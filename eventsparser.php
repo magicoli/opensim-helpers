@@ -82,12 +82,14 @@ foreach($json as $json_event) {
 
   $slurl = opensim_format_tp($json_event['hgurl'], TPLINK_TXT );
   $links = opensim_format_tp($json_event['hgurl'], TPLINK_APPTP + TPLINK_HOP);
-  $description = strip_tags(html_entity_decode($json_event['description']));
+  $description = strip_tags(html_entity_decode(utf8_encode(utf8_decode($json_event['description']))));
   $description = "$links\n\n$description";
+  // $title = utf8_encode(utf8_decode($json_event['title']));
+  $title = strip_tags(html_entity_decode(utf8_encode(utf8_decode($json_event['title']))));
 
   $fields = array(
     'owneruuid' => EVENTS_NULL_KEY, // Not implemented
-    'name' => $json_event['title'],
+    'name' => $title,
     // 'eventid' => $json_event['eventid'],
     'creatoruuid' => EVENTS_NULL_KEY, // Not implemented
     'category' => getEventCategory($json_event['categories']),
@@ -106,8 +108,10 @@ foreach($json as $json_event) {
   $events[] = $fields;
 }
 
-$SearchDB->query("DELETE FROM events");
-foreach($events as $event) {
-  $result = $SearchDB->insert('events', $event);
-  if(!$result) error_log("error while inserting new events)");
+if(is_object($SearchDB) && $SearchDB->connected) {
+  $SearchDB->query("DELETE FROM events");
+  foreach($events as $event) {
+    $result = $SearchDB->insert('events', $event);
+    if(!$result) error_log("error while inserting new events)");
+  }
 }
