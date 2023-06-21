@@ -10,4 +10,4 @@ then
   exit 0
 fi
 
-rsync --delete -Wavz "$helpers_dir/" helpers/ --exclude-from=.gitignore --exclude-from="$helpers_dir/.gitignore" --exclude-from="$helpers_dir/.libignore"
+rsync --delete -Wavz "$helpers_dir/" helpers/ --exclude-from=.gitignore --exclude=$0 --exclude-from="$helpers_dir/.gitignore" --exclude-from="$helpers_dir/.libignore"
