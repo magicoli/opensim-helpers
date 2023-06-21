@@ -1,0 +1,7 @@
+bin/
+composer.json
+composer.lock
+includes/config.php
+*-load.php
+*.example.php
+.gitignore
