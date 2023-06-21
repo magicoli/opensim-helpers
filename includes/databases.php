@@ -25,6 +25,9 @@ class OSPDO extends PDO {
 	 * @return PDOstatement if success, false on error
 	 */
 	public function prepareAndExecute( $query, $params = null, $options = array() ) {
+		$trace = debug_backtrace()[0];
+		$trace = $trace['file'] . ':' . $trace['line'];
+
 		$statement = $this->prepare( $query, $options );
 		$result    = $statement->execute( $params );
 
@@ -32,8 +35,6 @@ class OSPDO extends PDO {
 			return $statement;
 		}
 
-		$trace = debug_backtrace()[0];
-		$trace = $trace['file'] . ':' . $trace['line'];
 		error_log( 'Error ' . $statement->errorCode() . ' ' . $statement->errorInfo()[2] . ' ' . $trace );
 		return false;
 	}

@@ -2,7 +2,7 @@
 
 - Version: 2.1
 - Project URL: <https://github.com/GuduleLapointe/flexible_helper_scripts>
-- Donate: <https://magiiic.com/support/Flexible+Helper+Scripts>
+- Donate: <https://w4os.org/donate/>
 - Tags: OpenSimulator, Second Life, metaverse, avatar, web interface, helpers
 - Requires PHP: 5.5.0
 - License: AGPLv3
