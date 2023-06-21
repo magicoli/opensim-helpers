@@ -71,6 +71,7 @@ function dir_places_query( $method_name, $params, $app_data ) {
 	);
 	if ( isset( $_REQUEST['gk'] ) & ! empty( $_REQUEST['gk'] ) ) {
 		$gatekeeperURL           = $_REQUEST['gk'];
+		$gatekeeperURL           = preg_match( '#https?://#', $gatekeeperURL ) ? $gatekeeperURL : 'http://' . $gatekeeperURL;
 		$terms[]                 = 'parcels.gatekeeperURL = :gatekeeperURL';
 		$values['gatekeeperURL'] = $gatekeeperURL;
 	}
@@ -91,7 +92,7 @@ function dir_places_query( $method_name, $params, $app_data ) {
 		);
 	}
 
-	if(empty($data)) {
+	if ( empty( $data ) ) {
 		// osXmlDie( 'Nothing found' );
 		osXmlResponse( true, 'No results', $data );
 	} else {
@@ -181,8 +182,8 @@ function dir_popular_query( $method_name, $params, $app_data ) {
 xmlrpc_server_register_method( $xmlrpc_server, 'dir_land_query', 'dir_land_query' );
 function dir_land_query( $method_name, $params, $app_data ) {
 	global $SearchDB;
+	$req = $params[0];
 
-	$req         = $params[0];
 	$flags       = $req['flags'];
 	$type        = $req['type'];
 	$price       = $req['price'];
@@ -280,7 +281,6 @@ function dir_land_query( $method_name, $params, $app_data ) {
 xmlrpc_server_register_method( $xmlrpc_server, 'dir_events_query', 'dir_events_query' );
 function dir_events_query( $method_name, $params, $app_data ) {
 	global $SearchDB;
-
 	$req = $params[0];
 
 	$text        = $req['text'];
