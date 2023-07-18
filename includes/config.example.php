@@ -18,7 +18,7 @@ define( 'OPENSIM_LOGIN_URI', 'http://yourgrid.org:8002' );
 define( 'OPENSIM_MAIL_SENDER', "no-reply@{$_SERVER['SERVER_NAME']}" );
 // define('OPENSIM_GRID_LOGO_URL', "http://yougrid.org/logo.png");
 
-define( 'HYPEVENTS_URL', preg_replace( ':/$:', '', 'https://2do.pm/events' ) );
+define( 'HYPEVENTS_URL', preg_replace( ':/$:', '', 'https://2do.directory/events' ) );
 
 /**
  * Main database.
@@ -149,7 +149,7 @@ define( 'TPLINK_DEFAULT', TPLINK_HOP ); // default
 require_once 'databases.php';
 require_once 'functions.php';
 
-$currency_addon = dirname( __DIR__ ) . '/addons/currency-' . CURRENCY_PROVIDER . '.php';
+$currency_addon = dirname( __DIR__ ) . '/addons/' . CURRENCY_PROVIDER . '.php';
 if ( file_exists( $currency_addon ) ) {
 	require_once $currency_addon;
 }
