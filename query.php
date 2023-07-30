@@ -123,17 +123,17 @@ xmlrpc_server_register_method( $xmlrpc_server, 'dir_popular_query', 'dir_popular
 function dir_popular_query( $method_name, $params, $app_data ) {
 	global $SearchDB;
 
-	$req = $params[0];
-
-	$text        = $req['text'];
-	$flags       = $req['flags'];
-	$query_start = $req['query_start'];
+	$req               = $params[0];
+	$text              = $req['text'];
+	$flags             = $req['flags'];
+	$query_start       = $req['query_start'];
+	$include_hypergrid = ( isset( $req['include_hypergrid'] ) && $req['include_hypergrid'] == 'false' ) ? false : true;
+	$include_landsales = ( isset( $req['include_landsales'] ) && $req['include_landsales'] == 'true' ) ? true : false;
 
 	$terms   = array();
 	$sqldata = array();
 
 	if ( $flags & pow( 2, 12 ) ) {
-		$terms[] = 'has_picture = 1';
 		$terms[] = 'has_picture = 1';
 	}
 	// if ($flags & pow(2,11)) $terms[] = "pop.mature = 0";     //PgSimsOnly (1 << 11)
@@ -152,7 +152,11 @@ function dir_popular_query( $method_name, $params, $app_data ) {
 		$terms[]                  = 'pop.gatekeeperURL = :gatekeeperURL';
 		$sqldata['gatekeeperURL'] = $gatekeeperURL;
 	}
-
+	$left_join = null;
+	if ( ! $include_landsales ) {
+		$left_join = 'LEFT JOIN parcelsales AS sales ON sales.parcelUUID = pop.parcelUUID';
+		$terms[]   = 'sales.regionUUID IS NULL';
+	}
 	if ( count( $terms ) > 0 ) {
 		$where = ' WHERE ' . join( ' AND ', $terms );
 	} else {
@@ -164,12 +168,13 @@ function dir_popular_query( $method_name, $params, $app_data ) {
 		$query_start = 0;
 	}
 
-	$query  = $SearchDB->prepare(
-		'SELECT * FROM popularplaces as pop
-    INNER JOIN parcels as par ON pop.parcelUUID = par.parcelUUID
-    INNER JOIN ' . SEARCH_REGION_TABLE . ' as r ON par.regionUUID = r.regionUUID'
-		. $where . " ORDER BY pop.dwell DESC, parcelname LIMIT $query_start,100"
-	);
+	$sql    = 'SELECT pop.infoUUID, pop.name, pop.dwell, pop.gatekeeperURL, r.regionname, r.regionUUID, par.landingpoint, par.imageUUID FROM popularplaces as pop
+	INNER JOIN parcels as par ON pop.parcelUUID = par.parcelUUID
+	INNER JOIN ' . SEARCH_REGION_TABLE . ' as r ON par.regionUUID = r.regionUUID
+	' . $left_join . '
+	' . $where . "
+	ORDER BY pop.dwell DESC, par.parcelname LIMIT $query_start,100";
+	$query  = $SearchDB->prepare( $sql );
 	$result = $query->execute( $sqldata );
 
 	$data = array();
