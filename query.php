@@ -19,12 +19,11 @@
 require_once 'includes/config.php';
 require_once 'includes/search.php';
 
-function ossearch_get_gatekeeperURL( $args = [] ) {
+function ossearch_get_gatekeeperURL( $args = array() ) {
 	$gatekeeperURL = false;
 	if ( ! empty( $args['gatekeeper_url'] ) ) {
 		$gatekeeperURL = $args['gatekeeper_url'];
-	} else
-	 if ( ! empty( $_REQUEST['gk'] ) ) {
+	} elseif ( ! empty( $_REQUEST['gk'] ) ) {
 		$gatekeeperURL = $_REQUEST['gk'];
 	} else {
 		return false;
@@ -149,7 +148,7 @@ function dir_popular_query( $method_name, $params, $app_data ) {
 	}
 
 	$gatekeeperURL = ossearch_get_gatekeeperURL( $req );
-	if ( !empty($gatekeeperURL) ) {
+	if ( ! $include_hypergrid && ! empty( $gatekeeperURL ) ) {
 		$terms[]                  = 'pop.gatekeeperURL = :gatekeeperURL';
 		$sqldata['gatekeeperURL'] = $gatekeeperURL;
 	}
