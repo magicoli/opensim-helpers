@@ -409,6 +409,18 @@ if ( ! function_exists( 'osdebug' ) ) {
 	}
 }
 
+define( 'NULL_KEY', '00000000-0000-0000-0000-000000000000' );
+define( 'TPLINK_LOCAL', 1 ); // seconlife://Region/x/y/z
+define( 'TPLINK_HG', 2 ); // seconlife://yourgrid.org:8002 Region/x/y/z
+define( 'TPLINK_V3HG', 4 ); // the overcomplicated stuff!
+define( 'TPLINK_HOP', 8 ); // hop://yourgrid.org:8002:Region/x/y/z
+define( 'TPLINK_TXT', 16 ); // yourgrid.org:8002:Region/x/y/z
+define( 'TPLINK_APPTP', 32 ); // secondlife:///app/teleport/yourgrid.org:8002:Region/x/y/z
+define( 'TPLINK_MAP', 64 ); // secondlife:///app/map/yourgrid.org:8002:Region/x/y/z
+define( 'TPLINK', pow( 2, 8 ) - 1 ); // all formats
+define( 'TPLINK_DEFAULT', TPLINK_HOP ); // default
+
+
 /**
  * OpenSim source to help further attempts to allow Hypergrid search results.
  * Infouuid is a fake parcelid resolving to region handle and (region-level?)
