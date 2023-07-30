@@ -181,7 +181,7 @@ function opensim_format_tp( $uri, $format = TPLINK, $sep = "\n" ) {
 															$links[ TPLINK_LOCAL ] = "secondlife://$region/$pos";
 	}
 	if ( $format & TPLINK_HG ) {
-		$links[ TPLINK_HG ] = "secondlife://$host:$port+$region/$pos";
+		$links[ TPLINK_HG ] = "secondlife://$host:$port $region/$pos";
 	}
 	if ( $format & TPLINK_V3HG ) {
 		$links[ TPLINK_V3HG ] = "secondlife://http|!!$host|$port+$region";
