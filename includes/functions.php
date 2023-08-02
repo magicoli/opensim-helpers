@@ -4,10 +4,10 @@
  *
  * Provides functions required by helpers
  *
- * @package		magicoli/opensim-helpers
- * @author 		Gudule Lapointe <gudule@speculoos.world>
- * @link 			https://github.com/magicoli/opensim-helpers
- * @license		AGPLv3
+ * @package     magicoli/opensim-helpers
+ * @author      Gudule Lapointe <gudule@speculoos.world>
+ * @link            https://github.com/magicoli/opensim-helpers
+ * @license     AGPLv3
  */
 
 /**
