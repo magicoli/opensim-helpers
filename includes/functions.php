@@ -410,6 +410,48 @@ if ( ! function_exists( 'osdebug' ) ) {
 	}
 }
 
+function set_helpers_locale( $locale = null, $domain = 'messages' ) {
+	mb_internal_encoding('UTF-8');
+	$encoding = mb_internal_encoding();
+
+	if (isset($_GET["l"])) $locale = $_GET["l"];
+	$languages = array_filter(array_merge( array($locale), explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']) ));
+
+	// $results = putenv("LC_ALL=$locale");
+	// if (!$results) {
+	// 	exit ('putenv failed');
+	// }
+
+	// $currentLocale = setlocale(LC_ALL, 0);
+	$user_locales = array_unique(array( $locale, $locale . ".$encoding", $locale . '.UTF-8', $locale . '.utf8', $locale, 0 ));
+
+	$user_locales = array_map(function ($code) {
+		return preg_replace(
+			array('/;.*/', '/-/' ),
+			array ('', '_'),
+			$code
+		);
+	}, $languages);
+
+	// Generate variants with different encodings appended
+	$variants = array();
+	foreach ($user_locales as $lang) {
+		$variants[] = $lang;
+		$variants[] = "$lang.$encoding";
+		// $variants[] = "$lang.UTF-8";
+	}
+
+	$variants = array_unique($variants);
+	if ( ! setlocale(LC_ALL, $variants ) ) {
+		error_log ("setlocale() failed: none of  '" . join(', ', $variants) . "' does exist in this environment or setlocale() is not available on this platform");
+		setlocale(LC_ALL, 0 );
+		return 0;
+	}
+
+	bindtextdomain($domain, "./locales");
+	textdomain($domain);
+}
+
 define( 'NULL_KEY', '00000000-0000-0000-0000-000000000000' );
 define( 'TPLINK_LOCAL', 1 ); // seconlife://Region/x/y/z
 define( 'TPLINK_HG', 2 ); // seconlife://yourgrid.org:8002 Region/x/y/z
@@ -421,6 +463,7 @@ define( 'TPLINK_MAP', 64 ); // secondlife:///app/map/yourgrid.org:8002:Region/x/
 define( 'TPLINK', pow( 2, 8 ) - 1 ); // all formats
 define( 'TPLINK_DEFAULT', TPLINK_HOP ); // default
 
+define( 'HELPERS_LOCALE_DIR', dirname( __DIR__ ) . '/languages' );
 
 /**
  * OpenSim source to help further attempts to allow Hypergrid search results.
