@@ -39,6 +39,7 @@ define( 'OPENSIM_DB_HOST', 'localhost' );
 define( 'OPENSIM_DB_NAME', 'opensim' );
 define( 'OPENSIM_DB_USER', 'opensim' );
 define( 'OPENSIM_DB_PASS', 'password' );
+define( 'SEARCH_TABLE_EVENTS', 'events' );
 
 /**
  * Search database credentials and settings.
