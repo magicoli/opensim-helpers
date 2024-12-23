@@ -73,31 +73,29 @@ function opensim_sanitize_uri( $url, $gatekeeperURL = null, $array_outout = fals
 		$split  = explode( ' ', $split[1] );
 		$port   = $split[0];
 		$region = $split[1];
-	} else {
-		if ( preg_match( '/[a-z].*\.[a-z]/', $split[0] ) ) {
+	} elseif ( preg_match( '/[a-z].*\.[a-z]/', $split[0] ) ) {
 			$host = array_shift( $split );
-			if ( preg_match( '/^[0-9]+$/', $split[0] ) ) {
-				$port = array_shift( $split );
-			} else {
-				$port = 8002;
-			}
-			$region = preg_replace( ':^/*:', '', @$split[0] );
-		} else if(function_exists('w4os_grid_login_uri')) {
-			$host = parse_url( w4os_grid_login_uri(), PHP_URL_HOST );
-			$port = parse_url( w4os_grid_login_uri(), PHP_URL_HOST );
-			if ( preg_match( '/^[0-9]+$/', $split[0] ) ) {
-				array_shift( $split );
-			}
-			$region = preg_replace( ':^/*:', '', @$split[0] );
+		if ( preg_match( '/^[0-9]+$/', $split[0] ) ) {
+			$port = array_shift( $split );
 		} else {
-			if( empty($gatekeeperURL)) {
-				return false;
-			}
-			$region = $split[2];
-			$split = explode( ':', preg_replace( '#.*://([^/]+)/?.*#', '$1', $gatekeeperURL ) );
-			$host = $split[0];
-			$port = $split[1];
+			$port = 8002;
 		}
+			$region = preg_replace( ':^/*:', '', @$split[0] );
+	} elseif ( function_exists( 'w4os_grid_login_uri' ) ) {
+		$host = parse_url( w4os_grid_login_uri(), PHP_URL_HOST );
+		$port = parse_url( w4os_grid_login_uri(), PHP_URL_HOST );
+		if ( preg_match( '/^[0-9]+$/', $split[0] ) ) {
+			array_shift( $split );
+		}
+		$region = preg_replace( ':^/*:', '', @$split[0] );
+	} else {
+		if ( empty( $gatekeeperURL ) ) {
+			return false;
+		}
+		$region = $split[2];
+		$split  = explode( ':', preg_replace( '#.*://([^/]+)/?.*#', '$1', $gatekeeperURL ) );
+		$host   = $split[0];
+		$port   = $split[1];
 	}
 	if ( empty( $host ) & ! empty( $gatekeeperURL ) ) {
 		$split = explode( ':', preg_replace( '#.*://([^/]+)/?.*#', '$1', $gatekeeperURL ) );
@@ -108,7 +106,7 @@ function opensim_sanitize_uri( $url, $gatekeeperURL = null, $array_outout = fals
 		$port = 80;
 	}
 	$host   = strtolower( trim( $host ) );
-	$region = trim(str_replace("_", " ", $region ));
+	$region = trim( str_replace( '_', ' ', $region ) );
 	if ( is_numeric( $region ) ) {
 		$pos    = "$region/$pos";
 		$region = '';
@@ -197,12 +195,12 @@ function opensim_format_tp( $uri, $format = TPLINK, $sep = "\n" ) {
 		$links[ TPLINK_V3HG ] = "secondlife://http|!!$host|$port+$region";
 	}
 	if ( $format & TPLINK_HOP ) {
-		$links[ TPLINK_HOP ] = "hop://$host:$port/$regionencoded/$pos_mandatory";
+		$links[ TPLINK_HOP ] = "hop://$host:$port/$region" . ( empty( $pos ) ? '' : "/$pos" );
 	}
 	if ( $format & TPLINK_APPTP ) {
 		$links[ TPLINK_APPTP ] = "secondlife:///app/teleport/$host:$port+$regionencoded/" . ( ( ! empty( $pos_sl ) ) ? "$pos_sl/" : '' );
 	}
-	// if ($format & TPLINK_MAP)		$links[TPLINK_MAP]		= "secondlife:///app/map/$host:$port+$regionencoded/$pos";
+	// if ($format & TPLINK_MAP)        $links[TPLINK_MAP]      = "secondlife:///app/map/$host:$port+$regionencoded/$pos";
 	$links = preg_replace( '#^[^[:alnum:]]*|[^[:alnum:]]+$#', '', $links );
 
 	return join( $sep, $links );
@@ -242,7 +240,7 @@ function opensim_link_region( $args, $var = null ) {
 			return $link_region;
 		}
 	}
-	
+
 	return array();
 }
 
@@ -252,11 +250,11 @@ function opensim_link_region( $args, $var = null ) {
  * @param  array $region sanitized region array
  * @return string
  */
-function opensim_region_url($region) {
-    if(!is_array($region)) {
-        return false;
-    }
-    return $region['gatekeeper'] . ( empty($region['region']) ? '' : ':' . $region['region'])  . ( empty($region['pos']) ? '' : '/' . $region['pos'] );
+function opensim_region_url( $region ) {
+	if ( ! is_array( $region ) ) {
+		return false;
+	}
+	return $region['gatekeeper'] . ( empty( $region['region'] ) ? '' : ':' . $region['region'] ) . ( empty( $region['pos'] ) ? '' : '/' . $region['pos'] );
 }
 
 function opensim_get_region( $region_uri, $var = null ) {
@@ -264,13 +262,13 @@ function opensim_get_region( $region_uri, $var = null ) {
 		return array();
 	}
 	global $OSSEARCH_CACHE;
-	$region     = opensim_sanitize_uri( $region_uri, '', true );
+	$region = opensim_sanitize_uri( $region_uri, '', true );
 
 	$gatekeeper = $region['gatekeeper'];
 
 	$link_region = opensim_link_region( $region );
 
-	$uuid        = @$link_region['uuid'];
+	$uuid = @$link_region['uuid'];
 	if ( ! opensim_isuuid( $uuid ) ) {
 		// error_log( "opensim_get_region $region_uri invalid uuid $uuid" );
 		return array();
@@ -409,34 +407,33 @@ function osNotice( $message ) {
 	echo $message . "\n";
 }
 
-function osAdminNotice( $message, $error_code = 0, $die = false) {
+function osAdminNotice( $message, $error_code = 0, $die = false ) {
 	// get calling function and file
 	$trace = debug_backtrace();
 
-	
-	if(isset($trace[1])) {
+	if ( isset( $trace[1] ) ) {
 		$caller = $trace[1];
 	} else {
 		$caller = $trace[0];
 	}
-	$file = empty($caller['file']) ? '' : $caller['file'];
-	$function = $caller['function'] . "()" ?? 'main';
-	$line = $caller['line'] ?? 0;
-	$class = $caller['class'] ?? 'main';
-	$type = $caller['type'] ?? '::';
-	if($class != 'main') {
+	$file     = empty( $caller['file'] ) ? '' : $caller['file'];
+	$function = $caller['function'] . '()' ?? 'main';
+	$line     = $caller['line'] ?? 0;
+	$class    = $caller['class'] ?? 'main';
+	$type     = $caller['type'] ?? '::';
+	if ( $class != 'main' ) {
 		$function = $class . $type . $function;
 	}
-	$file = $file . ':' . $line;
+	$file    = $file . ':' . $line;
 	$message = sprintf(
 		'%s%s: %s in %s',
 		$function,
-		empty($error_code) ? '' : " Error $error_code",
+		empty( $error_code ) ? '' : " Error $error_code",
 		$message,
 		$file,
 	);
 	error_log( $message );
-	if($die == true) {
+	if ( $die == true ) {
 		die( $error_code );
 	}
 }
