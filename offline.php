@@ -129,11 +129,11 @@ switch ( $method ) {
 						// $body = str_replace( "\n", "\r\n", $body );
 
 			$body = '<html><body>'
-			. ( empty($intro) ? "" : "<p></p>" )
+			. ( empty( $intro ) ? '' : '<p></p>' )
 			. $body
 			. "\r\n"
 			. "\r\n"
-			. ( empty($outro) ? "" : "<blockquote>$outro</blockquote>" )
+			. ( empty( $outro ) ? '' : "<blockquote>$outro</blockquote>" )
 			. '<hr>'
 			. "<p style='font-size:small'><b>" . OPENSIM_GRID_NAME . '</b> Instant Messages mail forwarding by w4os.'
 			. '<br>Please log in-world to answer to this message. Emails to the sender address will not be processed.'
@@ -144,7 +144,7 @@ switch ( $method ) {
 				// We're inside WordPress, use wp_mail()
 				add_action(
 					'plugins_loaded',
-					function() use ( $email, $subject, $body, $headers ) {
+					function () use ( $email, $subject, $body, $headers ) {
 						$result = wp_mail( $email, $subject, $body, $headers );
 						if ( ! $result ) {
 							error_log( __FILE__ . "error $result sending IM notification to $email." );

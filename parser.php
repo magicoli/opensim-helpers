@@ -34,7 +34,7 @@ function hostCheck( $hostname, $port ) {
 
 	$xml = file_get_contents( "http://$hostname:$port/?method=collector" );
 	if ( empty( $xml ) ) {
-		error_log( "$hostname:$port unreachable" );
+		// error_log( "$hostname:$port unreachable" );
 		$fails       = $SearchDB->prepareAndExecute(
 			'SELECT failcounter FROM hostsregister
       WHERE host = :host AND port = :port',
@@ -267,7 +267,7 @@ function hostScan( $hostname, $port, $xmlcontent ) {
 					)
 				);
 
-				  // We don't want land for sale in popular places.
+					// We don't want land for sale in popular places.
 				if ( $parcelforsale == 'false' ) {
 					$SearchDB->insert(
 						'popularplaces',
