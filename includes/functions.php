@@ -431,7 +431,7 @@ function osAdminNotice( $message, $error_code = 0, $die = false ) {
 		$function,
 		empty( $error_code ) ? '' : " Error $error_code",
 		$message,
-		$file,
+		$file
 	);
 	error_log( $message );
 	if ( $die == true ) {

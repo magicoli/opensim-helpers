@@ -1,17 +1,24 @@
 # OpenSimulator Helpers
 
-![Version 2.4.0](https://badgen.net/badge/Version/2.4.0/blue) ![Stable 2.4.0](https://badgen.net/badge/Stable/2.4.0/green) ![Requires PHP 7.3](https://badgen.net/badge/PHP/7.3/7884bf) ![License AGPLv3](https://badgen.net/badge/License/AGPLv3/552b55)
+![Version 2.4.0](https://badgen.net/badge/Version/2.4.0/blue)
+![Stable 2.4.0](https://badgen.net/badge/Stable/2.4.0/green)
+![Requires PHP 5.7](https://badgen.net/badge/PHP/5.7/7884bf)
+![License AGPLv3](https://badgen.net/badge/License/AGPLv3/552b55)
 
-- Project URL: <https://github.com/magicoli/opensim-helpers>
-- Donate: <https://w4os.org/donate/>
+Collection of PHP scripts to complement OpenSimulator features.
 
 ## Description
 
-Helpers required to enable common functionalties like search, currency, events in OpenSimulator grids.
+Collection of PHP scripts to enable OpenSimulator features that are not implemented in the core, like search, currency, events in OpenSimulator grids (see Features below).
+
+Most files are used directly by viewer to allow features not implemented in OpenSimulator, like classifieds, events, etc.
 
 They were initially based on a collection of different projects (see Credits below), but were entirely rewritten to use an unified code and set of parameters, as well as for integration in larger projects like [w4os OpenSim WordPress Interface](https://w4os.org/).
 
 Formerly known as Flexible Helper Scripts.
+
+- Project URL: <https://github.com/magicoli/opensim-helpers>
+- Donate: <https://w4os.org/donate/>
 
 ### Features
 
@@ -21,6 +28,17 @@ Formerly known as Flexible Helper Scripts.
 - **Offline messaging**: add mail forwarding option to offline IM (according to user viewer settings)
 - **Multi-grid**: can be used for standalone or closed grid as well as to provide a cross-grid search engine
 - **Unified library**: rewritten to allow easier integration in bigger projects
+
+### Roadmap
+
+- [ ] Avatar authentication
+- [ ] Avatar registration
+- [ ] Web profiles
+- [ ] Web assets server
+- [ ] Web search
+- [ ] Grid info
+- [ ] Grid status
+- [ ] Splash page
 
 ## Installation
 

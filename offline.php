@@ -61,7 +61,7 @@ switch ( $method ) {
 			'SELECT imviaemail, email FROM usersettings WHERE useruuid = :useruuid',
 			array(
 				'useruuid' => $xml->toAgentID,
-			),
+			)
 		);
 
 		if ( $emailinfo ) {
@@ -170,7 +170,7 @@ switch ( $method ) {
 				'SELECT ID, Message FROM ' . OFFLINE_MESSAGE_TBL . ' WHERE PrincipalID = :PrincipalID',
 				array(
 					'PrincipalID' => $xml->Guid,
-				),
+				)
 			);
 			if ( $pendingmessages ) {
 				$delivered = array();
