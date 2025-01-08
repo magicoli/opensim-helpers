@@ -9,84 +9,9 @@
  * @package		magicoli/opensim-helpers
 **/
 
-class OpenSim {
-    private static $tmp_dir;
-
-    public function __construct() {
-        if( ! defined( 'ABSPATH' ) ) {
-            define( 'ABSPATH', dirname( __FILE__ ) . '/' );
-        }
-    }
-
-    public static function get_temp_dir( $dir = false ) {
-        if( isset( self::$tmp_dir ) ) {
-            return self::$tmp_dir;
-        }
-
-        if ( ! empty( $dir ) && is_dir( $dir ) && is_writable( $dir ) ) {
-            $dir = realpath( $dir );
-        } else {
-            $dirs = array(
-                sys_get_temp_dir(),
-                dirname( $_SERVER['DOCUMENT_ROOT'] )  . '/tmp',
-                ini_get( 'upload_tmp_dir' ),
-                '/var/tmp',
-                '~/tmp',
-            );
-            foreach( $dirs as $key => $dir ) {
-                if( is_dir( $dir ) && is_writable( $dir ) ) {
-                    $dir = realpath( $dir );
-                    break;
-                }
-            }
-        }
-        if ( ! $dir ) {
-            throw new Error( 'No writable temporary directory found.' );
-        }
-        
-        self::$tmp_dir = $dir;
-        return $dir;
-    }
-
-	public static function connectionstring_to_array( $connectionstring ) {
-		$parts = explode( ';', $connectionstring );
-		$creds = array();
-		foreach ( $parts as $part ) {
-			$pair              = explode( '=', $part );
-			$creds[ $pair[0] ] = $pair[1] ?? '';
-		}
-        if( preg_match( '/:[0-9]+$/', $creds['Data Source'] ) ) {
-            $host = explode( ':', $creds['Data Source'] );
-            $creds['Data Source'] = $host[0];
-            $creds['Port'] = empty( $host[1] || $host[1] == 3306 ) ? null : $creds['Port'];
-        }
-        $result = array(
-            'host' => $creds['Data Source'],
-            'port' => $creds['Port'],
-            'name' => $creds['Database'],
-            'user' => $creds['User ID'],
-            'pass' => $creds['Password'],
-        );
-		return $result;
-	}
-}
-
-class OpenSim_Page {
-    protected $page_title;
-    protected $content;
-
-    public function __construct() {
-
-    }
-
-    public function get_page_title() {
-        return $this->page_title;
-    }
-
-    public function get_content() {
-        return $this->content;
-    }
-}
+require_once( __DIR__ . '/classes/main-class.php' );
+require_once( __DIR__ . '/classes/class-page.php' );
+require_once( __DIR__ . '/classes/class-ini.php' );
 
 class OpenSim_Install extends OpenSim_Page {
     private $ini_path;
@@ -112,14 +37,14 @@ class OpenSim_Install extends OpenSim_Page {
     private function generate_php_config() {
         $template = 'includes/config.example.php';
         if (!file_exists($template)) {
-            $this->user_notice(_('Template file not found.'), 'error');
+            OpenSim::notify(_('Template file not found.'), 'error');
             return false;
         }
 
         try {
             $php_template = file_get_contents($template);
         } catch (Error $e) {
-            $this->error_notice($e, 'Error reading template file');
+            OpenSim::notify_error($e, 'Error reading template file');
             return false;
         }
         $config = $this->config;
@@ -189,11 +114,11 @@ class OpenSim_Install extends OpenSim_Page {
         try {
             file_put_contents($config_file, $php_template);
         } catch (Error $e) {
-            $this->error_notice($e, 'Error writing configuration file');
+            OpenSim::notify_error($e, 'Error writing configuration file');
             return false;
         }
 
-        $this->user_notice(_('Configuration file generated successfully.'), 'success');
+        OpenSim::notify(_('Configuration file generated successfully.'), 'success');
         return true;
     }
 
@@ -282,48 +207,16 @@ class OpenSim_Install extends OpenSim_Page {
         ) );
     }
 
-    public function parse_args( $args, $defaults ) {
-        if( is_object( $args ) ) {
-            $args = get_object_vars( $args );
-        } elseif( is_array( $args ) ) {
-            $args = $args;
-        } else {
-            parse_str( $args, $args );
-        }
-        return array_merge( $defaults, $args );
-    }
-
-    public function user_notice( $message, $type = 'info' ) {
-        $key = md5( $message ); // Make sure we don't have duplicates
-        $this->user_notices[$key] = array(
-            'message' => $message,
-            'type' => $type,
-        );
-    }
-
-    public function get_notices() {
-        $html = '';
-        foreach( $this->user_notices as $key => $notice ) {
-            $type = $notice['type'] ?? 'info';
-            $html .= sprintf(
-                '<div class="alert alert-%s">%s</div>',
-                $type,
-                $notice['message']
-            );
-        }
-        return $html;
-    }
-
     public function get_form( $form_id ) {
         if( empty( $form_id ) ) {
-            $this->user_notice( sprintf( _('%s submitted without form ID.'), __FUNCTION__ ), 'error' );
+            OpenSim::notify( sprintf( _('%s submitted without form ID.'), __FUNCTION__ ), 'error' );
             return null;
         }
         if( empty( $this->forms[$form_id] ) ) {
-            $this->user_notice( sprintf( _('Form %s not registered.'), $form_id ), 'error' );
+            OpenSim::notify( sprintf( _('Form %s not registered.'), $form_id ), 'error' );
             return null;
         }
-        $this->user_notice( sprintf( _('Form %s rendered.'), $form_id ), 'info' );
+        OpenSim::notify( sprintf( _('Form %s rendered.'), $form_id ), 'info' );
         return $this->build_form( $form_id );
     }
 
@@ -373,7 +266,7 @@ class OpenSim_Install extends OpenSim_Page {
     }
 
     public function render_content() {
-        $content = $this->get_notices();
+        $content = OpenSim::get_notices();
         $content .= $this->content ?? '';
         // $content = '<p>' . join( '</p><p>', array(
         //     _('This tool wil scan Robust configuration file to get your grid settings and generate helpers configuration files.'),
@@ -387,116 +280,21 @@ class OpenSim_Install extends OpenSim_Page {
         return $content;
     }
 
-    function error_notice( $e, $message = '', $type = 'warning' ) {
-        $trace = $e->getTrace();
-        $message = empty( $message ) ? $trace[0]['function'] : '';
-        $message = ( empty( $message ) ? '' : $message . ': ' ) . $e->getMessage();
-        $this->user_notice( $message, $type );
-    }
-
     /**
      * Read the ini file and store config in an array.
      */
     public function process_ini() {
         $ini = new OpenSim_Ini( $this->ini_path );
         if ( ! $ini ) {
-            $this->user_notice( _('Error parsing file.'), 'error' );
+            OpenSim::notify( _('Error parsing file.'), 'error' );
             return false;
         }
         $this->config = $ini->get_config();
         if ( $this->config ) {
-            $this->user_notice( _('Ini parsed successfully.'), 'success' );
+            OpenSim::notify( _('Ini parsed successfully.'), 'success' );
             return true;
         }
     }
-}
-
-class OpenSim_Ini {
-    private $file;
-    private $ini;
-    private $config = array();
-    private $raw_ini_array;
-
-    public function __construct( $args ) {
-        if( empty( $args ) ) {
-            throw new Error( __FUNCTION__ .'() empty value received');
-        }
-
-        if( is_string( $args ) && file_exists( $args ) ) {
-            try {
-                $file_content = file_get_contents( $args );
-            } catch (Error $e) {
-                $this->error_notice( $e, 'Error reading file' );
-            }
-            $content = file_get_contents( $args );
-            $this->raw_ini_array = explode( "\n", $content );
-        } elseif( is_string( $args ) ) {
-            $this->raw_ini_array = explode( "\n", $args );
-        } elseif( is_array( $args ) ) {
-            $this->raw_ini_array = $args;
-        } else {
-            throw new Error( __CLASS__ .' accepts only string, array or file path value' );
-        }
-
-        $this->sanitize_and_parse( $this->raw_ini_array );
-    }
-
-    public function get_config() {
-        return $this->config;
-    }
-
-    public function get_ini() {
-        return $this->ini;
-    }
-
-	/**
-	 * Sanitize an INI string. Make sure each value is encosed in quotes.
-     * Convert constants to their value.
-	 */
-	private function sanitize_and_parse() {
-		$this->ini = '';
-        $this->config = array();
-
-        $lines = $this->raw_ini_array;
-
-        $section = '_';
-		foreach ( $lines as $line ) {
-			$line = trim( $line );
-			if ( empty( $line ) || preg_match('/^\s*;/', $line ) ) {
-                $this->ini .= "$line\n";
-				continue;
-			}
-			$parts = explode( '=', $line );
-            if( preg_match( '/^\[[a-zA-Z]+\]$/' , $line)) {
-                $section = trim( $line, '[]' );
-                error_log( "section $section" );
-                $this->ini .= "$line\n";
-                continue;
-            }
-			if ( count( $parts ) < 2 ) {
-				$this->ini .= "$line\n";
-				continue;
-			}
-			// use first part as key, the rest as value
-			$key   = trim( array_shift( $parts ) );
-			$value = trim( implode( '=', $parts ), '\" ');
-
-            $config_value = $value;
-            while ( preg_match( '/\${Const\|([a-zA-Z]+)}/', $config_value, $matches ) ) {
-                $const = $matches[1];
-                $config_value = str_replace( '${Const|' . $const . '}', $this->config['Const'][$const], $config_value );
-                error_log( "Found constant $const, in $line
-                    replacing $value with $config_value" );
-            }
-            $this->config[$section][$key] = $config_value;
-
-            if( is_numeric( $value ) || in_array( $value, array( "true", "false" ) ) ) {
-                $this->ini .= "$key = $value\n";
-            } else {
-                $this->ini .= "$key = \"$value\"\n";
-            }
-		}
-	}
 }
 
 $page = new OpenSim_Install();
