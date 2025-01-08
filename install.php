@@ -9,6 +9,56 @@
  * @package		magicoli/opensim-helpers
 **/
 
+class OpenSim {
+    private static $tmp_dir;
+
+    public function __construct() {
+        if( ! defined( 'ABSPATH' ) ) {
+            define( 'ABSPATH', dirname( __FILE__ ) . '/' );
+        }
+    }
+
+    public static function get_temp_dir( $dir = false ) {
+        if( isset( self::$tmp_dir ) ) {
+            return self::$tmp_dir;
+        }
+
+        if ( ! empty( $dir ) && is_dir( $dir ) && is_writable( $dir ) ) {
+            $dir = realpath( $dir );
+        } else {
+            $dirs = array(
+                sys_get_temp_dir(),
+                dirname( $_SERVER['DOCUMENT_ROOT'] )  . '/tmp',
+                ini_get( 'upload_tmp_dir' ),
+                '/var/tmp',
+                '~/tmp',
+            );
+            foreach( $dirs as $key => $dir ) {
+                if( is_dir( $dir ) && is_writable( $dir ) ) {
+                    $dir = realpath( $dir );
+                    break;
+                }
+            }
+        }
+        if ( ! $dir ) {
+            throw new Error( 'No writable temporary directory found.' );
+        }
+        
+        self::$tmp_dir = $dir;
+        return $dir;
+    }
+
+	public static function connectionstring_to_array( $connectionstring ) {
+		$parts = explode( ';', $connectionstring );
+		$creds = array();
+		foreach ( $parts as $part ) {
+			$pair              = explode( '=', $part );
+			$creds[ $pair[0] ] = $pair[1] ?? '';
+		}
+		return $creds;
+	}
+}
+
 class OpenSim_Page {
     protected $page_title;
     protected $content;
@@ -42,8 +92,87 @@ class OpenSim_Install extends OpenSim_Page {
         $this->page_title = _('Helpers Installation');
         $this->register_forms();
         $this->process_forms();
+        $this->generate_php_config();
 
         $this->content = $this->render_content();
+    }
+
+    private function generate_php_config() {
+        $template = 'includes/config.example.php';
+        if (!file_exists($template)) {
+            $this->user_notice(_('Template file not found.'), 'error');
+            return false;
+        }
+
+        try {
+            $php_template = file_get_contents($template);
+        } catch (Error $e) {
+            $this->error_notice($e, 'Error reading template file');
+            return false;
+        }
+        $config = $this->config;
+        $robust_db = OpenSim::connectionstring_to_array($config['DatabaseService']['ConnectionString']);
+
+        $registrars = array(
+            'DATA_SRV_W4OSDev' => "http://dev.w4os.org/helpers/register.php",
+            'DATA_SRV_2do' => 'http://2do.directory/helpers/register.php',
+            'DATA_SRV_MISearch' => 'http://metaverseink.com/cgi-bin/register.py',
+        );
+
+        $console = array(
+            'ConsoleUser' => $config['Network']['ConsoleUser'],
+            'ConsolePass' => $config['Network']['ConsolePass'],
+            'ConsolePort' => $config['Network']['ConsolePort'],
+            'numeric' => 123456789,
+            'boolean_string' => 'true',
+        );
+        
+        // Define mapping between config array keys and template constants
+        $mapping = array(
+            'OPENSIM_GRID_NAME'          => $config['Const']['BaseURL'],
+            'OPENSIM_LOGIN_URI'          => $config['Const']['BaseURL'] . ':' . $config['Const']['PublicPort'],
+            'OPENSIM_MAIL_SENDER'        => "no-reply@" . parse_url($config['Const']['BaseURL'], PHP_URL_HOST),
+            'OPENSIM_DB'                 => 'true', // Example static value
+            'OPENSIM_DB_HOST'            => $robust_db['Data Source'],
+            'OPENSIM_DB_NAME'            => $robust_db['Database'],
+            'OPENSIM_DB_USER'            => $robust_db['User ID'],
+            'OPENSIM_DB_PASS'            => $robust_db['Password'],
+            'SEARCH_REGISTRARS'         => $registrars,
+            'ROBUST_CONSOLE'             => $console,
+            // Add more mappings as needed
+        );
+
+        // Replace placeholders in the template
+        foreach ($mapping as $constant => $value) {
+            $pattern = "/define\(\s*'{$constant}'\s*,\s*(?:array\s*\([^;]*?\)|'[^']*'|\"[^\"]*\"|[^)]+)\s*\);/s";
+
+            if (is_array($value)) {
+                $exported = var_export($value, true);
+                // Remove quotes for numbers
+                $exported = preg_replace('/\'(\d+)\'/', '$1', $exported);
+                $replacement = "define( '{$constant}', {$exported} );";
+            } elseif (is_bool($value)) {
+                $bool = $value ? 'true' : 'false';
+                $replacement = "define( '{$constant}', {$bool} );";
+            } elseif (is_numeric($value)) {
+                $replacement = "define( '{$constant}', {$value} );";
+            } else {
+                $replacement = "define( '{$constant}', '" . addslashes($value) . "' );";
+            }
+            $php_template = preg_replace($pattern, $replacement, $php_template);
+        }
+
+        // Write the updated config to config.php
+        $config_file = 'includes/config.php';
+        try {
+            file_put_contents($config_file, $php_template);
+        } catch (Error $e) {
+            $this->error_notice($e, 'Error writing configuration file');
+            return false;
+        }
+
+        $this->user_notice(_('Configuration file generated successfully.'), 'success');
+        return true;
     }
 
     private function process_forms() {
@@ -90,7 +219,7 @@ class OpenSim_Install extends OpenSim_Page {
         }
 
         if( $count == 0 ) {
-            $this->process_ini();
+            return $this->process_ini();
         }
     }
     
@@ -222,14 +351,14 @@ class OpenSim_Install extends OpenSim_Page {
     }
 
     public function render_content() {
-        $content = $this->content ?? '';
+        $content = $this->get_notices();
+        $content .= $this->content ?? '';
         // $content = '<p>' . join( '</p><p>', array(
         //     _('This tool wil scan Robust configuration file to get your grid settings and generate helpers configuration files.'),
         //     _('It only needs to run once.'),
         //     _('When config is saved, you can (and should) delete install.php file.')
         // ) ) . '</p>';
 
-        $content .= $this->get_notices();
 
         $content .= $this->get_form('config');
 
@@ -253,8 +382,10 @@ class OpenSim_Install extends OpenSim_Page {
             return false;
         }
         $this->config = $ini->get_config();
-        $this->content .= '<pre>' . print_r( $this->config, true ) . '</pre>';
-        return true;
+        if ( $this->config ) {
+            $this->user_notice( _('Ini parsed successfully.'), 'success' );
+            return true;
+        }
     }
 }
 

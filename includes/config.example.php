@@ -21,6 +21,8 @@ define( 'OPENSIM_MAIL_SENDER', "no-reply@{$_SERVER['SERVER_NAME']}" );
 
 define( 'HYPEVENTS_URL', preg_replace( ':/$:', '', 'https://2do.directory/events' ) );
 
+define( 'ROBUST_CONSOLE', array() );
+
 /**
  * Main database.
  * For grids, use Robust database credentials.
