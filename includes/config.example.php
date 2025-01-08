@@ -21,7 +21,18 @@ define( 'OPENSIM_MAIL_SENDER', "no-reply@{$_SERVER['SERVER_NAME']}" );
 
 define( 'HYPEVENTS_URL', preg_replace( ':/$:', '', 'https://2do.directory/events' ) );
 
-define( 'ROBUST_CONSOLE', array() );
+/**
+ * Robust console settings.
+ * 
+ * It will allow more interactions with the Robust server in the future.
+ * e.g. access to some region information without requiring a direct connection
+ * to each simulator.
+ */
+define( 'ROBUST_CONSOLE', array(
+	// 'ConsoleUser' => 'user',
+	// 'ConsolePass' => 'password',
+	// 'ConsolePort' => 8004,
+) );
 
 /**
  * Main database.
@@ -36,11 +47,22 @@ define( 'ROBUST_CONSOLE', array() );
  * a multi-grid search engine). In this case search will only provide results
  * for places, land for sale and events.
  */
+
+// Main database is now set with ROBUST_DB constant. Use of OPENSIM_DB_* constants will be deprecated.
+define( 'ROBUST_DB', array (
+	'host' => 'localhost',
+	'port' => 3306,
+	'name' => 'opensim',
+	'user' => 'opensim',
+	'pass' => '',
+) );
+
 define( 'OPENSIM_DB', true ); // Set to false for search only, see above
-define( 'OPENSIM_DB_HOST', 'localhost' );
-define( 'OPENSIM_DB_NAME', 'opensim' );
-define( 'OPENSIM_DB_USER', 'opensim' );
-define( 'OPENSIM_DB_PASS', 'password' );
+define( 'OPENSIM_DB_HOST', ROBUST_DB['host'] );
+define( 'OPENSIM_DB_PORT', ROBUST_DB['port'] );
+define( 'OPENSIM_DB_NAME', ROBUST_DB['name'] );
+define( 'OPENSIM_DB_USER', ROBUST_DB['user'] );
+define( 'OPENSIM_DB_PASS', ROBUST_DB['pass'] );
 define( 'SEARCH_TABLE_EVENTS', 'events' );
 
 /**
@@ -53,10 +75,19 @@ define( 'SEARCH_TABLE_EVENTS', 'events' );
  *   - optional for closed grids and standalone simulators
  * These are recommendations, the Robust database can safely be used instead.
  */
-define( 'SEARCH_DB_HOST', OPENSIM_DB_HOST );
-define( 'SEARCH_DB_NAME', OPENSIM_DB_NAME );
-define( 'SEARCH_DB_USER', OPENSIM_DB_USER );
-define( 'SEARCH_DB_PASS', OPENSIM_DB_PASS );
+
+define( 'SEARCH_DB', array(
+	'host' => OPENSIM_DB_HOST,
+	'port' => null, // Leave null for default port
+	'name' => OPENSIM_DB_NAME,
+	'user' => OPENSIM_DB_USER,
+	'pass' => OPENSIM_DB_PASS,
+) );
+define( 'SEARCH_DB_HOST', SEARCH_DB['host'] );
+define( 'SEARCH_DB_PORT', SEARCH_DB['port'] );
+define( 'SEARCH_DB_NAME', SEARCH_DB['name'] );
+define( 'SEARCH_DB_USER', SEARCH_DB['user'] );
+define( 'SEARCH_DB_PASS', SEARCH_DB['pass'] );
 
 /**
  * Other registrars to forward hosts registrations (deprecated)
@@ -70,6 +101,7 @@ define( 'SEARCH_DB_PASS', OPENSIM_DB_PASS );
 define(
 	'SEARCH_REGISTRARS',
 	array(
+	// 'http://yourgrid.org/helpers/register.php',
 	// 'http://2do.directory/helpers/register.php',
 	// 'http://metaverseink.com/cgi-bin/register.py',
 	)
@@ -80,10 +112,19 @@ define(
  * Needed if currency is enabled on OpenSim server.
  * A dedicated database is recommended, but not mandatory.
  */
-define( 'CURRENCY_DB_HOST', OPENSIM_DB_HOST );
-define( 'CURRENCY_DB_NAME', OPENSIM_DB_NAME );
-define( 'CURRENCY_DB_USER', OPENSIM_DB_USER );
-define( 'CURRENCY_DB_PASS', OPENSIM_DB_PASS );
+define( 'CURRENCY_DB', array(
+	'host' => OPENSIM_DB_HOST,
+	'port' => null, // Leave null for default port
+	'name' => OPENSIM_DB_NAME,
+	'user' => OPENSIM_DB_USER,
+	'pass' => OPENSIM_DB_PASS,
+) );
+define( 'CURRENCY_DB_HOST', CURRENCY_DB['host'] );
+define( 'CURRENCY_DB_PORT', CURRENCY_DB['port'] );
+define( 'CURRENCY_DB_NAME', CURRENCY_DB['name'] );
+define( 'CURRENCY_DB_USER', CURRENCY_DB['user'] );
+define( 'CURRENCY_DB_PASS', CURRENCY_DB['pass'] );
+
 define( 'CURRENCY_MONEY_TBL', 'balances' );
 define( 'CURRENCY_TRANSACTION_TBL', 'transactions' );
 
@@ -112,10 +153,19 @@ if ( OPENSIM_USE_UTC_TIME ) {
  *
  * @var [type]
  */
-define( 'OFFLINE_DB_HOST', OPENSIM_DB_HOST );
-define( 'OFFLINE_DB_NAME', OPENSIM_DB_NAME );
-define( 'OFFLINE_DB_USER', OPENSIM_DB_USER );
-define( 'OFFLINE_DB_PASS', OPENSIM_DB_PASS );
+define( 'OFFLINE_DB', array(
+	'host' => OPENSIM_DB_HOST,
+	'port' => null, // Leave null for default port
+	'name' => OPENSIM_DB_NAME,
+	'user' => OPENSIM_DB_USER,
+	'pass' => OPENSIM_DB_PASS,
+) );
+define( 'OFFLINE_DB_HOST', OFFLINE_DB['host'] );
+define( 'OFFLINE_DB_PORT', OFFLINE_DB['port'] );
+define( 'OFFLINE_DB_NAME', OFFLINE_DB['name'] );
+define( 'OFFLINE_DB_USER', OFFLINE_DB['user'] );
+define( 'OFFLINE_DB_PASS', OFFLINE_DB['pass'] );
+
 define( 'OFFLINE_MESSAGE_TBL', 'im_offline' ); // Same DB as Offline Module V2?
 
 /**

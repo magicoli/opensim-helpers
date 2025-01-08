@@ -55,7 +55,19 @@ class OpenSim {
 			$pair              = explode( '=', $part );
 			$creds[ $pair[0] ] = $pair[1] ?? '';
 		}
-		return $creds;
+        if( preg_match( '/:[0-9]+$/', $creds['Data Source'] ) ) {
+            $host = explode( ':', $creds['Data Source'] );
+            $creds['Data Source'] = $host[0];
+            $creds['Port'] = empty( $host[1] || $host[1] == 3306 ) ? null : $creds['Port'];
+        }
+        $result = array(
+            'host' => $creds['Data Source'],
+            'port' => $creds['Port'],
+            'name' => $creds['Database'],
+            'user' => $creds['User ID'],
+            'pass' => $creds['Password'],
+        );
+		return $result;
 	}
 }
 
@@ -129,16 +141,21 @@ class OpenSim_Install extends OpenSim_Page {
         
         // Define mapping between config array keys and template constants
         $mapping = array(
-            'OPENSIM_GRID_NAME'          => $config['Const']['BaseURL'],
-            'OPENSIM_LOGIN_URI'          => $config['Const']['BaseURL'] . ':' . $config['Const']['PublicPort'],
-            'OPENSIM_MAIL_SENDER'        => "no-reply@" . parse_url($config['Const']['BaseURL'], PHP_URL_HOST),
-            'OPENSIM_DB'                 => 'true', // Example static value
-            'OPENSIM_DB_HOST'            => $robust_db['Data Source'],
-            'OPENSIM_DB_NAME'            => $robust_db['Database'],
-            'OPENSIM_DB_USER'            => $robust_db['User ID'],
-            'OPENSIM_DB_PASS'            => $robust_db['Password'],
-            'SEARCH_REGISTRARS'         => $registrars,
-            'ROBUST_CONSOLE'             => $console,
+            'OPENSIM_GRID_NAME'   => $config['Const']['BaseURL'],
+            'OPENSIM_LOGIN_URI'   => $config['Const']['BaseURL'] . ':' . $config['Const']['PublicPort'],
+            'OPENSIM_MAIL_SENDER' => "no-reply@" . parse_url($config['Const']['BaseURL'], PHP_URL_HOST),
+            'ROBUST_DB'           => $robust_db,
+            'OPENSIM_DB'          => true, // Changed from string to boolean
+            'OPENSIM_DB_HOST'     => $robust_db['host'],
+            'OPENSIM_DB_PORT'     => $robust_db['port'] ?? null,
+            'OPENSIM_DB_NAME'     => $robust_db['name'],
+            'OPENSIM_DB_USER'     => $robust_db['user'],
+            'OPENSIM_DB_PASS'     => $robust_db['pass'],
+            'SEARCH_REGISTRARS'   => $registrars,
+            'ROBUST_CONSOLE'     => $console,
+            'CURRENCY_NAME'       => $config['LoginService']['Currency'],
+            'CURRENCY_HELPER_URL' => $config['GridInfoService']['economy'],
+
             // Add more mappings as needed
         );
 
@@ -148,13 +165,18 @@ class OpenSim_Install extends OpenSim_Page {
 
             if (is_array($value)) {
                 $exported = var_export($value, true);
-                // Remove quotes for numbers
-                $exported = preg_replace('/\'(\d+)\'/', '$1', $exported);
+                // Remove quotes for numeric and boolean strings if necessary
+                $exported = preg_replace("/'([0-9]+)'/", '$1', $exported);
+                $exported = str_replace("'true'", 'true', $exported);
+                $exported = str_replace("'false'", 'false', $exported);
                 $replacement = "define( '{$constant}', {$exported} );";
-            } elseif (is_bool($value)) {
+            } else if( $value === null ) {
+                $exported = "NULL";
+                $replacement = "define( '{$constant}', {$exported} );";
+            } else if (is_bool($value)) {
                 $bool = $value ? 'true' : 'false';
                 $replacement = "define( '{$constant}', {$bool} );";
-            } elseif (is_numeric($value)) {
+            } else if (is_numeric($value)) {
                 $replacement = "define( '{$constant}', {$value} );";
             } else {
                 $replacement = "define( '{$constant}', '" . addslashes($value) . "' );";
