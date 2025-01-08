@@ -5,7 +5,8 @@ $content = $content ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 $sidebar_left = $sidebar_left ?? '';
 $sidebar_right = $sidebar_right ?? '';
-$footer = $footer ?? 'Footer';
+$version = $version ?? file_get_contents( dirname(__DIR__) . '/.version');
+$footer = $footer ?? sprintf( _('OpenSimulator Helpers %s'), $version );
 
 $menus['main'] = $menu ?? array(
     'home' => array(
@@ -42,13 +43,13 @@ $menus['user'] = array(
 );
 
 $menus['footer'] = array(
-    'privacy' => array(
-        'url' => '/privacy',
-        'label' => 'Privacy Policy',
+    'github' => array(
+        'url' => 'http://github.com/magicoli/opensim-helpers',
+        'label' => 'GitHub Repository',
     ),
-    'terms' => array(
-        'url' => '/terms',
-        'label' => 'Terms of Service',
+    'w4os' => array(
+        'url' => 'https://w4os.org',
+        'label' => 'W4OS Project',
     ),
 );
 
