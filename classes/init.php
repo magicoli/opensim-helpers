@@ -83,7 +83,7 @@ class OpenSim {
         return $dir;
     }
 
-    public function parse_args( $args, $defaults ) {
+    public static function parse_args( $args, $defaults ) {
         if( is_object( $args ) ) {
             $args = get_object_vars( $args );
         } elseif( is_array( $args ) ) {
@@ -127,10 +127,16 @@ class OpenSim {
     }
 
     public static function notify_error( $e, $message = '', $type = 'warning' ) {
-        $trace = $e->getTrace();
-        $message = empty( $message ) ? $trace[0]['function'] : '';
-        $message = ( empty( $message ) ? '' : $message . ': ' ) . $e->getMessage();
-        self::notify( $message, $type );
+        if( is_string ( $e ) ) {
+            $message = $e ?? _('Empty message');
+            self::notify( $message, $type );
+        } else if ( is_callable( $e, 'getTrace' ) ) {
+            $trace = $e->getTrace();
+            $message = empty( $message ) ? $trace[0]['function'] : '';
+            $message = ( empty( $message ) ? '' : $message . ': ' ) . $e->getMessage();
+        } else {
+            self::notify( _( 'Unknown error ' ), $type );
+        }
     }
 
     public static function notify( $message, $type = 'info' ) {
@@ -151,6 +157,42 @@ class OpenSim {
                 $notice['message']
             );
         }
+        return $html;
+    }
+
+    public static function validate_error_type( $type, $fallback = 'light' ) {
+        $type = in_array( $type, array(
+            'primary',
+            'secondary',
+            'success',
+            'danger',
+            'warning',
+            'info',
+            'light',
+            'dark',
+        ) ) ? $type : $fallback;
+        return $type;
+    }
+
+    public static function validate_error ( $error, $type = 'light' ) {
+        if( is_string( $error )) {
+            $error = array( 'message', $error );
+        }
+        $error = self::parse_args( $error, array(
+            'message' => _('Error'),
+            'type' => $type,
+        ));
+        $error['type'] = self::validate_error_type( $error['type'], $type );
+        return $error;
+    }
+
+    public static function error_html( $error, $type = null ) {
+        $error = self::validate_error( $error, $type );
+        $html = sprintf(
+            '<div class="text-%s">%s</div>',
+            $error['type'],
+            $error['message'],
+        );
         return $html;
     }
 }
