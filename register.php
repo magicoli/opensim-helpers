@@ -78,10 +78,19 @@ switch ( $service ) {
 		break;
 }
 
-if ( is_array( SEARCH_REGISTRARS ) & ! empty( $hostname ) & ! empty( $port ) & ! empty( $service ) ) {
-	$querystring = getenv( 'QUERY_STRING' );
-	foreach ( SEARCH_REGISTRARS as $registrar ) {
-		$result = file_get_contents( "$registrar?$querystring" );
-	}
-}
+/**
+ * Deprecated since 0.9.0. Multiple registrars can be set directly from OpenSim config.
+ * This would create duplicate registration requests, and worst, an infinite loop 
+ * if this service url is included in the array.
+ * 
+ * Could be re-enabled with a specific option like FORWARD_TO_REGISTRARS, but only 
+ * with a strict test to ensure we don't call ourselves again and no registrar is
+ * called both from robust and this script.
+ */
+// if ( is_array( SEARCH_REGISTRARS ) & ! empty( $hostname ) & ! empty( $port ) & ! empty( $service ) ) {
+// 	$querystring = getenv( 'QUERY_STRING' );
+// 	foreach ( SEARCH_REGISTRARS as $registrar ) {
+// 		$result = file_get_contents( "$registrar?$querystring" );
+// 	}
+// }
 die;

@@ -59,9 +59,9 @@ define( 'SEARCH_DB_USER', OPENSIM_DB_USER );
 define( 'SEARCH_DB_PASS', OPENSIM_DB_PASS );
 
 /**
- * Other registrars to forward hosts registrations.
+ * Other registrars to forward hosts registrations (deprecated)
  *
- * This method is not needed as with current OpenSim server (0.9.x) which allow
+ * This method is not needed since OpenSim server (0.9.x) which allow
  * specifying multiple registrars, but could be used in the future to implement
  * peer to peer information sharing.
  *
