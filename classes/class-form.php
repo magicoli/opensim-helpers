@@ -13,7 +13,7 @@
  *          'html' => html code
  *          'callback' => callback to call to process form
  * )
- * - get_html()     return the form html code
+ * - render_form()     return the form html code
  * - get_values()   return an array of field_id => value pairs
  * - get_fields()   return the array of defined fields 
  * - process()      process the form callback
@@ -30,6 +30,7 @@ class OpenSim_Form {
     private static $forms = array();
     private $errors;
     private $html;
+    private $completed;
 
     public function __construct($args = array(), $step = 0) {
         if (!is_array($args)) {
@@ -45,8 +46,10 @@ class OpenSim_Form {
         $this->form_id = $args['form_id'];
         $this->add_fields($args['fields']);
         $this->callback = $args['callback'];
+        $this->steps = $args['steps'] ?? false;
 
         self::$forms[$this->form_id] = $this;
+        // $this->refresh_steps();
     }
 
     /**
@@ -83,12 +86,11 @@ class OpenSim_Form {
 
     public function render() {
         if( ! empty( $this->html )) {
-            error_log( 'return previously rendered html');
             return $this->html;
         }
         $fields = $this->fields;
         if( empty( $fields )) {
-            error_log( 'empty fields' );
+            error_log( __METHOD__ . ' called with empty fields' );
             return false;
         }
         
@@ -159,8 +161,7 @@ class OpenSim_Form {
     }
 
     // Get the form HTML
-    public function get_html() {
-        // Implement form rendering logic
+    public function render_form() {
         return $this->render();
     }
 
@@ -192,5 +193,111 @@ class OpenSim_Form {
 
     public function get_forms() {
         return self::$forms ?? false;
+    }
+
+    /**
+     * Use the value of $this->complete as last completed step, get the next step and 
+     * build a navigation html.
+     */
+    private function refresh_steps() {
+        if( empty( $this->steps )) {
+            return false;
+        }
+
+        $steps = $this->steps;
+        if( ! empty($_POST['form_id']) ) {
+            $form_id = $_POST['form_id'];
+            $form = self::$forms[$form_id];
+            if( $form ) {
+                $form->process();
+            } else {
+                error_log( __METHOD__ . ' Form ' . $form_id . ' is not registered' );
+                return false;
+            }
+        }
+        $current_step = array_search($this->completed, array_keys($steps));
+        if( empty( $this->completed ) ) {
+            $next_step_key = key($steps);
+            $next_step_label = $steps[$next_step_key];
+        } else {
+            $next_step_key = array_keys($steps)[$current_step + 1] ?? null;
+            if( empty($steps[$next_step_key])) {
+                $next_step_key='completed';
+                $next_step_label = _('Completed');
+            } else {
+                $next_step_label = $steps[$next_step_key] ?? null;
+            }
+        }
+        // $this->next_step = $next_step_label;
+        $this->next_step_key = $next_step_key;
+
+        // Set progression table
+        $progress = array();
+        $status = 'completed';
+        foreach( $steps as $key => $step ) {
+            if( $key == $next_step_key ) {
+                $progress[$key] = 'active';
+                $status = '';
+            } else {
+                $progress[$key] = $status;
+            }
+        }
+        $this->progression = $progress;
+    }
+
+    /**
+     * Build HTML progress bar with bootstrap classes
+     */
+    public function render_progress() {
+        $this->refresh_steps();
+
+        if( empty( $this->steps )) {
+            return false;
+        }
+
+        $steps = $this->steps;
+        $progress = $this->progression;
+
+        $status = 'completed';
+        $html = '<ul class="nav nav-tabs nav-fill">';
+        foreach( $steps as $key => $step ) {
+            $status = $progress[$key] ?? 'disabled';
+            $label = $steps[$key];
+            $style = '';
+            switch( $status ) {
+                case 'completed':
+                    $status .= ' success';
+                    $label .= ' &#10003;';
+                    $style = 'style="color:green"';
+                    break;
+                case 'active':
+                    $status = 'active bg-light';
+                    $style = 'style="font-weight:bold"';
+
+                    break;
+            }
+            $status = empty($status) ? 'disabled' : $status;
+            // if( $key == $next_step_key ) {
+            //     $progress[$key] = 'active';
+            //     $status = '';
+            // } else {
+            //     $progress[$key] = $status;
+            // }
+            // '<div class="progress-bar progress-bar-striped progress-bar-animated bg-%s" role="progressbar" style="width: 20%%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">%s</div>',
+            $html .= sprintf( '<li class="nav-item">
+                <a class="nav-link %s" aria-current="page" href="#" %s>%s</a>
+                </li>',
+                $status,
+                $style,
+                $label,
+            );
+        }
+        $html .= '</ul>';
+        return $html;
+    }
+
+    public function complete( $step ) {
+        $this->completed = $step;
+        $this->refresh_steps();
     }
 }

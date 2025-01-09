@@ -21,7 +21,6 @@ class OpenSim_Install extends OpenSim_Page {
     private $errors = array();
     private $forms = array();
     private $ini;
-    private $completed; // Temporary value for debug
     private $form;
 
     public function __construct() {
@@ -31,12 +30,13 @@ class OpenSim_Install extends OpenSim_Page {
 
         $this->page_title = _('Helpers Installation');
 
-        $this->register_form_config_robust();
+        $this->register_form_installation();
 
-        $this->get_steps();
+        // $this->refresh_steps();
 
         // if( $next_step == 'config_robust' ) {
-        $form = $this->forms['config_robust'];
+        $form = $this->form;
+
         if( ! $form ) {
             OpenSim::notify_error( 'Could not create form');
         } else {
@@ -46,61 +46,30 @@ class OpenSim_Install extends OpenSim_Page {
                 OpenSim::notify_error($e, 'Could not process form' );
             }
 
-            if ($values === null || $values === false) {
-                $this->content .= $form->get_html();
-            } else {
-                OpenSim::notify('Form processed');
-                // $this->generate_php_config();
+            if ( $values === false ) {
+                OpenSim::notify_error('Form not validated');
+                $this->content .= $form->render_form();
+            } else if ( ! empty( $values ) ) {
+                $result = $this->process_ini();
+                if( ! $result ) {
+                    OpenSim::notify_error('Could not process ini file');
+                } else {
+                    $result = $this->generate_php_config();
+                    if( ! $result ) {
+                        OpenSim::notify_error('Could not generate config file');
+                    } else {
+                        OpenSim::notify('Robust configuration completed', 'success');
+                    }
+                }
             }
         }
 
         $this->content = $this->render_content();
     }
 
-    /**
-     * Use the value of $this->complete as last completed step, get the next step and 
-     * build a navigation html.
-     */
-    private function get_steps() {
-        $steps = array(
-            'config_robust' => _('Configure Robust'), // Get Robust.ini path and process it, skip for standalone grids
-            'config_opensim' => _('Configure OpenSim.ini'), // Get OpenSim.ini file and process it
-            'config_others' => _('Get additional ini files'), // according to Robust/OpenSim settings, e.g. MoneyServer.ini, Gloebit.ini...
-            'config_helpers' => _('Helpers config'), // additional settings specific to helpers, not in ini files, e.g. OSSEARCH_DB
-            'validation' => _('Validation')
-        );
-        if( ! empty($_POST['form_id']) ) {
-            $form_id = $_POST['form_id'];
-            $form = $this->forms[$form_id];
-            if( $form ) {
-                error_log( __METHOD__ . ' processing form ' . $form_id );
-                $form->process();
-            } else {
-                error_log( 'Form ' . $form_id . ' is not registered' );
-            }
-        }
-        $current_step = array_search($this->completed, array_keys($steps));
-        if( empty( $current_step )) {
-            $next_step_key = key($steps);
-            $next_step = $steps[$next_step_key];
-        } else {
-            $next_step_key = array_keys($steps)[$current_step + 1] ?? null;
-            if( empty($steps[$next_step_key])) {
-                $next_step_key='completed';
-                $next_step = _('Completed');
-            } else {
-                $next_step = $steps[$next_step_key] ?? null;
-            }
-        }
-
-        // TODO: build steps navigation and save in $this->step_navigation
-
-        OpenSim::notify( "current_step $current_step Next step $next_step_key $next_step" );
-    }
-
     private function generate_php_config() {
         $template = 'includes/config.example.php';
-        if (!file_exists($template)) {
+        if ( ! file_exists( $template )) {
             OpenSim::notify(_('Template file not found.'), 'error');
             return false;
         }
@@ -112,6 +81,10 @@ class OpenSim_Install extends OpenSim_Page {
             return false;
         }
         $config = $this->config;
+        if( empty( $config ) ) {
+            OpenSim::notify_error(_('No configuration found.'), 'error');
+            return false;
+        }
         $robust_db = OpenSim::connectionstring_to_array($config['DatabaseService']['ConnectionString']);
 
         $registrars = array(
@@ -142,8 +115,8 @@ class OpenSim_Install extends OpenSim_Page {
             'OPENSIM_DB_PASS'     => $robust_db['pass'],
             'SEARCH_REGISTRARS'   => $registrars,
             'ROBUST_CONSOLE'     => $console,
-            'CURRENCY_NAME'       => $config['LoginService']['Currency'],
-            'CURRENCY_HELPER_URL' => $config['GridInfoService']['economy'],
+            'CURRENCY_NAME'       => $config['LoginService']['Currency'] ?? 'L$',
+            'CURRENCY_HELPER_URL' => $config['GridInfoService']['economy'] ?? '',
 
             // Add more mappings as needed
         );
@@ -181,8 +154,8 @@ class OpenSim_Install extends OpenSim_Page {
             OpenSim::notify_error($e, 'Error writing configuration file');
             return false;
         }
-
         OpenSim::notify(_('Configuration file generated successfully.'), 'success');
+        $this->form->complete('config_robust');
         return true;
     }
 
@@ -195,7 +168,7 @@ class OpenSim_Install extends OpenSim_Page {
             error_log( __FUNCTION__ . ' ERROR: Missing form ID.' );
             return false;
         }
-        $form = $this->forms[$form_id] ?? null;
+        $form = $this->form ?? null;
         if( empty( $form ) ) {
             error_log( __FUNCTION__ . ' ERROR: Form empty.' );
             return false;
@@ -210,11 +183,11 @@ class OpenSim_Install extends OpenSim_Page {
         }
     }
 
-    public function process_form_config_robust() {
-        $form_id='config_robust';
-        $form = $this->forms[$form_id] ?? false;
+    public function process_form_installation() {
+        $form_id='installation';
+        $form = $this->form ?? false;
         if( ! $form ) {
-            error_log( __FUNCTION__ . ' form not set' );
+            error_log( __FUNCTION__ . ' form not set ' . print_r( $this->forms, true ) );  
             return false;
         }
         $values = $form->get_values();
@@ -241,18 +214,8 @@ class OpenSim_Install extends OpenSim_Page {
             $form->error('config_file', _('A file must be specified'));
             $errors++;
         }
-                
-        error_log( '<pre>
-        ' . print_r($values, true) . '
-        $this->ini_path ' . ( $this->ini_path ?? 'not set') . '
-        $this->config_file ' . ( $this->config_file ?? 'not set' ) . '
-        </pre>' );
 
-        // $this->ini_path = $values['ini_path'] ?? '';
-        // $this->config_file = $values['config_file'] ?? '';
-        
-
-        return false;
+        return ( $errors > 0 ) ? false : true;
     }
 
     private function register_form( $form_id, $fields ) {
@@ -260,11 +223,12 @@ class OpenSim_Install extends OpenSim_Page {
             error_log( __FUNCTION__ . ' ERROR: Missing form ID or fields.' );
             return false;
         }
-        $this->forms[$form_id] = $fields;
+        $this->form = $fields;
     }
 
-    private function register_form_config_robust() {
-        $form_id = 'config_robust';
+    private function register_form_installation() {
+        $form_id = 'installation';
+
         $fields = array(
             'ini_path' => array(
                 'label' => _('Robust .ini file path'),
@@ -284,21 +248,36 @@ class OpenSim_Install extends OpenSim_Page {
                 'help' => _('This file will be created or replaced with the settings found in the .ini file.'),
             ),
         );
-        $this->forms[$form_id] = OpenSim_Form::register(array(
+
+        $steps = array(
+            'config_robust' => _('Setup Robust'), // Get Robust.ini path and process it, skip for standalone grids
+            'config_opensim' => _('Setup OpenSim'), // Get OpenSim.ini file and process it
+            'config_others' => _('Get additional files'), // according to Robust/OpenSim settings, e.g. MoneyServer.ini, Gloebit.ini...
+            'config_helpers' => _('Setup Helpers'), // additional settings specific to helpers, not in ini files, e.g. OSSEARCH_DB
+            'validation' => _('Validation')
+        );
+
+        $form = OpenSim_Form::register(array(
             'form_id' => $form_id,
             'fields' => $fields,
-            'callback' => [$this, 'process_form_config_robust']
+            'callback' => [$this, 'process_form_installation'],
+            'steps' => $steps,
         ));
-        return $this->forms[$form_id];
+        if( ! $form ) {
+            error_log( __FUNCTION__ . ' form registration failed' );
+            return false;
+        }
+        $this->form = $form;
+        return $form;
     }
 
-    public function get_html( $form_id = null ) {
-        $form = $this->forms[$form_id] ?? false;
+    public function render_form( $form_id = null ) {
+        $form = $this->form ?? false;
         if ( $form ) {
-            return $form->get_html();
+            return $form->render_form();
         }
         // if( $this->form ) {
-        //     return OpenSim_Form::get_html( $form_id );
+        //     return OpenSim_Form::render_form( $form_id );
         // }
 
         return false;
@@ -307,7 +286,7 @@ class OpenSim_Install extends OpenSim_Page {
         //     OpenSim::notify( sprintf( _('%s submitted without form ID.'), __FUNCTION__ ), 'error' );
         //     return null;
         // }
-        // if( empty( $this->forms[$form_id] ) ) {
+        // if( empty( $this->form ) ) {
         //     OpenSim::notify( sprintf( _('Form %s not registered.'), $form_id ), 'error' );
         //     return null;
         // }
@@ -316,8 +295,11 @@ class OpenSim_Install extends OpenSim_Page {
     }
 
     public function render_content() {
-        $content = OpenSim::get_notices() . ( $this->content ?? '' );
-        // $content .= $this->forms_html;
+
+        $content = OpenSim::get_notices();
+        $content .= $this->form->render_progress();
+        $content .= $this->form->render_form();
+        $content .= ( $this->content ?? '' );
 
         return $content;
     }
@@ -326,7 +308,12 @@ class OpenSim_Install extends OpenSim_Page {
      * Read the ini file and store config in an array.
      */
     public function process_ini() {
-        $ini = new OpenSim_Ini( $this->ini_path );
+        try {
+            $ini = new OpenSim_Ini( $this->ini_path );
+        } catch (Error $e) {
+            OpenSim::notify_error($e, 'Error creating ini object');
+            return false;
+        }
         if ( ! $ini ) {
             OpenSim::notify( _('Error parsing file.'), 'error' );
             return false;
@@ -335,6 +322,9 @@ class OpenSim_Install extends OpenSim_Page {
         if ( $this->config ) {
             OpenSim::notify( _('Ini parsed successfully.'), 'success' );
             return true;
+        } else {
+            OpenSim::notify( _('Error parsing file.'), 'error' );
+            return false;
         }
     }
 }
