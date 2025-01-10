@@ -114,8 +114,11 @@ class OpenSim_Form {
 
         $form_id = $this->form_id;
 
-        // Add Reset button if session is not empty
-        $reset_button = ( empty($_SESSION[$form_id])) ? '' : '<button type="submit" name="reset" class="btn btn-secondary bg-black-50 mx-2">Reset Form</button>';
+        // Update Reset button to remain a submit button and bypass validation
+        $reset_button = ( empty($_SESSION[$form_id])) ? '' : sprintf(
+            '<button type="submit" name="reset" formnovalidate class="btn btn-secondary bg-black-50 mx-2">%s</button>',
+            _( 'Reset Form' )
+        );
         
         if( empty( $fields ) && empty( $reset_button ) ) {
             error_log( __METHOD__ . ' called with empty fields' );
