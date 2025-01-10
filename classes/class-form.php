@@ -31,6 +31,8 @@ class OpenSim_Form {
     private $errors;
     private $html;
     private $completed;
+    private $multistep;
+    public $tasks;
 
     public function __construct($args = array(), $step = 0) {
         if (!is_array($args)) {
@@ -42,12 +44,15 @@ class OpenSim_Form {
             'form_id' => uniqid('form-', true),
             'fields' => array(),
             'callback' => null,
+            'multistep' => false,
         ));
         $this->form_id = $args['form_id'];
-        $this->add_fields($args['fields']);
-        $this->callback = $args['callback'];
+        $this->multistep = $args['multistep'];
         $this->steps = $args['steps'] ?? false;
+        $this->callback = $args['callback'];
+        $this->add_fields($args['fields']);
 
+        $this->completed = $_SESSION[$this->form_id]['completed'] ?? $this->completed;
         self::$forms[$this->form_id] = $this;
         // $this->refresh_steps();
     }
@@ -70,37 +75,63 @@ class OpenSim_Form {
         }
     }
 
+    public function add_steps($steps) {
+        if( empty( $steps )) {
+            return false;
+        }
+        $this->steps = OpenSim::parse_args( $steps, $this->steps );
+    }
+
     public function add_fields( $fields) {
         if( empty( $fields )) {
             return;
         }
         $this->fields = OpenSim::parse_args( $fields, $this->fields );
+        $this->get_next_step();
     }
 
-    public function error( $field_id, $message, $type = 'warning' ) {
+    public function task_error( $field_id, $message, $type = 'warning' ) {
         $this->errors[$field_id] = array(
             'message' => $message ?? 'Error',
             'type' => empty( $type ) ? 'warning' : $type,
         );
     }
 
-    public function render() {
+    public function render_form() {
         if( ! empty( $this->html )) {
             return $this->html;
         }
-        $fields = $this->fields;
-        if( empty( $fields )) {
+        if( $this->multistep ) {
+            $this->refresh_steps();
+            $fields = $this->get_step_fields() ?? array();
+            if( ! is_array( $fields )) {
+                error_log( __METHOD__ . ' wrong field format ' );
+                return false;
+            }
+        } else {
+            $fields = $this->fields;
+        }
+
+        $form_id = $this->form_id;
+
+        // Add Reset button if session is not empty
+        $reset_button = ( empty($_SESSION[$form_id])) ? '' : '<button type="submit" name="reset" class="btn btn-secondary bg-black-50 mx-2">Reset Form</button>';
+        
+        if( empty( $fields ) && empty( $reset_button ) ) {
             error_log( __METHOD__ . ' called with empty fields' );
             return false;
         }
         
         $html = '';
-        
+        $fields = empty($fields) ? array() : $fields;
         foreach ( $fields as $field => $data ) {
             $add_class = '';
             if( ! empty( $this->errors[$field] ) ) {
-                $data['help'] = OpenSim::error_html( $this->errors[$field], 'warning' ) . $data['help'];
-                $add_class .= ' is-invalid';
+                $field_error = $this->errors[$field];
+                $data['help'] = OpenSim::error_html( $field_error, 'warning' ) . $data['help'];
+                if( $field_error['type'] == 'danger' ) {
+                    $add_class .= ' is-invalid';
+                }
             }
             $add_attrs = '';
             $add_attrs .= isset( $data['readonly'] ) && $data['readonly'] ? ' readonly' : '';
@@ -126,18 +157,26 @@ class OpenSim_Form {
             );
         }
 
-        if( empty( $html )) {
-            return null;
-        }
-
-        $submit = sprintf(
-            '<input type="hidden" name="form_id" value="%s">'
-            . '<div class="form-group py-4 text-end"><button type="submit" class="btn btn-primary">%s</button></div>',
-            $this->form_id,
+        $submit = empty( $html ) ? '' : sprintf(
+            '<button type="submit" class="btn btn-primary">%s</button>',
             _('Submit')
         );
 
-        $html = '<form id="' . $this->form_id . '" method="post" action="' . $_SERVER['PHP_SELF'] . '" class="bg-light p-4">' . $html . $submit . '</form>';
+        $buttons = sprintf(
+            '<input type="hidden" name="form_id" value="%s">'
+            . '<input type="hidden" name="step_key" value="%s">'
+            . '<div class="form-group text-end">%s</div>',
+            $this->form_id,
+            $this->next_step_key ?? '',
+            $reset_button . $submit
+        );
+        $html = sprintf(
+            '<form id="%s" method="post" action="%s" class="bg-light p-4">%s</form>',
+            $this->form_id,
+            $_SERVER['PHP_SELF'],
+            $html . $buttons
+        );
+
         $this->html = $html;
         return $html;
     }
@@ -160,11 +199,6 @@ class OpenSim_Form {
         }
     }
 
-    // Get the form HTML
-    public function render_form() {
-        return $this->render();
-    }
-
     /**
      * Get values from fields definition and post.
      * 
@@ -173,10 +207,29 @@ class OpenSim_Form {
      * compare old and new value in the process() method called later.
      */
     public function get_values() {
-        foreach( $this->fields as $key => $field ) {
-            $values[$key] = $_POST[$key] ?? $field['value'] ?? null;
+        $form_id = $this->form_id;
+        $values = array();
+        if( $this->multistep ) {
+            $fields = $this->get_step_fields() ?? array();
+            if( ! is_array( $fields )) {
+                error_log( __METHOD__ . ' wrong field format ' );
+                return false;
+            }
+        } else {
+            $fields = $this->fields;
+        }
+        // error_log( 'Fields: ' . print_r( $fields, true ) );
+        foreach( $fields as $key => $field ) {
+            $values[$key] = $_POST[$key] ?? $_SESSION[$form_id][$key] ?? $field['value'] ?? null;
         }
         return $values;
+    }
+
+    private function get_step_fields() {
+        if( ! isset( $this->next_step_key ) || ! isset( $this->fields[$this->next_step_key] ) ) {
+            return array();
+        }
+        return $this->fields[$this->next_step_key];
     }
 
     // Get defined fields
@@ -195,6 +248,29 @@ class OpenSim_Form {
         return self::$forms ?? false;
     }
 
+    public function get_next_step() {
+        if( empty( $this->steps )) {
+            return false;
+        }
+        $steps = $this->steps;
+        $current_step = array_search($this->completed, array_keys($steps));
+        if( empty( $this->completed ) ) {
+            $next_step_key = key($steps);
+            $next_step_label = $steps[$next_step_key];
+        } else {
+            $next_step_key = array_keys($steps)[$current_step + 1] ?? null;
+            if( empty($steps[$next_step_key])) {
+                $next_step_key='completed';
+                $next_step_label = _('Completed');
+            } else {
+                $next_step_label = $steps[$next_step_key] ?? null;
+            }
+        }
+        // $this->next_step = $next_step_label;
+        $this->next_step_key = $next_step_key;
+        $this->tasks = $this->steps[$next_step_key]['tasks'] ?? false;
+        return $this->next_step_key;
+    }
     /**
      * Use the value of $this->complete as last completed step, get the next step and 
      * build a navigation html.
@@ -215,21 +291,7 @@ class OpenSim_Form {
                 return false;
             }
         }
-        $current_step = array_search($this->completed, array_keys($steps));
-        if( empty( $this->completed ) ) {
-            $next_step_key = key($steps);
-            $next_step_label = $steps[$next_step_key];
-        } else {
-            $next_step_key = array_keys($steps)[$current_step + 1] ?? null;
-            if( empty($steps[$next_step_key])) {
-                $next_step_key='completed';
-                $next_step_label = _('Completed');
-            } else {
-                $next_step_label = $steps[$next_step_key] ?? null;
-            }
-        }
-        // $this->next_step = $next_step_label;
-        $this->next_step_key = $next_step_key;
+        $next_step_key = $this->get_next_step();
 
         // Set progression table
         $progress = array();
@@ -262,13 +324,13 @@ class OpenSim_Form {
         $html = '<ul class="nav nav-tabs nav-fill">';
         foreach( $steps as $key => $step ) {
             $status = $progress[$key] ?? 'disabled';
-            $label = $steps[$key];
+            $label = $steps[$key]['label'] ?? $key;
             $style = '';
             switch( $status ) {
                 case 'completed':
-                    $status .= ' success';
+                    $status .= ' text-success';
                     $label .= ' &#10003;';
-                    $style = 'style="color:green"';
+                    // $style = 'style="color:green"';
                     break;
                 case 'active':
                     $status = 'active bg-light';
@@ -298,6 +360,7 @@ class OpenSim_Form {
 
     public function complete( $step ) {
         $this->completed = $step;
+        $_SESSION[$this->form_id]['completed'] = $step;
         $this->refresh_steps();
     }
 }

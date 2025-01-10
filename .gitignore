@@ -8,3 +8,5 @@ tmp/
 includes/config.php
 /vendor/
 wp-load.php
+*.temp
+*.tmp

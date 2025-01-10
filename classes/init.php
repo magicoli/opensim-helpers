@@ -9,6 +9,11 @@
  * @package magicoli/opensim-helpers
  */
 
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 class OpenSim {
     private static $tmp_dir;
     private static $user_notices = array();
@@ -84,6 +89,9 @@ class OpenSim {
     }
 
     public static function parse_args( $args, $defaults ) {
+        if( empty( $defaults ) ) {
+            $defaults = array();
+        }
         if( is_object( $args ) ) {
             $args = get_object_vars( $args );
         } elseif( is_array( $args ) ) {
@@ -127,16 +135,24 @@ class OpenSim {
     }
 
     public static function notify_error( $e, $message = '', $type = 'warning' ) {
+        if( empty($e) ) {
+            return;
+        }
         if( is_string ( $e ) ) {
+            $type = $message;
             $message = $e ?? _('Empty message');
             self::notify( $message, $type );
-        } else if ( is_callable( $e, 'getTrace' ) ) {
+        } else if ( $e instanceof Error ) {
             $trace = $e->getTrace();
-            $message = empty( $message ) ? $trace[0]['function'] : '';
+            $origin = $trace[0];
+            $message = empty( $message ) ? ( $origin ?? '' ) : '';
             $message = ( empty( $message ) ? '' : $message . ': ' ) . $e->getMessage();
+            self::notify( $message, $type );
         } else {
+            $message = 'Unidentified error type: ' . gettype( $e ) . ' ' . print_r( $e, true );
             self::notify( _( 'Unknown error ' ), $type );
         }
+        error_log( $message );
     }
 
     public static function notify( $message, $type = 'info' ) {
@@ -151,16 +167,33 @@ class OpenSim {
         $html = '';
         foreach( self::$user_notices as $key => $notice ) {
             $type = $notice['type'] ?? 'info';
-            $html .= sprintf(
-                '<div class="alert alert-%s">%s</div>',
-                $type,
-                $notice['message']
-            );
+            switch( $type ) {
+                case 'task-checked':
+                    $html .= sprintf(
+                        '<div class="form-check %s">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked readonly>
+                            <label class="form-check-label" for="flexCheckChecked">
+                                %s
+                            </label>
+                        </div>',
+                        $type,
+                        $notice['message']
+                    );
+                    break;
+
+                    default:
+                    $html .= sprintf(
+                        '<div class="alert alert-%s my-4">%s</div>',
+                        $type,
+                        $notice['message']
+                    );
+            }
         }
         return $html;
     }
 
     public static function validate_error_type( $type, $fallback = 'light' ) {
+        $given = $type;
         $type = in_array( $type, array(
             'primary',
             'secondary',
@@ -194,6 +227,43 @@ class OpenSim {
             $error['message'],
         );
         return $html;
+    }
+
+    /**
+     * Log message to error_log, adding calling [CLASS] and function before message, and severity if given
+     */
+    public static function log( $message, $severity = none ) {
+        $caller = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 2 );
+        $caller = $caller[1];
+        $class = $caller['class'] ?? '';
+        $function = $caller['function'] ?? '';
+        $message = sprintf(
+            '[%s%s%s] %s%s',
+            $class,
+            empty( $class ) ? '' : '::',
+            $function,
+            empty( $severity ) ? '' : strtoupper( $severity ) . ' ',
+            $message
+        );
+        // Add severity if given
+        error_log( $message );
+    }
+
+    public static function callback_name_string( $callback ) {
+        if( is_string( $callback ) ) {
+            return $callback;
+        }
+        if( is_array( $callback ) && is_object( $callback[0] ) ) {
+            $callback_name = get_class($callback[0]) . '::' . $callback[1];
+            return $callback_name;
+        }
+        if( is_array( $callback ) ) {
+            return $callback[0] . '::' . $callback[1];
+        }
+        if( is_object( $callback ) ) {
+            return get_class( $callback );
+        }
+        return 'Unknown';
     }
 }
 
