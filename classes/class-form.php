@@ -180,6 +180,8 @@ class OpenSim_Form {
             $html . $buttons
         );
 
+        OpenSim::enqueue_script( 'form', 'js/form.js' );
+
         $this->html = $html;
         return $html;
     }

@@ -17,6 +17,8 @@ if (session_status() == PHP_SESSION_NONE) {
 class OpenSim {
     private static $tmp_dir;
     private static $user_notices = array();
+    private static $version;
+    private static $scripts;
 
     public function __construct() {
     }
@@ -32,30 +34,39 @@ class OpenSim {
         }
         define( 'OSHELPERS', true );
         define( 'OSHELPERS_DIR', self::trailingslashit( dirname( __DIR__ ) ) );
-        define( 'OSHELPERS_URL', ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]" );
+        define( 'OSHELPERS_URL', self::get_helpers_url() );
+        // ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]" );
+
+    }
+
+    public function get_helpers_url() {
+        $helpers_path = dirname( __DIR__ );
+        $url_path = self::trailingslashit( str_replace( $_SERVER['DOCUMENT_ROOT'], '', $helpers_path ) );
+
+        $parsed = array(
+            'scheme' => isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http',
+            'host' => $_SERVER['HTTP_HOST'],
+        );
+        $url = self::build_url( $parsed ) . ltrim( $url_path );
+
+        return $url;
     }
 
     public function includes() {
     }
 
-    private static function set_version() {
-        if( file_exists( OSHELPERS_DIR . '.version' ) ) {
-            $version = file_get_contents( '.version' );
-        }
-        
-        // Get version from .git/HEAD file.
-        if( file_exists( OSHELPERS_DIR . '.git/HEAD' ) ) {
-            $version .= ' (git ' . trim(preg_replace('%.*/%', '', file_get_contents( '.git/HEAD' ) ) ) . ')';
-        }
-        $this->version = $version;
-        return $version;
-    }
-
-    public static function get_version() {
-        if( isset( self::$version ) ) {
+    private static function get_version() {
+        if( self::$version ) {
             return self::$version;
         }
-        return self::set_version();
+        if( file_exists( OSHELPERS_DIR . '.version' ) ) {
+            $version = file_get_contents( '.version' );
+        } else {
+            $version = '0.0.0';
+        }
+
+        self::$version = $version;
+        return $version;
     }
 
     public static function get_temp_dir( $dir = false ) {
@@ -264,6 +275,89 @@ class OpenSim {
             return get_class( $callback );
         }
         return 'Unknown';
+    }
+
+    /**
+     * Basic function to replace WP enqueue_script when not in WP environment.
+     * Add the script to a private property that will be used with another method to output all scripts.
+     * Use OSHELPERS_URL constant to build the URL unless it's already full.
+     * Use self::get_version() to define the version of the script unless it is already defined.
+     */
+    public static function enqueue_script( $handle, $src, $deps = array(), $ver = false, $in_footer = false ) {
+        if( ! file_exists( $src ) ) {
+            error_log( __FUNCTION__ . ' file not found: ' . $src );
+            return false;
+        }
+
+        $handle = preg_match( '/^oshelpers-/', $handle ) ? $handle : 'oshelpers-' . $handle;
+
+        self::$scripts = self::$scripts ?? array( 'head' => array(), 'footer' => array() );
+        if( strpos( $src, '://' ) === false ) {
+            $src = OSHELPERS_URL . ltrim( $src, '/' );
+        }
+        $src = self::add_query_args( $src, array( 'ver' => self::get_version() ) );
+        $section = $in_footer ? 'footer' : 'head';
+        self::$scripts[$section][$handle] = array(
+            'src' => $src,
+            'deps' => $deps,
+            'ver' => $ver ?? self::get_version(),
+            'in_footer' => $in_footer,
+        );
+    }
+
+    public static function build_url( $parsed ) {
+        if( empty( $parsed['host'] ) ) {
+            $url = '';
+        } else {
+            $url = ( $parsed['scheme'] ?? 'https' ) . '://' . $parsed['host'];
+        }
+        $url .= $parsed['path'] ?? '';
+        if( ! empty( $parsed['query'] ) ) {
+            $url .= '?' . $parsed['query'];
+        }
+        return $url;
+    }
+
+    public static function add_query_args( $url, $args ) {
+        $parsed = parse_url( $url );
+        $query = $parsed['query'] ?? '';
+        $query = self::parse_args( $query, array() );
+        $query = array_merge( $query, $args );
+        $query = http_build_query( $query );
+        $parsed['query'] = $query;
+        $url = self::build_url( $parsed );
+        return $url;
+    }
+
+    public static function get_scripts( $section, $echo = false ) {
+        if( ! isset( self::$scripts[$section] ) ) {
+            return '';
+        }
+        $html = '';
+        if(empty( self::$scripts[$section] ) ) {
+            return '';
+        }
+        if( $section === 'head' ) {
+            $template = '<link id="%s" rel="stylesheet" href="%s" type="text/css" %s>';
+        } else {
+            $template = '<script id="%s" src="%s" type="text/javascript"></script>';
+        }
+
+        $scripts = self::$scripts[$section];
+        foreach( $scripts as $handle => $script ) {
+            // error_log( 'Script: ' . print_r( $script, true ) );
+            $html .= sprintf(
+                $template,
+                $handle,
+                $script['src'],
+                empty( $script['ver'] ) ? '' : 'version="' . $script['ver'] . '"'
+            );
+        }
+        if( $echo ) {
+            echo $html;
+        }
+        error_log( $html );
+        return $html;
     }
 }
 
