@@ -150,7 +150,7 @@ class OpenSim_Form {
             $data['type'],
             $field,
             $add_attrs . $add_class,
-            $_POST[$field] ?? $data['value'] ?? '',
+            $_POST[$field] ?? $data['value'] ?? $data['default'] ?? '',
             $data['placeholder'] ?? '',
             $add_attrs,
             $data['help'] ?? ''
@@ -183,8 +183,8 @@ class OpenSim_Form {
 
     public function process() {
         if( empty( $_POST )) {
-            // Ignore silently, nothing to do
-            return null;
+            // Only init values if form is not submitted
+            return $this->get_values();
         }
         if (is_callable($this->callback)) {
             return call_user_func($this->callback, $this->get_values());

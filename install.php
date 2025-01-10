@@ -36,7 +36,7 @@ class OpenSim_Install extends OpenSim_Page {
         if( ! $form ) {
             OpenSim::notify_error( 'Could not create form');
         } else {
-            // $values = $form->process();
+            
             $next_step_key = $form->get_next_step();
             $next_step_label = array_key_exists( $next_step_key, $form->steps ) ? $form->steps[$next_step_key]['label'] : false;
 
@@ -223,6 +223,8 @@ class OpenSim_Install extends OpenSim_Page {
             error_log( __FUNCTION__ . ' form not set' );
             return false;
         }
+
+        $next_step_key = $form->get_next_step();
         $values = $form->get_values();
         $errors = 0;
         if( ! empty( $values['robust_ini_path'] ) ) {
@@ -237,7 +239,7 @@ class OpenSim_Install extends OpenSim_Page {
             $errors++;
         }
 
-        if( ! empty( $values['config_file'] ) && file_exists( $values['config_file'] ) ) {
+        if( file_exists( $values['config_file'] ) ) {
             $_SESSION['installation']['config_file'] = realpath( $values['config_file'] );
             $form->task_error('config_file', _('File will be overwritten, any existing config wil be lost.'), 'warning' );
         } else {
@@ -247,17 +249,10 @@ class OpenSim_Install extends OpenSim_Page {
         return ( $errors > 0 ) ? false : true;
     }
 
-    private function register_form( $form_id, $fields ) {
-        if( empty( $form_id ) || empty( $fields ) ) {
-            error_log( __FUNCTION__ . ' ERROR: Missing form ID or fields.' );
-            return false;
-        }
-        $this->form = $fields;
-    }
-
     private function register_form_installation() {
         $form_id = 'installation';
 
+        $config_file = $_POST['config_file'] ?? $_SESSION['installation']['config_file'] ?? 'includes/config.php';
         $form = OpenSim_Form::register(array(
             'form_id' => $form_id,
             'multistep' => true,
@@ -277,7 +272,8 @@ class OpenSim_Install extends OpenSim_Page {
                     'config_file' => array(
                         'label' => _('Target configuration file'),
                         'type' => 'text',
-                        'value' => $_POST['config_file'] ?? $_SESSION['installation']['config_file'] ?? 'includes/config.php',
+                        'value' => $config_file,
+                        'default' => $config_file,
                         'placeholder' => 'includes/config.php',
                         'readonly' => true,
                         // 'disabled' => true,
@@ -356,9 +352,9 @@ class OpenSim_Install extends OpenSim_Page {
         $form->add_steps( $steps );
 
         // Get values prematurely to check if the config file exists
+        $next_step_key = $form->get_next_step();
         $values = $form->get_values();
-        if( ! empty( $values['config_file'] ) && file_exists($values['config_file']) ) {
-            $values['config_file'] = realpath( $values['config_file'] );
+        if( file_exists( $values['config_file'] ) ) {
             $form->task_error('config_file', _('File will be overwritten, any existing config wil be lost.'), 'warning' );
         }
 
