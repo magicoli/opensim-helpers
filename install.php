@@ -20,12 +20,14 @@ class OpenSim_Install extends OpenSim_Page {
     private $forms = array();
     private $form;
 
+    const FORM_ID = 'installation';
+
     public function __construct() {
         if( ! defined( 'ABSPATH' ) ) {
             define( 'ABSPATH', dirname( __FILE__ ) . '/' );
         }
-        if( ! isset( $_SESSION['installation'] ) ) {
-            $_SESSION['installation'] = array();
+        if( ! isset( $_SESSION[self::FORM_ID] ) ) {
+            $_SESSION[self::FORM_ID] = array();
         }
         $this->handle_reset();
 
@@ -101,7 +103,7 @@ class OpenSim_Install extends OpenSim_Page {
             OpenSim::notify_error($e, 'Error reading template file');
             return false;
         }
-        $config = $_SESSION['installation']['config'] ?? null;
+        $config = $_SESSION[self::FORM_ID]['config'] ?? null;
         if( empty( $config ) ) {
             OpenSim::notify_error( __FUNCTION__ . '() ' . _('No configuration found.'), 'error');
             return false;
@@ -168,14 +170,14 @@ class OpenSim_Install extends OpenSim_Page {
         }
 
         // Write the updated config to config.php
-        if( empty( $_SESSION['installation']['config_file'] ) ) {
+        if( empty( $_SESSION[self::FORM_ID]['config_file'] ) ) {
             // Should not happen, it has been validated before
             $message = _( 'No config file specified, should be possible at this stage.' );
             error_log( 'ERROR ' . __FUNCTION__ . '() ' . $message );
             OpenSim::notify_error( __FUNCTION__ . '() ' . _('No config file specified, should not have occured.'), 'danger');
             return false;
         }
-        $temp_config_file = $_SESSION['installation']['config_file'] . '.install.temp';
+        $temp_config_file = $_SESSION[self::FORM_ID]['config_file'] . '.install.temp';
 
         try {
             $result = file_put_contents($temp_config_file, $php_template);
@@ -219,7 +221,6 @@ class OpenSim_Install extends OpenSim_Page {
     }
 
     public function process_form_installation() {
-        $form_id='installation';
         $form = $this->form ?? false;
         if( ! $form ) {
             error_log( __FUNCTION__ . ' form not set' );
@@ -231,7 +232,7 @@ class OpenSim_Install extends OpenSim_Page {
         $errors = 0;
         if( ! empty( $values['robust_ini_path'] ) ) {
             if( file_exists($values['robust_ini_path']) ) {
-                $_SESSION['installation']['robust_ini_path'] = realpath( $values['robust_ini_path'] );
+                $_SESSION[self::FORM_ID]['robust_ini_path'] = realpath( $values['robust_ini_path'] );
             } else {
                 $form->task_error('robust_ini_path', _('File not found'), 'danger' );
                 $errors++;
@@ -242,21 +243,19 @@ class OpenSim_Install extends OpenSim_Page {
         }
 
         if( file_exists( $values['config_file'] ) ) {
-            $_SESSION['installation']['config_file'] = realpath( $values['config_file'] );
+            $_SESSION[self::FORM_ID]['config_file'] = realpath( $values['config_file'] );
             $form->task_error('config_file', _('File will be overwritten, any existing config wil be lost.'), 'warning' );
         } else {
-            $_SESSION['installation']['config_file'] = $values['config_file'] ?? 'includes/config.php';
+            $_SESSION[self::FORM_ID]['config_file'] = $values['config_file'] ?? 'includes/config.php';
         }
 
         return ( $errors > 0 ) ? false : true;
     }
 
     private function register_form_installation() {
-        $form_id = 'installation';
-        
-        $config_file = $_POST['config_file'] ?? $_SESSION['installation']['config_file'] ?? 'includes/config.php';
+        $config_file = $_POST['config_file'] ?? $_SESSION[self::FORM_ID]['config_file'] ?? 'includes/config.php';
         $form = OpenSim_Form::register(array(
-            'form_id' => $form_id,
+            'form_id' => self::FORM_ID,
             'multistep' => true,
             'success' => _('Robust configuration completed.'),
             'callback' => [$this, 'process_form_installation'],
@@ -298,7 +297,7 @@ class OpenSim_Install extends OpenSim_Page {
                         'label' => _('OpenSim config file path'),
                         'type' => 'text',
                         'required' => true,
-                        'value' => isset( $_SESSION['installation']['robust_ini_path']) ? dirname( $_SESSION['installation']['robust_ini_path'] ) . '/OpenSim.ini' : null,
+                        'value' => isset( $_SESSION[self::FORM_ID]['robust_ini_path']) ? dirname( $_SESSION[self::FORM_ID]['robust_ini_path'] ) . '/OpenSim.ini' : null,
                         'placeholder' => '/opt/opensim/bin/OpenSim.ini',
                         'help' => _('The full path to OpenSim.ini on this server.'),
                     ),
@@ -375,7 +374,6 @@ class OpenSim_Install extends OpenSim_Page {
     }    
 
     private function validate_form_installation( $form, $step, $values = null ) {
-        $form_id = 'installation';
         $errors = 0;
         // $form = $this->form;
         if( ! $form ) {
@@ -438,7 +436,7 @@ class OpenSim_Install extends OpenSim_Page {
      */
     public function robust_process_ini() {
         try {
-            $ini = new OpenSim_Ini( $_SESSION['installation']['robust_ini_path'] );
+            $ini = new OpenSim_Ini( $_SESSION[self::FORM_ID]['robust_ini_path'] );
         } catch (Error $e) {
             OpenSim::notify_error($e, 'Error creating ini object');
             return false;
@@ -449,7 +447,7 @@ class OpenSim_Install extends OpenSim_Page {
         }
 
         $config = $ini->get_config();
-        $_SESSION['installation']['config'] = $config;
+        $_SESSION[self::FORM_ID]['config'] = $config;
         if ( ! $config ) {
             OpenSim::notify( _('Error parsing file.'), 'error' );
             return false;
@@ -463,7 +461,7 @@ class OpenSim_Install extends OpenSim_Page {
     private function handle_reset() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['reset'])) {
-                unset($_SESSION['installation']);
+                unset($_SESSION[self::FORM_ID]);
                 OpenSim::notify(_('Installation session has been cleared. Restarting installation.'), 'success');
                 header("Location: " . $_SERVER['PHP_SELF']);
                 exit();

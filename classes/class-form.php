@@ -35,6 +35,10 @@ class OpenSim_Form {
     public $tasks;
 
     public function __construct($args = array(), $step = 0) {
+        if( is_string( $args )) {
+            // If only a string is passed, consider it as form_id for a pending form
+            $args = array( 'form_id' => $args );
+        }
         if (!is_array($args)) {
             error_log(__METHOD__ . ' invalid argument type ' . gettype($args));
             throw new InvalidArgumentException('Invalid argument type: ' . gettype($args));
