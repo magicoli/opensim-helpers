@@ -286,12 +286,12 @@ class OpenSim_Install extends OpenSim_Page {
                     'config_file' => array(
                         'label' => _('Target configuration file'),
                         'type' => 'text',
-                        'disabled' => true,
+                        'readonly' => true,
                     ),
                     'robust_ini_path' => array(
                         'label' => _('Robust config file path'),
                         'type' => 'text',
-                        'disabled' => true,
+                        'readonly' => true,
                     ),
                     'opensim_ini_path' => array(
                         'label' => _('OpenSim config file path'),
