@@ -356,7 +356,7 @@ class OpenSim {
         if( $echo ) {
             echo $html;
         }
-        error_log( $html );
+        // error_log( $html );
         return $html;
     }
 }

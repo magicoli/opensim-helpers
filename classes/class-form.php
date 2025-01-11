@@ -131,7 +131,7 @@ class OpenSim_Form {
             $add_class = '';
             if( ! empty( $this->errors[$field] ) ) {
                 $field_error = $this->errors[$field];
-                $data['help'] = OpenSim::error_html( $field_error, 'warning' ) . $data['help'];
+                $data['help'] = OpenSim::error_html( $field_error, 'warning' ) . ( $data['help'] ?? '' );
                 if( $field_error['type'] == 'danger' ) {
                     $add_class .= ' is-invalid';
                 }
