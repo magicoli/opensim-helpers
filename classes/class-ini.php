@@ -21,7 +21,7 @@ class OpenSim_Ini {
         if( is_string( $args ) && file_exists( $args ) ) {
             try {
                 $file_content = file_get_contents( $args );
-            } catch (Error $e) {
+            } catch (Throwable $e) {
                 $this->notify_error( $e, 'Error reading file' );
             }
             $content = file_get_contents( $args );

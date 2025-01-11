@@ -74,7 +74,7 @@ class OpenSim_Form {
             return new self($args, $step);
         } catch (InvalidArgumentException $e) {
             error_log($e->getMessage());
-            OpenSim::notify_error($e->getMessage(), 'error');
+            OpenSim::notify_error($e->getMessage() );
             return false;
         }
     }
@@ -254,8 +254,8 @@ class OpenSim_Form {
     }
 
     public function get_form( $form_id ) {
-        if( empty( $formid )) {
-            return $false;
+        if( empty( $form_id )) {
+            return false;
         }
         return isset( self::$forms[$form_id] ) ? self::$forms[$form_id] : false;
     }
@@ -374,9 +374,14 @@ class OpenSim_Form {
         return $html;
     }
 
-    public function validate_file( $field_id, $file_path ) {
-        if( empty( $file_path )) {
-            // don't check, allow it to be empty
+    public function validate_file( $field_id, $file_path, $strict = false ) {
+        if( empty( $file_path ) ) {
+            if( $strict ) {
+                $message = sprintf( _('File %s is required'), $field_id );
+                $this->task_error( $field_id, $message, 'danger' );
+                return false;
+            }
+            // if not strict, allow it to be empty
             return true;
         }
         if( ! file_exists( $file_path )) {
@@ -386,6 +391,92 @@ class OpenSim_Form {
         }
         return true;
     }
+
+    /**
+     * Make sure the file is a valid .ini file
+     */
+    public function is_valid_ini_file( $field_id, $file_path, $strict = false ) {
+        if( ! $this->validate_file( $field_id, $file_path, true )) {
+            $this->task_error( $field_id, _('File not found'), 'danger' );
+            return false;
+        }
+
+        // If strict, use parse_ini_file
+        if( $strict ) {
+            $ini = parse_ini_file( $file_path );
+            if( empty( $ini )) {
+                $message = sprintf( _('File %s does not comply with .ini standards.'), $file_path );
+                $this->task_error( $field_id, $message, 'danger' );
+                // throw new Exception( $message );
+                return false;
+            }
+            return true;
+        }
+
+        // If not strict, a light check is enough
+        //
+        // OpenSim uses some non-standard formatting that are not supported by parse_ini_file.
+        // Ignore comments and empty lines, then make sure the remaining contains 
+        // only key = value pairs or [sections]
+        $ini = file_get_contents( $file_path );
+        $lines = explode( "\n", $ini );
+        $valid = true;
+
+        // Filter out comments and empty lines
+        $lines = array_filter( array_map( 'trim', $lines ), function( $line ) {
+            return ! empty( $line ) && ! preg_match( '/^\s*;/', $line );
+        });
+
+        // Filter out valid lines, leaving only invalid ones
+        $valid = array_filter( array_map( function( $line ) {
+            return preg_match( '/^\[.*\]$|.*=.*$/', $line ) ? false : $line;
+        }, $lines ));
+
+        if( ! empty( $valid )) {
+            $message = sprintf( _('File %s is not a valid .ini file'), $file_path );
+            error_log( $message . ', found invalid lines: ' . print_r( $valid, true ) );
+            $this->task_error( $field_id, $message, 'danger' );
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Make sure the file is a valid Robust.ini file
+     */
+    public function is_robust_ini_file( $field_id, $file_path ) {
+        if( ! $this->is_valid_ini_file( $field_id, $file_path )) {
+            throw new Exception( _('Not a valid ini file') );
+            return false;
+        }
+
+        $required_sections = array(
+            'DatabaseService',
+            'GridInfoService',
+            'LoginService',
+        );
+
+        // Check if all required sections are present, with array_map (without parse_ini_file)
+        $ini = file_get_contents( $file_path );
+        $lines = explode( "\n", $ini );
+        $sections = array_map( function( $line ) {
+            if( preg_match( '/^\[(.*)\]\s*$/', $line, $matches )) {
+                return $matches[1];
+            }
+            return false;
+        }, $lines );
+
+        $missing = array_diff( $required_sections, $sections );
+        if( ! empty( $missing )) {
+            $message = sprintf( _('Not a valid Robust config file.'), $file_path, implode( ', ', $missing ));
+            $this->task_error( $field_id, $message, 'danger' );
+            $message = sprintf( _('%s is missing required sections: %s'), $file_path, '<ul><li>' . implode( '</li><li>', $missing )  . '</li></ul>' );
+            throw new Exception( $message );
+        }
+
+        return true;
+    }
+
     public function complete( $step ) {
         $this->completed = $step;
         $_SESSION[$this->form_id]['completed'] = $step;

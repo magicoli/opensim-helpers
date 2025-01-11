@@ -52,13 +52,12 @@ class OpenSim_Install extends OpenSim_Page {
                     try {
                         $result = call_user_func( $task['callback'] );
                         if( ! $result ) {
-                            throw new Error( $task['error'] ?? 'Failed' );
+                            throw new Error( $task['error'] ?? $callback_name . ' failed without throwing an error.' );
                         }
-                    } catch (Error $e) {
+                    } catch (Throwable $e) {
                         $result = false;
-                        $message = $callback_name . '() ' . $e->getMessage();
                         error_log( $message );
-                        OpenSim::notify_error( $e, $e->getMessage() );
+                        OpenSim::notify_error( $e );
                         break;
                     }
                     // if( ! $result ) {
@@ -71,14 +70,16 @@ class OpenSim_Install extends OpenSim_Page {
                     error_log( '[' . __CLASS__ . '] ' . $message );
                     OpenSim::notify( $message, 'task-checked' );
                 }
+
+                $prefix = '<strong>' . $next_step_label . '</strong>: ';
                 if( ! $result ) {
-                    $message = $next_step_label . ': ' . ( $form->steps[$next_step_key]['error'] ?? 'Failed' );
+                    $message = $prefix . ( $form->steps[$next_step_key]['error'] ?? 'Failed' );
                     OpenSim::notify_error( $message, 'danger' );
                 } else if ( $result instanceof Error ) {
-                    $message = $next_step_label . ': ' . $result->getMessage();
+                    $message = $prefix . $result->getMessage();
                     OpenSim::notify_error( $message, 'danger' );
                 } else {
-                    $message = $next_step_label . ': ' . ( $form->steps[$next_step_key]['success'] ?? 'Success' );
+                    $message = $prefix . ( $form->steps[$next_step_key]['success'] ?? 'Success' );
                     OpenSim::notify( $message, 'success' );
                     // Register the form again to update values
                     $this->register_form_installation();
@@ -93,21 +94,30 @@ class OpenSim_Install extends OpenSim_Page {
     private function robust_generate_config() {
         $template = 'includes/config.example.php';
         if ( ! file_exists( $template )) {
-            OpenSim::notify(_('Template file not found.'), 'error');
+            OpenSim::notify(_('Template file not found.') );
             return false;
         }
 
         try {
             $php_template = file_get_contents($template);
-        } catch (Error $e) {
-            OpenSim::notify_error($e, 'Error reading template file');
+        } catch (Throwable $e) {
+            OpenSim::notify_error( $e );
             return false;
         }
-        $config = $_SESSION[self::FORM_ID]['config'] ?? null;
-        if( empty( $config ) ) {
-            OpenSim::notify_error( __FUNCTION__ . '() ' . _('No configuration found.'), 'error');
+        try {
+            $config = $_SESSION[self::FORM_ID]['config'] ?? null;
+            if( empty( $config ) ) {
+                throw new Error( _('No configuration found.') );
+            }
+        } catch (Throwable $e) {
+            OpenSim::notify_error( $e );
             return false;
         }
+        // $config = $_SESSION[self::FORM_ID]['config'] ?? null;
+        // if( empty( $config ) ) {
+        //     OpenSim::notify_error( __FUNCTION__ . '() ' . _('No configuration found.') );
+        //     return false;
+        // }
         $robust_db = OpenSim::connectionstring_to_array($config['DatabaseService']['ConnectionString']);
 
         $registrars = array(
@@ -187,8 +197,8 @@ class OpenSim_Install extends OpenSim_Page {
                     '<nobr><code>' . dirname( $temp_config_file ) . '/</code></nobr>'
                 ) );
             }
-        } catch (Error $e) {
-            OpenSim::notify_error($e, $e->getMessage());
+        } catch (Throwable $e) {
+            OpenSim::notify_error( $e );
             return false;
         }
         // OpenSim::notify(_('Configuration file generated successfully.'), 'success');
@@ -231,6 +241,20 @@ class OpenSim_Install extends OpenSim_Page {
         $values = $form->get_values();
         $errors = 0;
         if( ! empty( $values['robust_ini_path'] ) ) {
+            try {
+                $valid = $form->is_robust_ini_file( 'robust_ini_path', $values['robust_ini_path'] );
+                if( $valid === false ) {
+                    // $message = 
+                    // OpenSim::notify_error( _('Invalid answer from is_robust_ini_file') );
+                    // Should not happen, is_robust_ini_file should have thrown an error instead of returning false
+                    throw new Error( _('is_robust_ini_file returned an invalid value.') );
+                    $errors++;
+                }
+                // $ini = new OpenSim_Ini( $values['robust_ini_path'] );
+            } catch (Throwable $e) {
+                // OpenSim::notify_error( $e );
+                $errors++;
+            }
             if( file_exists($values['robust_ini_path']) ) {
                 $_SESSION[self::FORM_ID]['robust_ini_path'] = realpath( $values['robust_ini_path'] );
             } else {
@@ -279,6 +303,7 @@ class OpenSim_Install extends OpenSim_Page {
                         'type' => 'text',
                         'required' => true,
                         'value' => null,
+                        // 'validation' => 'is_robust_ini_file',
                         'placeholder' => '/opt/opensim/bin/Robust.HG.ini',
                         'help' => _('The full path to Robust.HG.ini (in grid mode) or Robust.ini (standalone mode) on this server.'),
                     ),
@@ -316,6 +341,7 @@ class OpenSim_Install extends OpenSim_Page {
             return false;
         }
 
+        $values = $form->get_values();
         // As steps require the form to be registered, we need to register
         // them after the form is created.
         $steps = array(
@@ -330,7 +356,7 @@ class OpenSim_Install extends OpenSim_Page {
                     array(
                         'label' => _('Process form'),
                         'callback' => [ $form, 'process' ],
-                        'error' => _('Invalid submission.'),
+                        'error' => sprintf( _('Error processing %s.'), ( $_POST['robust_ini_path'] ?? $values['robust_ini_path'] ?? $_SESSION[self::FORM_ID]['robust_ini_path'] ?? 'Robust.ini' ) ),
                         'success' => _('Submission validated.'),
                     ),
                     array(
@@ -370,6 +396,11 @@ class OpenSim_Install extends OpenSim_Page {
 
         // Validate the values only for user information, keep proceeding even if there are errors
         if( is_callable ( [$this,'validate_form_installation'] ) ) {
+            try {
+                $this->validate_form_installation( $form, $next_step_key );
+            } catch (Throwable $e) {
+                OpenSim::notify_error( '$e' );
+            }
             $this->validate_form_installation( $form, $next_step_key );
         }
         $this->form = $form;
@@ -391,10 +422,19 @@ class OpenSim_Install extends OpenSim_Page {
         switch( $step ) {
             case 'config_robust':
                 if( file_exists( $values['config_file'] ) ) {
-                    // Only a warning, not an error
+                    // Only a warning, it's normal to overwrite the file if wanted
                     $form->task_error('config_file', _('File will be overwritten, any existing config wil be lost.'), 'warning' );
                 }
-                if( ! $form->validate_file( 'robust_ini_path', $values['robust_ini_path'] ) ) {
+                try {
+                    $valid = $form->is_robust_ini_file( 'robust_ini_path', $values['robust_ini_path'] );
+                    if( $valid === false ) {
+                        OpenSim::notify_error( _('Invalid answer from is_robust_ini_file') );
+                        // Should not happen, is_robust_ini_file should have thrown an error instead of returning false
+                        throw new Error( _('is_robust_ini_file failed') );
+                        $errors++;
+                    }
+                } catch (Throwable $e) {
+                    OpenSim::notify_error( $e );
                     $errors++;
                 }
                 break;
@@ -440,19 +480,19 @@ class OpenSim_Install extends OpenSim_Page {
     public function robust_process_ini() {
         try {
             $ini = new OpenSim_Ini( $_SESSION[self::FORM_ID]['robust_ini_path'] );
-        } catch (Error $e) {
-            OpenSim::notify_error($e, 'Error creating ini object');
+        } catch (Throwable $e) {
+            OpenSim::notify_error( $e );
             return false;
         }
         if ( ! $ini ) {
-            OpenSim::notify( _('Error parsing file.'), 'error' );
+            OpenSim::notify( _('Error parsing file.') );
             return false;
         }
 
         $config = $ini->get_config();
         $_SESSION[self::FORM_ID]['config'] = $config;
         if ( ! $config ) {
-            OpenSim::notify( _('Error parsing file.'), 'error' );
+            OpenSim::notify( _('Error parsing file.') );
             return false;
         }
         return true;

@@ -145,29 +145,39 @@ class OpenSim {
         return rtrim( $value, '/\\' );
     }
 
-    public static function notify_error( $e, $message = '', $type = 'warning' ) {
-        if( empty($e) ) {
-            return;
-        }
-        if( is_string ( $e ) ) {
-            $type = $message;
-            $message = $e ?? _('Empty message');
-            self::notify( $message, $type );
-        } else if ( $e instanceof Error ) {
+    /**
+     * Notify user of an error, log it and display it in the admin area
+     * 
+     * @param mixed $error (string) Error message or (Throwable) Exception
+     * @param string $type Error severity: 'info', 'warning', 'danger'
+     * @return void
+     */
+    public static function notify_error( $error, $type = 'warning' ) {
+        if ( $error instanceof Throwable ) {
+            $e = $error;
+            $message = $e->getMessage();
+            // $message = empty( $message ) ? ( $origin ?? '' ) : '';
+            // $message = ( empty( $message ) ? '' : $message . ': ' ) . $e->getMessage();
             $trace = $e->getTrace();
             $origin = $trace[0];
-            $message = empty( $message ) ? ( $origin ?? '' ) : '';
-            $message = ( empty( $message ) ? '' : $message . ': ' ) . $e->getMessage();
-            self::notify( $message, $type );
+        } else if( is_string ( $error ) ) {
+            $message = $error;
         } else {
-            $message = 'Unidentified error type: ' . gettype( $e ) . ' ' . print_r( $e, true );
-            self::notify( _( 'Unknown error ' ), $type );
+            error_log( 'Unidentified error type: ' . gettype( $error ) . ' ' . print_r( $e, true ) );
+            $message = _( 'Unknown error, see log for details' );
         }
-        error_log( $message );
+
+        self::notify( $message, $type );
+        if( ! empty( $origin['class'] ) ) {
+            $message = $origin['class'] . '::' . $origin['function'] . '(): ' . $message;
+        } else {
+            $message = $origin['function'] . '(): ' . $message;
+        }
+        error_log( '[' . strtoupper( $type ) . '] ' . $message );
     }
 
     public static function notify( $message, $type = 'info' ) {
-        $key = md5( $message ); // Make sure we don't have duplicates
+        $key = md5( $key . $message ); // Make sure we don't have duplicates
         self::$user_notices[$key] = array(
             'message' => $message,
             'type' => $type,
