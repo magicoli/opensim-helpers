@@ -78,6 +78,8 @@ class OpenSim_Install extends OpenSim_Page {
                 } else {
                     $message = $next_step_label . ': ' . ( $form->steps[$next_step_key]['success'] ?? 'Success' );
                     OpenSim::notify( $message, 'success' );
+                    // Register the form again to update values
+                    $this->register_form_installation();
                     $form->complete( $next_step_key );
                 }
             }
@@ -251,24 +253,17 @@ class OpenSim_Install extends OpenSim_Page {
 
     private function register_form_installation() {
         $form_id = 'installation';
-
+        
         $config_file = $_POST['config_file'] ?? $_SESSION['installation']['config_file'] ?? 'includes/config.php';
         $form = OpenSim_Form::register(array(
             'form_id' => $form_id,
             'multistep' => true,
             'success' => _('Robust configuration completed.'),
             'callback' => [$this, 'process_form_installation'],
+
             // 'steps' => $steps, // Steps can be defined here if all objects needed are available
             'fields' => array(
                 'config_robust' => array(
-                    'robust_ini_path' => array(
-                        'label' => _('Robust config file path'),
-                        'type' => 'text',
-                        'required' => true,
-                        'value' => null,
-                        'placeholder' => '/opt/opensim/bin/Robust.HG.ini',
-                        'help' => _('The full path to Robust.HG.ini (in grid mode) or Robust.ini (standalone mode) on this server.'),
-                    ),
                     'config_file' => array(
                         'label' => _('Target configuration file'),
                         'type' => 'text',
@@ -279,8 +274,26 @@ class OpenSim_Install extends OpenSim_Page {
                         // 'disabled' => true,
                         'help' => _('This file will be created or replaced with the settings found in the .ini file.'),
                     ),
+                    'robust_ini_path' => array(
+                        'label' => _('Robust config file path'),
+                        'type' => 'text',
+                        'required' => true,
+                        'value' => null,
+                        'placeholder' => '/opt/opensim/bin/Robust.HG.ini',
+                        'help' => _('The full path to Robust.HG.ini (in grid mode) or Robust.ini (standalone mode) on this server.'),
+                    ),
                 ),
                 'config_opensim' => array(
+                    'config_file' => array(
+                        'label' => _('Target configuration file'),
+                        'type' => 'text',
+                        'disabled' => true,
+                    ),
+                    'robust_ini_path' => array(
+                        'label' => _('Robust config file path'),
+                        'type' => 'text',
+                        'disabled' => true,
+                    ),
                     'opensim_ini_path' => array(
                         'label' => _('OpenSim config file path'),
                         'type' => 'text',
@@ -351,15 +364,59 @@ class OpenSim_Install extends OpenSim_Page {
         );
         $form->add_steps( $steps );
 
-        // Get values prematurely to check if the config file exists
+        // // Get values prematurely to check if the config file exists
         $next_step_key = $form->get_next_step();
-        $values = $form->get_values();
-        if( file_exists( $values['config_file'] ) ) {
-            $form->task_error('config_file', _('File will be overwritten, any existing config wil be lost.'), 'warning' );
-        }
+        // $values = $form->get_values();
+        // if( file_exists( $values['config_file'] ) ) {
+        //     $form->task_error('config_file', _('File will be overwritten, any existing config wil be lost.'), 'warning' );
+        // }
 
+        // Validate the values only for user information, keep proceeding even if there are errors
+        if( is_callable ( [$this,'validate_form_installation'] ) ) {
+            $this->validate_form_installation( $form, $next_step_key );
+        }
         $this->form = $form;
         return $form;
+    }    
+
+    private function validate_form_installation( $form, $step ) {
+        $form_id = 'installation';
+        $errors = 0;
+        // $form = $this->form;
+        if( ! $form ) {
+            error_log( __FUNCTION__ . ' form not set' );
+            return false;
+        }
+        // $step = $form->get_next_step();
+        $values = $form->get_values();
+
+        error_log( 'Validating form ' . $form_id . ' step ' . $step . ' values ' . print_r( $values, true ) );
+
+        switch( $step ) {
+            case 'config_robust':
+                if( file_exists( $values['config_file'] ) ) {
+                    // Only a warning, not an error
+                    $form->task_error('config_file', _('File will be overwritten, any existing config wil be lost.'), 'warning' );
+                }
+                if( ! $form->validate_file( 'robust_ini_path', $values['robust_ini_path'] ) ) {
+                    $errors++;
+                }
+                break;
+            case 'config_opensim':
+                if( ! empty( $values['opensim_ini_path'] ) ) {
+                    if( ! $form->validate_file( 'opensim_ini_path', $values['opensim_ini_path'] ) ) {
+                        $errors++;
+                    }
+                }
+                break;
+            case 'config_others':
+                break;
+            case 'config_helpers':
+                break;
+            case 'validation':
+                break;
+        }
+        return;
     }
 
     public function render_form( $form_id = null ) {
