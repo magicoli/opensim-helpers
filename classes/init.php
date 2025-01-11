@@ -153,31 +153,35 @@ class OpenSim {
      * @return void
      */
     public static function notify_error( $error, $type = 'warning' ) {
+        // Initialize the prefix before error type check
+        $prefix = '[' . strtoupper( $type ) . '] ';
+
+        // Retrieve the calling method's information
         if ( $error instanceof Throwable ) {
-            $e = $error;
-            $message = $e->getMessage();
-            // $message = empty( $message ) ? ( $origin ?? '' ) : '';
-            // $message = ( empty( $message ) ? '' : $message . ': ' ) . $e->getMessage();
-            $trace = $e->getTrace();
-            $origin = $trace[0];
-        } else if( is_string ( $error ) ) {
+            $message = $error->getMessage();
+        } elseif( is_string($error) ) {
             $message = $error;
         } else {
-            error_log( 'Unidentified error type: ' . gettype( $error ) . ' ' . print_r( $e, true ) );
-            $message = _( 'Unknown error, see log for details' );
+            $message = _('Unknown error, see log for details');
+            error_log( $prefix . 'Unidentified error type: ' . gettype( $error ) . ' ' . print_r( $error, true ) );
         }
-
+        
         self::notify( $message, $type );
-        if( ! empty( $origin['class'] ) ) {
-            $message = $origin['class'] . '::' . $origin['function'] . '(): ' . $message;
-        } else {
-            $message = $origin['function'] . '(): ' . $message;
+
+        $message = strip_tags( $message );
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        if( ! empty( $trace[1] ) ) {
+            $class = $trace[1]['class'] ?? '';
+            $function = $trace[1]['function'] ?? '';
         }
-        error_log( '[' . strtoupper( $type ) . '] ' . $message );
+        if( ! empty( trim ( $class . $function ) ) ) {
+            $prefix .= '(' . ( empty( $class ) ? '' : $class . '::' ) . $function . ') ';
+        }
+        error_log( $prefix . $message );
     }
 
     public static function notify( $message, $type = 'info' ) {
-        $key = md5( $key . $message ); // Make sure we don't have duplicates
+        $key = md5( $type . $message ); // Make sure we don't have duplicates
         self::$user_notices[$key] = array(
             'message' => $message,
             'type' => $type,

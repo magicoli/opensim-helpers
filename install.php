@@ -56,7 +56,7 @@ class OpenSim_Install extends OpenSim_Page {
                         }
                     } catch (Throwable $e) {
                         $result = false;
-                        error_log( $message );
+                        // error_log( $message );
                         OpenSim::notify_error( $e );
                         break;
                     }
