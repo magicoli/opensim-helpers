@@ -364,12 +364,7 @@ class OpenSim_Install extends OpenSim_Page {
         );
         $form->add_steps( $steps );
 
-        // // Get values prematurely to check if the config file exists
         $next_step_key = $form->get_next_step();
-        // $values = $form->get_values();
-        // if( file_exists( $values['config_file'] ) ) {
-        //     $form->task_error('config_file', _('File will be overwritten, any existing config wil be lost.'), 'warning' );
-        // }
 
         // Validate the values only for user information, keep proceeding even if there are errors
         if( is_callable ( [$this,'validate_form_installation'] ) ) {
@@ -379,7 +374,7 @@ class OpenSim_Install extends OpenSim_Page {
         return $form;
     }    
 
-    private function validate_form_installation( $form, $step ) {
+    private function validate_form_installation( $form, $step, $values = null ) {
         $form_id = 'installation';
         $errors = 0;
         // $form = $this->form;
@@ -388,9 +383,9 @@ class OpenSim_Install extends OpenSim_Page {
             return false;
         }
         // $step = $form->get_next_step();
-        $values = $form->get_values();
-
-        error_log( 'Validating form ' . $form_id . ' step ' . $step . ' values ' . print_r( $values, true ) );
+        if( $values === null ) {
+            $values = $form->get_values();
+        }
 
         switch( $step ) {
             case 'config_robust':

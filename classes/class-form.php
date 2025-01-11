@@ -363,6 +363,18 @@ class OpenSim_Form {
         return $html;
     }
 
+    public function validate_file( $field_id, $file_path ) {
+        if( empty( $file_path )) {
+            // don't check, allow it to be empty
+            return true;
+        }
+        if( ! file_exists( $file_path )) {
+            $message = sprintf( _('File %s not found'), $file_path );
+            $this->task_error( $field_id, $message, 'danger' );
+            return false;
+        }
+        return true;
+    }
     public function complete( $step ) {
         $this->completed = $step;
         $_SESSION[$this->form_id]['completed'] = $step;
