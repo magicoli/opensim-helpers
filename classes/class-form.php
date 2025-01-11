@@ -133,6 +133,7 @@ class OpenSim_Form {
         $fields = empty($fields) ? array() : $fields;
         foreach ( $fields as $field => $data ) {
             $add_class = '';
+            $add_attrs = '';
             if( ! empty( $this->errors[$field] ) ) {
                 $field_error = $this->errors[$field];
                 $data['help'] = OpenSim::error_html( $field_error, 'warning' ) . ( $data['help'] ?? '' );
@@ -140,8 +141,14 @@ class OpenSim_Form {
                     $add_class .= ' is-invalid';
                 }
             }
-            $add_attrs = '';
-            $add_attrs .= isset( $data['readonly'] ) && $data['readonly'] ? ' readonly' : '';
+            if( $data['type'] == 'plaintext' ) {
+                $data['type'] = 'text';
+                $add_class .= ' form-control-plaintext';
+            }
+            if( isset( $data['readonly'] ) && $data['readonly'] ) {
+                $add_class .= ' text-muted';
+                $add_attrs .= ' readonly';
+            }
             $add_attrs .= isset( $data['disabled'] ) && $data['disabled'] ? ' disabled' : '';
             $add_attrs .= isset( $data['required'] ) && $data['required'] ? ' required' : '';
             // $placeholder = isset( $data['placeholder'] ) ? $data['placeholder'] : '';

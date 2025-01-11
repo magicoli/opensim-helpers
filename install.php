@@ -254,6 +254,7 @@ class OpenSim_Install extends OpenSim_Page {
 
     private function register_form_installation() {
         $config_file = $_POST['config_file'] ?? $_SESSION[self::FORM_ID]['config_file'] ?? 'includes/config.php';
+        $config_file = ( file_exists( $config_file ) ) ? realpath( $config_file ) : $config_file;
         $form = OpenSim_Form::register(array(
             'form_id' => self::FORM_ID,
             'multistep' => true,
@@ -265,7 +266,7 @@ class OpenSim_Install extends OpenSim_Page {
                 'config_robust' => array(
                     'config_file' => array(
                         'label' => _('Target configuration file'),
-                        'type' => 'text',
+                        'type' => 'plaintext',
                         'value' => $config_file,
                         'default' => $config_file,
                         'placeholder' => 'includes/config.php',
@@ -285,12 +286,14 @@ class OpenSim_Install extends OpenSim_Page {
                 'config_opensim' => array(
                     'config_file' => array(
                         'label' => _('Target configuration file'),
-                        'type' => 'text',
+                        'type' => 'plaintext',
+                        'value' => $_SESSION[self::FORM_ID]['config_file'] ?? 'includes/config.php',
                         'readonly' => true,
                     ),
                     'robust_ini_path' => array(
                         'label' => _('Robust config file path'),
-                        'type' => 'text',
+                        'type' => 'plaintext',
+                        'value' => $_SESSION[self::FORM_ID]['robust_ini_path'],
                         'readonly' => true,
                     ),
                     'opensim_ini_path' => array(
