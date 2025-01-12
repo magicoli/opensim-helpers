@@ -84,10 +84,12 @@ class OpenSim {
             $version .= empty( $hash ) ? ' git ' : ' git ' . $hash;
             self::$is_dev = ( empty( $hash ) ) ? self::$is_dev : true;
         }
-        
-        error_log( 'Version: ' . $version );
+
         self::$version = $version;
         self::$version_slug = self::sanitize_slug( $version );
+        if( $sanitized && self::$version_slug ) {
+            return self::$version_slug;
+        }
         return $version;
     }
 
@@ -356,12 +358,14 @@ class OpenSim {
         if( strpos( $src, '://' ) === false ) {
             $src = OSHELPERS_URL . ltrim( $src, '/' );
         }
-        $src = self::add_query_args( $src, array( 'ver' => self::get_version() ) );
+        $ver = empty( $ver ) ? self::get_version( true ) : self::sanitize_slug( $ver );
+        $src = self::add_query_args( $src, array( 'ver' => $ver ) );
+
         $section = $in_footer ? 'footer' : 'head';
         self::$scripts[$section][$handle] = array(
             'src' => $src,
             'deps' => $deps,
-            'ver' => $ver ?? self::get_version(),
+            'ver' => $ver ?? self::get_version( true ),
             'in_footer' => $in_footer,
         );
     }
@@ -413,11 +417,13 @@ class OpenSim {
         if( strpos( $src, '://' ) === false ) {
             $src = OSHELPERS_URL . ltrim( $src, '/' );
         }
+        $ver = empty( $ver ) ? self::get_version( true ) : self::sanitize_slug( $ver );
+        $src = self::add_query_args( $src, array( 'ver' => $ver ) );
 
         self::$styles['head'][$handle] = array(
             'src' => $src,
             'deps' => $deps,
-            'ver' => $ver ?? self::get_version(),
+            'ver' => $ver,
             'media' => $media,
         );
     }
@@ -455,8 +461,6 @@ class OpenSim {
         
         $slug = $string;
         try {
-            // $slug = urldecode( $slug );
-            // $slug = iconv("utf-8", "ascii//TRANSLIT", $slug);
             $slug = transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $slug );
             $slug = preg_replace('/[-\s]+/', '-', $slug );
         } catch ( Exception $e ) {

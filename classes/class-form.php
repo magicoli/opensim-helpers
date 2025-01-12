@@ -448,7 +448,7 @@ class OpenSim_Form {
     public function is_robust_ini_file( $field_id, $file_path ) {
         if( ! $this->is_valid_ini_file( $field_id, $file_path )) {
             throw new Exception( _('Not a valid ini file') );
-            return false;
+            // return false;
         }
 
         $required_sections = array(

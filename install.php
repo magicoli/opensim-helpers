@@ -52,7 +52,7 @@ class OpenSim_Install extends OpenSim_Page {
                     try {
                         $result = call_user_func( $task['callback'] );
                         if( ! $result ) {
-                            throw new Error( $task['error'] ?? $callback_name . ' failed without throwing an error.' );
+                            throw new Error( $task['error'] ?? $callback_name . '() failed.' );
                         }
                     } catch (Throwable $e) {
                         $result = false;
@@ -242,6 +242,7 @@ class OpenSim_Install extends OpenSim_Page {
         $errors = 0;
         if( ! empty( $values['robust_ini_path'] ) ) {
             try {
+                // At this stage, we only check if the file exists
                 $valid = $form->is_robust_ini_file( 'robust_ini_path', $values['robust_ini_path'] );
                 if( $valid === false ) {
                     // $message = 
@@ -303,7 +304,6 @@ class OpenSim_Install extends OpenSim_Page {
                         'type' => 'text',
                         'required' => true,
                         'value' => null,
-                        // 'validation' => 'is_robust_ini_file',
                         'placeholder' => '/opt/opensim/bin/Robust.HG.ini',
                         'help' => _('The full path to Robust.HG.ini (in grid mode) or Robust.ini (standalone mode) on this server.'),
                     ),
@@ -356,8 +356,8 @@ class OpenSim_Install extends OpenSim_Page {
                     array(
                         'label' => _('Process form'),
                         'callback' => [ $form, 'process' ],
-                        'error' => sprintf( _('Error processing %s.'), ( $_POST['robust_ini_path'] ?? $values['robust_ini_path'] ?? $_SESSION[self::FORM_ID]['robust_ini_path'] ?? 'Robust.ini' ) ),
-                        'success' => _('Submission validated.'),
+                        // 'error' => sprintf( _('Error processing %s.'), ( $_POST['robust_ini_path'] ?? $values['robust_ini_path'] ?? $_SESSION[self::FORM_ID]['robust_ini_path'] ?? 'Robust.ini' ) ),
+                        // 'success' => _('Submission validated.'),
                     ),
                     array(
                         'label' => _('Process ini file'),
@@ -425,19 +425,25 @@ class OpenSim_Install extends OpenSim_Page {
                     // Only a warning, it's normal to overwrite the file if wanted
                     $form->task_error('config_file', _('File will be overwritten, any existing config wil be lost.'), 'warning' );
                 }
-                try {
-                    $valid = $form->is_robust_ini_file( 'robust_ini_path', $values['robust_ini_path'] );
-                    if( $valid === false ) {
-                        OpenSim::notify_error( _('Invalid answer from is_robust_ini_file') );
-                        // Should not happen, is_robust_ini_file should have thrown an error instead of returning false
-                        throw new Error( _('is_robust_ini_file failed') );
+
+                if( file_exists( $values['robust_ini_path'] ) ) {
+                    try {
+                        // At this stage, we only check if the file exists
+                        $valid = $form->is_robust_ini_file( 'robust_ini_path', $values['robust_ini_path'] );
+                        if( $valid === false ) {
+                            // OpenSim::notify_error( _('Invalid answer from is_robust_ini_file') );
+                            // Should not happen, is_robust_ini_file should have thrown an error instead of returning false
+                            throw new Error( _('Invalid answer from is_robust_ini_file()') );
+                            $errors++;
+                        }
+                    } catch (Throwable $e) {
+                        OpenSim::notify_error( $e );
+                        $form->task_error('robust_ini_path', _('Invalid Robust config file'), 'danger' );
                         $errors++;
                     }
-                } catch (Throwable $e) {
-                    OpenSim::notify_error( $e );
-                    $errors++;
                 }
                 break;
+
             case 'config_opensim':
                 if( ! empty( $values['opensim_ini_path'] ) ) {
                     if( ! $form->validate_file( 'opensim_ini_path', $values['opensim_ini_path'] ) ) {
