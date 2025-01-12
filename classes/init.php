@@ -44,6 +44,10 @@ class OpenSim {
 
     }
 
+    public function includes() {
+        require_once( OSHELPERS_DIR . 'classes/class-locale.php' );
+    }
+
     public function get_helpers_url() {
         $helpers_path = dirname( __DIR__ );
         $url_path = self::trailingslashit( str_replace( $_SERVER['DOCUMENT_ROOT'], '', $helpers_path ) );
@@ -55,9 +59,6 @@ class OpenSim {
         $url = self::build_url( $parsed ) . ltrim( $url_path );
 
         return $url;
-    }
-
-    public function includes() {
     }
 
     public static function get_version( $sanitized = false ) {
@@ -488,7 +489,48 @@ class OpenSim {
         }
     }
 
+    /**
+     * Get user preferred language from browser settings.
+     * 
+     * @param bool $long Full locale string if true (en_US), language code otherwise (en)
+     * @return string
+     */
+    public static function user_locale( $long = true ) {
+        return $long ? OpenSim_Locale::locale() : OpenSim_Locale::lang();
+    }
+
+    public static function user_lang( $long = false ) {
+        return $long ? OpenSim_Locale::locale() : OpenSim_Locale::lang();
+    }
+
+    /**
+     * Return the actual language of the content if localization is setup
+     */
+    public static function content_lang( $long = false ) {
+        // When localization is setup, we will return user language
+        // For now, we return english.
+        $lang = 'en_US';
+        
+        // return self::user_locale( $long );
+        return $long ? $lang : substr( $lang, 0, 2 );
+    }
+
     public static function is_logged_in() {
+        // WP is not loaded so constants like COOKIEHASH are not available.
+        // Any cookie matching wordpress_logged_in or wordpress_logged_in_*
+        // is considered a valid login cookie.
+        // If logged_in, use first part of cookie value as user_id
+        foreach( $_COOKIE as $key => $value ) {
+            if( preg_match( '/^wordpress_logged_in/', $key ) ) {
+                $parts = explode( '|', $value );
+                $_SESSION['user_id'] = $parts[0];
+                error_log( 'Logged in user: ' . $_SESSION['user_id'] );
+                error_log( 'user locale ' . self::user_locale( true ) );
+                // error_log( 'Cookies: ' . print_r( $_COOKIE, true ) );
+                break;
+            }
+        }
+
         return isset( $_SESSION['user_id'] );
     }
 

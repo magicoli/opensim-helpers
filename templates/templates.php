@@ -28,11 +28,11 @@ $menus['user'] = array(
         'children' => array(
             'account' => array(
                 'url' => '/account',
-                'label' => 'Account Settings',
+                'label' => _('Account Settings'),
             ),
             'logout' => array(
-                'url' => '/profile/?logout',
-                'label' => 'View',
+                'url' => '?action=logout',
+                'label' => _('Logout'),
             ),
         ),
     ),
