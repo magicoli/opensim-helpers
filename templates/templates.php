@@ -6,7 +6,7 @@ $content = $content ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 $sidebar_left = $sidebar_left ?? '';
 $sidebar_right = $sidebar_right ?? '';
-$version = $version ?? file_get_contents( dirname(__DIR__) . '/.version');
+$version = OpenSim::get_version();
 $footer = $footer ?? sprintf( _('OpenSimulator Helpers %s'), $version );
 
 $menus['main'] = $menu ?? array(

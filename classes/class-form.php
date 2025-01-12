@@ -192,6 +192,7 @@ class OpenSim_Form {
         );
 
         OpenSim::enqueue_script( 'form', 'js/form.js' );
+        OpenSim::enqueue_style( 'form', 'css/form.css' );
 
         $this->html = $html;
         return $html;

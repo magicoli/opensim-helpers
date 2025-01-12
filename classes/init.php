@@ -18,10 +18,14 @@ class OpenSim {
     private static $tmp_dir;
     private static $user_notices = array();
     private static $version;
+    private static $version_slug;
     private static $scripts;
     private static $styles;
+    private static $is_dev;
 
     public function __construct() {
+        // Check if domain name starts with "dev." or usual wp debug constants are set
+        self::$is_dev = ( strpos( $_SERVER['HTTP_HOST'], 'dev.' ) === 0 ) || ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG );
     }
 
     public function init() {
@@ -56,8 +60,10 @@ class OpenSim {
     public function includes() {
     }
 
-    private static function get_version() {
-        if( self::$version ) {
+    public static function get_version( $sanitized = false ) {
+        if( $sanitized && self::$version_slug ) {
+            return self::$version_slug;
+        } else if ( ! $sanitized && self::$version ) {
             return self::$version;
         }
         if( file_exists( OSHELPERS_DIR . '.version' ) ) {
@@ -65,8 +71,23 @@ class OpenSim {
         } else {
             $version = '0.0.0';
         }
+        if( file_exists( '.git/HEAD' ) ) {
+            $hash = trim( file_get_contents( '.git/HEAD' ) );
+            $hash = trim( preg_replace( '+.*[:/]+', '', $hash ) );
+            if( !empty( $hash ) && file_exists( '.git/refs/heads/' . $hash ) ) {
+                $hash = substr( file_get_contents( '.git/refs/heads/' . $hash ), 0, 7 ) . " ($hash)";
+            } else {
+                $hash = substr( $hash, 0, 7 );
+                $hash .= ' (detached)';
+            }
 
+            $version .= empty( $hash ) ? ' git ' : ' git ' . $hash;
+            self::$is_dev = ( empty( $hash ) ) ? self::$is_dev : true;
+        }
+        
+        error_log( 'Version: ' . $version );
         self::$version = $version;
+        self::$version_slug = self::sanitize_slug( $version );
         return $version;
     }
 
@@ -392,7 +413,7 @@ class OpenSim {
         if( strpos( $src, '://' ) === false ) {
             $src = OSHELPERS_URL . ltrim( $src, '/' );
         }
-        $src = self::add_query_args( $src, array( 'ver' => self::get_version() ) );
+
         self::$styles['head'][$handle] = array(
             'src' => $src,
             'deps' => $deps,
@@ -426,6 +447,26 @@ class OpenSim {
         }
         return $html;
     }
+
+    public static function sanitize_slug( $string ) {
+        if( empty( $string ) ) {
+            return false;
+        }
+        
+        $slug = $string;
+        try {
+            // $slug = urldecode( $slug );
+            // $slug = iconv("utf-8", "ascii//TRANSLIT", $slug);
+            $slug = transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $slug );
+            $slug = preg_replace('/[-\s]+/', '-', $slug );
+        } catch ( Exception $e ) {
+            error_log( 'Error sanitizing slug: ' . $e->getMessage() );
+            $slug = $string;
+        }
+            
+        return $slug;
+    }
+    
 }
 
 $OpenSim = new OpenSim();
