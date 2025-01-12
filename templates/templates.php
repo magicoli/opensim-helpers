@@ -9,36 +9,40 @@ $sidebar_right = $sidebar_right ?? '';
 $version = OpenSim::get_version();
 $footer = $footer ?? sprintf( _('OpenSimulator Helpers %s'), $version );
 
-$menus['main'] = $menu ?? array(
-    'home' => array(
-        'url' => '/',
-        'label' => 'Home',
-    ),
-    'about' => array(
-        'url' => '/about',
-        'label' => 'About',
-    ),
-);
+// $menus['main'] = $menu ?? array(
+//     'home' => array(
+//         'url' => '/',
+//         'label' => 'Home',
+//     ),
+//     'about' => array(
+//         'url' => '/about',
+//         'label' => 'About',
+//     ),
+// );
 
 $menus['user'] = array(
     'userprofile' => array(
         'url' => '/profile',
-        'label' => 'Profile',
+        'label' => OpenSim::display_name( _('Profile') ),
+        'icon' => [ 'OpenSim', 'user_icon' ],
         'condition' => 'logged_in',
         'children' => array(
             'account' => array(
                 'url' => '/account',
                 'label' => _('Account Settings'),
+                'icon' => 'sliders'
             ),
             'logout' => array(
                 'url' => '?action=logout',
                 'label' => _('Logout'),
+                'icon' => 'box-arrow-right',
             ),
         ),
     ),
     'login' => array(
         'url' => '/login',
         'label' => 'Login',
+        'icon' => 'box-arrow-in-right',
         'condition' => 'logged_out',
     ),
 );
@@ -68,20 +72,33 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
         '<ul class="%s">',
         $ul_class
     );
-    foreach ($menu as $item) {
+    foreach ($menu as $key => $item) {
         if (isset($item['condition']) && ! OpenSim::validate_condition($item['condition'])) {
             continue;
         }
-
+        $item_id = "nav-$slug-$key";
         if (isset($item['children'])) {
             // Add 'dropdown-hover' class for hover functionality
             $html .= '<li class="nav-item dropdown dropdown-hover">';
-            $html .= '<a class="nav-link dropdown-toggle" href="' . htmlspecialchars($item['url']) . '" id="navbarDropdown" role="button" aria-expanded="false">';
-            $html .= htmlspecialchars($item['label']);
-            $html .= '</a>';
+            $html .= sprintf(
+                '<a class="nav-link dropdown-toggle" href="%s" id="%s" role="button" aria-expanded="false">%s%s</a>',
+                OpenSim::sanitize_url($item['url']),
+                $item_id,
+                OpenSim::icon($item['icon']),
+                strip_tags($item['label']),
+            );
+
             $html .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-            foreach ($item['children'] as $child) {
-                $html .= '<li><a class="dropdown-item" href="' . htmlspecialchars($child['url']) . '">' . htmlspecialchars($child['label']) . '</a></li>';
+            foreach ($item['children'] as $child_key => $child) {
+                $child_id = "nav-$slug-$key-$child_key";
+                $html .= sprintf( 
+                    '<li><a class="dropdown-item" id="%s" href="%s">%s%s</a></li>',
+                    $child_id,
+                    OpenSim::sanitize_url($child['url']),
+                    OpenSim::icon($child['icon']),
+                    strip_tags($child['label']),
+                );
+                '<li><a class="dropdown-item" href="' . htmlspecialchars($child['url']) . '">' . htmlspecialchars($child['label']) . '</a></li>';
             }
             $html .= '</ul>';
             $html .= '</li>';

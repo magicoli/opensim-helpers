@@ -455,21 +455,32 @@ class OpenSim {
         return $html;
     }
 
-    public static function sanitize_slug( $string ) {
+    public static function sanitize_id( $string ) {
         if( empty( $string ) ) {
             return false;
         }
         
-        $slug = $string;
+        $id = $string;
         try {
-            $slug = transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $slug );
-            $slug = preg_replace('/[-\s]+/', '-', $slug );
+            $id = transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $id );
+            $id = preg_replace('/[-\s]+/', '-', $id );
         } catch ( Exception $e ) {
             error_log( 'Error sanitizing slug: ' . $e->getMessage() );
-            $slug = $string;
+            $id = $string;
         }
             
-        return $slug;
+        return $id;
+    }
+
+    public static function sanitize_slug( $string ) {
+        return self::sanitize_id( $string );
+    }
+
+    public static function sanitize_url( $url ) {
+        $url = trim( $url );
+        $url = str_replace( ' ', '+', $url );
+        $url = filter_var( $url, FILTER_SANITIZE_URL );
+        return $url;
     }
 
     public static function validate_condition( $condition ) {
@@ -541,7 +552,41 @@ class OpenSim {
     public static function get_user_id() {
         return $_SESSION['user_id'] ?? false;
     }
+
+    public static function display_name( $fallback = false ) {
+        if( ! self::is_logged_in() ) {
+            return $fallback;
+        }
+
+        // For now, we return the user_id
+        return self::get_user_id() ?? $fallback;
+    }
+
+    public static function icon( $icon, $size = 'inherit' ) {
+        if( is_callable( $icon ) ) {
+            $callback = $icon;
+            return call_user_func( $callback, $size );
+        }
+        $size = is_numeric( $size ) ? $size . 'px' : $size;
+        return ' <i class="bi bi-' . $icon . '" style="font-size:' . $size . ';"></i> ';
+    }
+
+    /**
+     * Display small user icon based on in-world Avatar profile picture.
+     * Not implemented yet. For now, we use bootstrap icons.
+     * In any case, we don't use gravatar yet.
+     */
+    public static function user_icon( $size = 'inherit' ) {
+        if( ! self::is_logged_in() ) {
+            return null;
+        }
+        $size = is_numeric( $size ) ? $size . 'px' : $size;
+        return self::icon( 'person-circle', $size );
+        // For now, we return user icon with bootstrap library
+        // return ' <i class="bi bi-person-circle" style="font-size:' . $size . ';"></i> ';
+    }
 }
 
 $OpenSim = new OpenSim();
 $OpenSim->init();
+
