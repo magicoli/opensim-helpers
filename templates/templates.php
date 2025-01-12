@@ -1,4 +1,5 @@
 <?php
+
 $site_title = $site_title ?? 'OpenSimulator Helpers';
 $page_title = $page_title ?? 'Unknown page';
 $content = $content ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris.';
@@ -29,7 +30,7 @@ $menus['user'] = array(
                 'url' => '/account',
                 'label' => 'Account Settings',
             ),
-            'logut' => array(
+            'logout' => array(
                 'url' => '/profile/?logout',
                 'label' => 'View',
             ),
@@ -97,5 +98,8 @@ $branding = '<a class="navbar-brand" href="#">' . htmlspecialchars($GLOBALS['sit
 $main_menu_html = format_menu( $menus['main'], 'main' );
 $user_menu_html = format_menu( $menus['user'], 'user' );
 $footer_menu_html = format_menu( $menus['footer'], 'footer' );
+
+OpenSim::enqueue_script( 'template-page', 'js/page.js' );
+OpenSim::enqueue_style( 'template-page', 'templates/page.css' );
 
 require( 'template-page.php' );

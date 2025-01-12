@@ -185,7 +185,7 @@ class OpenSim_Form {
             $reset_button . $submit
         );
         $html = sprintf(
-            '<form id="%s" method="post" action="%s" class="bg-light p-4">%s</form>',
+            '<form id="%s" method="post" action="%s" class="py-4">%s</form>',
             $this->form_id,
             $_SERVER['PHP_SELF'],
             $html . $buttons
@@ -349,7 +349,7 @@ class OpenSim_Form {
                     // $style = 'style="color:green"';
                     break;
                 case 'active':
-                    $status = 'active bg-light';
+                    $status = 'active bg-secondary';
                     $style = 'style="font-weight:bold"';
 
                     break;

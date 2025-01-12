@@ -19,6 +19,7 @@ class OpenSim {
     private static $user_notices = array();
     private static $version;
     private static $scripts;
+    private static $styles;
 
     public function __construct() {
     }
@@ -291,34 +292,6 @@ class OpenSim {
         return 'Unknown';
     }
 
-    /**
-     * Basic function to replace WP enqueue_script when not in WP environment.
-     * Add the script to a private property that will be used with another method to output all scripts.
-     * Use OSHELPERS_URL constant to build the URL unless it's already full.
-     * Use self::get_version() to define the version of the script unless it is already defined.
-     */
-    public static function enqueue_script( $handle, $src, $deps = array(), $ver = false, $in_footer = false ) {
-        if( ! file_exists( $src ) ) {
-            error_log( __FUNCTION__ . ' file not found: ' . $src );
-            return false;
-        }
-
-        $handle = preg_match( '/^oshelpers-/', $handle ) ? $handle : 'oshelpers-' . $handle;
-
-        self::$scripts = self::$scripts ?? array( 'head' => array(), 'footer' => array() );
-        if( strpos( $src, '://' ) === false ) {
-            $src = OSHELPERS_URL . ltrim( $src, '/' );
-        }
-        $src = self::add_query_args( $src, array( 'ver' => self::get_version() ) );
-        $section = $in_footer ? 'footer' : 'head';
-        self::$scripts[$section][$handle] = array(
-            'src' => $src,
-            'deps' => $deps,
-            'ver' => $ver ?? self::get_version(),
-            'in_footer' => $in_footer,
-        );
-    }
-
     public static function build_url( $parsed ) {
         if( empty( $parsed['host'] ) ) {
             $url = '';
@@ -343,6 +316,41 @@ class OpenSim {
         return $url;
     }
 
+    /**
+     * Basic function to replace WP enqueue_script when not in WP environment.
+     * Add the script to a private property that will be used with another method to output all scripts.
+     * Use OSHELPERS_URL constant to build the URL unless it's already full.
+     * Use self::get_version() to define the version of the script unless it is already defined.
+     */
+    public static function enqueue_script( $handle, $src, $deps = array(), $ver = false, $in_footer = false ) {
+        if( ! file_exists( $src ) ) {
+            error_log( __FUNCTION__ . ' file not found: ' . $src );
+            return false;
+        }
+
+        $handle = preg_match( '/^oshelpers-/', $handle ) ? $handle : 'oshelpers-' . $handle;
+        $handle = ( rtrim ( $handle, '-css' ) ) . '-js';
+
+        self::$scripts = self::$scripts ?? array( 'head' => array(), 'footer' => array() );
+        if( strpos( $src, '://' ) === false ) {
+            $src = OSHELPERS_URL . ltrim( $src, '/' );
+        }
+        $src = self::add_query_args( $src, array( 'ver' => self::get_version() ) );
+        $section = $in_footer ? 'footer' : 'head';
+        self::$scripts[$section][$handle] = array(
+            'src' => $src,
+            'deps' => $deps,
+            'ver' => $ver ?? self::get_version(),
+            'in_footer' => $in_footer,
+        );
+    }
+
+    /**
+     * Return or output the html for scripts in the head or footer
+     * 
+     * @param string $section 'head' or 'footer'
+     * @param bool $echo Output the html if true, return it if false
+     */
     public static function get_scripts( $section, $echo = false ) {
         if( ! isset( self::$scripts[$section] ) ) {
             return '';
@@ -351,11 +359,8 @@ class OpenSim {
         if(empty( self::$scripts[$section] ) ) {
             return '';
         }
-        if( $section === 'head' ) {
-            $template = '<link id="%s" rel="stylesheet" href="%s" type="text/css" %s>';
-        } else {
-            $template = '<script id="%s" src="%s" type="text/javascript"></script>';
-        }
+
+        $template = '<script id="%s" src="%s" type="text/javascript"></script>';
 
         $scripts = self::$scripts[$section];
         foreach( $scripts as $handle => $script ) {
@@ -371,6 +376,54 @@ class OpenSim {
             echo $html;
         }
         // error_log( $html );
+        return $html;
+    }
+
+    public static function enqueue_style( $handle, $src, $deps = array(), $ver = false, $media = 'all' ) {
+        if( ! file_exists( $src ) ) {
+            error_log( __FUNCTION__ . ' file not found: ' . $src );
+            return false;
+        }
+
+        $handle = preg_match( '/^oshelpers-/', $handle ) ? $handle : 'oshelpers-' . $handle;
+        $handle = ( rtrim ( $handle, '-css' ) ) . '-css';
+
+        self::$styles = self::$styles ?? array( 'head' => array(), 'footer' => array() );
+        if( strpos( $src, '://' ) === false ) {
+            $src = OSHELPERS_URL . ltrim( $src, '/' );
+        }
+        $src = self::add_query_args( $src, array( 'ver' => self::get_version() ) );
+        self::$styles['head'][$handle] = array(
+            'src' => $src,
+            'deps' => $deps,
+            'ver' => $ver ?? self::get_version(),
+            'media' => $media,
+        );
+    }
+
+    public static function get_styles( $echo = false ) {
+        if( ! isset( self::$styles['head'] ) ) {
+            return '';
+        }
+        $html = '';
+        if(empty( self::$styles['head'] ) ) {
+            return '';
+        }
+
+        $template = '<link id="%s" rel="stylesheet" href="%s" type="text/css" media="%s">';
+
+        $styles = self::$styles['head'];
+        foreach( $styles as $handle => $style ) {
+            $html .= sprintf(
+                $template,
+                $handle,
+                $style['src'],
+                $style['media'],
+            );
+        }
+        if( $echo ) {
+            echo $html;
+        }
         return $html;
     }
 }

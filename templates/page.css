@@ -1,0 +1,12 @@
+/*
+ * Template page CSS
+**/
+
+:root {
+  --bs-primary-rgb: 0, 192, 0;
+  --bs-secondary-rgb: 63, 159, 63;
+}
+[data-bs-theme="dark"] {
+  /* --bs-secondary-rgb: 0, ; */
+  /* --bs-secondary-rgb: 127, 63, 127; */
+}
