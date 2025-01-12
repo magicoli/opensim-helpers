@@ -14,4 +14,17 @@ class OpenSim_Page {
     public function get_content() {
         return $this->content;
     }
+
+    public function get_sidebar_left() {
+        return '';
+    }
+
+    public function get_sidebar_right() {
+        $html = '';
+        $html .= OpenSim::grid_info_card();
+        if( ! empty( $html ) ) {
+            $html = '<div class="sidebar sidebar-right">' . $html . '</div>';
+        }
+        return $html;
+    }
 }

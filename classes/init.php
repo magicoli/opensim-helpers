@@ -45,6 +45,7 @@ class OpenSim {
     }
 
     public function includes() {
+        require_once( OSHELPERS_DIR . 'includes/functions.php' );
         require_once( OSHELPERS_DIR . 'classes/class-locale.php' );
     }
 
@@ -535,9 +536,6 @@ class OpenSim {
             if( preg_match( '/^wordpress_logged_in/', $key ) ) {
                 $parts = explode( '|', $value );
                 $_SESSION['user_id'] = $parts[0];
-                error_log( 'Logged in user: ' . $_SESSION['user_id'] );
-                error_log( 'user locale ' . self::user_locale( true ) );
-                // error_log( 'Cookies: ' . print_r( $_COOKIE, true ) );
                 break;
             }
         }
@@ -585,8 +583,120 @@ class OpenSim {
         // For now, we return user icon with bootstrap library
         // return ' <i class="bi bi-person-circle" style="font-size:' . $size . ';"></i> ';
     }
+
+    /**
+     * get_option()
+     * 
+     * Retrieve an option value from 
+     * - $_SESSION['installation']['config'], if exists, organized as an array(
+     *    'section' => array(
+     *       'option' => 'value',
+     *       'option2' => 'value2',
+     *   )
+     * - self::$config, if exists, organized the same way as $_SESSION['installation']['config']
+     * - constants defined includes/config.php (map to be implemented later)
+     * - site configuration data (to be implemented later)
+     */
+    public static function get_option( $option, $default = null ) {
+        $config = $_SESSION['installation']['config'] ?? self::$config ?? array();
+        if( empty( $config ) ) {
+            return $default;
+        }
+        // Give value of $config[$section][$key] if when given $option = 'section.key'
+        if( strpos( $option, '.' ) !== false ) {
+            $parts = explode( '.', $option );
+            $section = $parts[0];
+            $key = $parts[1];
+            return $config[$section][$key] ?? $default;
+        }
+
+        // Otherwise return global option
+        return $config[$option] ?? $default;
+    }
+
+    public static function grid_info_card( $grid_uri = false, $args = array() ) {
+        $info = array();
+        $title = false;
+        if( ! empty( $args['title'])) {
+            $title = $args['title'] === true ? _( 'Grid Information' ) : $args['title'];
+        }
+        if( ! $grid_uri ) {
+            $info = array_filter( array_merge(
+                $info,
+                array(
+                    self::get_option( 'GridInfoService.gridname' ),
+                    'Login URI' => self::hop( self::get_option( 'Hypergrid.HomeURI' ) ),
+                )
+            ) );
+            // $info = self::get_option( 'GridInfoService' );
+            // $login_uri = self::get_option( 'Hypergrid.HomeURI' );
+        } else {
+            $info = array(
+                'Grid Name' => 'External Grid, not implemented.',
+            );
+            $title = false;
+            if( ! empty( $args['title'])) {
+                $title = $args['title'] === true ? _( 'Grid Information' ) : $args['title'];
+            }
+        }
+        if( empty( $info ) ) {
+            return;
+        }
+        $html = '<div class="block grid-info card">';
+        $title = empty( $title ) ? array_shift( $info ) : $title;
+        // $html .= '<h5 class="card-title">' . $title . '</h5>';
+        $html .= '<ul class="list-group list-group-flush">';
+        $html .= sprintf(
+            '<li class="list-group-item active">
+                <h5 class="card-title p-0 m-0">%s</h5>
+            </li>',
+            $title,
+            'Now that\'s something else',
+        );
+        foreach( $info as $key => $value ) {
+            $html .= sprintf(
+                '<li class="list-group-item %s">%s %s</li>',
+                $class,
+                is_numeric( $key ) ? '' : $key . ':',
+                $value
+            );
+            $class="";
+        }
+        $html .= '</ul>';
+        $html .= '</div>';
+        return $html;
+    }
+
+    static function hop( $url = null, $string = null, $format = true ) {
+        if ( empty( $url ) ) {
+                // $url = get_option( 'w4os_login_uri' );
+                return $string;
+        }
+        $url = opensim_format_tp( $url, TPLINK_HOP );
+
+        if ( ! $format ) {
+                return $url;
+        }
+
+        $string    = ( empty( $string ) ) ? $url : $string;
+        $classes[] = 'hop';
+        $classes[] = 'hop-link';
+        if ( preg_match( ':/app/agent/:', $url ) ) {
+                $classes[] = 'profile';
+        }
+
+        $string = preg_replace( '+.*://+', '', $string );
+        return sprintf(
+            '<a class="%s" href="%s">%s %s</a>',
+            implode( ' ', $classes ),
+            $url,
+            self::icon( 'door-open' ),
+            $string,
+            // self::icon( 'box-arrow-up-right' ),
+            // self::icon( 'arrow-right-square' ),
+        );
+    }
 }
 
 $OpenSim = new OpenSim();
 $OpenSim->init();
-

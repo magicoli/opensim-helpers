@@ -524,5 +524,7 @@ $page = new OpenSim_Install();
 $page_title = $page->get_page_title();
 $content = $page->get_content();
 
+$sidebar_right = $page->get_sidebar_right();
+
 // Last step is to load template to display the page.
 require( 'templates/templates.php' );

@@ -72,6 +72,9 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
         '<ul class="%s">',
         $ul_class
     );
+    if( ! is_array( $menu ) ) {
+        return '';
+    }
     foreach ($menu as $key => $item) {
         if (isset($item['condition']) && ! OpenSim::validate_condition($item['condition'])) {
             continue;
@@ -117,7 +120,7 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
 $branding = '<a class="navbar-brand" href="#">' . htmlspecialchars($GLOBALS['site_title']) . '</a>';
 
 // Generate HTML for each menu
-$main_menu_html = format_menu( $menus['main'], 'main' );
+$main_menu_html = format_menu( ($menus['main'] ?? null ), 'main' );
 $user_menu_html = format_menu( $menus['user'], 'user' );
 $footer_menu_html = format_menu( $menus['footer'], 'footer' );
 
