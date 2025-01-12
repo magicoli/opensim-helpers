@@ -470,7 +470,35 @@ class OpenSim {
             
         return $slug;
     }
-    
+
+    public static function validate_condition( $condition ) {
+        if( is_callable( $condition ) ) {
+            return $condition();
+        }
+        if( is_bool( $condition ) ) {
+            return $condition;
+        }
+        switch( $condition ) {
+            case 'logged_in':
+                return self::is_logged_in();
+            case 'logged_out':
+                return self::is_logged_out();
+            default:
+                return false;
+        }
+    }
+
+    public static function is_logged_in() {
+        return isset( $_SESSION['user_id'] );
+    }
+
+    public static function is_logged_out() {
+        return ! self::is_logged_in();
+    }
+
+    public static function get_user_id() {
+        return $_SESSION['user_id'] ?? false;
+    }
 }
 
 $OpenSim = new OpenSim();

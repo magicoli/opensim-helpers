@@ -24,7 +24,7 @@ $menus['user'] = array(
     'userprofile' => array(
         'url' => '/profile',
         'label' => 'Profile',
-        'which_users' => 'logged_in',
+        'condition' => 'logged_in',
         'children' => array(
             'account' => array(
                 'url' => '/account',
@@ -39,7 +39,7 @@ $menus['user'] = array(
     'login' => array(
         'url' => '/login',
         'label' => 'Login',
-        'which_users' => 'logged_out',
+        'condition' => 'logged_out',
     ),
 );
 
@@ -69,6 +69,10 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
         $ul_class
     );
     foreach ($menu as $item) {
+        if (isset($item['condition']) && ! OpenSim::validate_condition($item['condition'])) {
+            continue;
+        }
+
         if (isset($item['children'])) {
             $html .= '<li class="nav-item dropdown">';
             $html .= '<a class="nav-link dropdown-toggle" href="' . htmlspecialchars($item['url']) . '" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">';
