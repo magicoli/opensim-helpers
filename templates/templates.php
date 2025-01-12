@@ -74,8 +74,9 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
         }
 
         if (isset($item['children'])) {
-            $html .= '<li class="nav-item dropdown">';
-            $html .= '<a class="nav-link dropdown-toggle" href="' . htmlspecialchars($item['url']) . '" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">';
+            // Add 'dropdown-hover' class for hover functionality
+            $html .= '<li class="nav-item dropdown dropdown-hover">';
+            $html .= '<a class="nav-link dropdown-toggle" href="' . htmlspecialchars($item['url']) . '" id="navbarDropdown" role="button" aria-expanded="false">';
             $html .= htmlspecialchars($item['label']);
             $html .= '</a>';
             $html .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
@@ -103,7 +104,7 @@ $main_menu_html = format_menu( $menus['main'], 'main' );
 $user_menu_html = format_menu( $menus['user'], 'user' );
 $footer_menu_html = format_menu( $menus['footer'], 'footer' );
 
-OpenSim::enqueue_script( 'template-page', 'js/page.js' );
-OpenSim::enqueue_style( 'template-page', 'templates/page.css' );
+OpenSim::enqueue_script( 'template-page', 'templates/bootstrap.js' );
+OpenSim::enqueue_style( 'template-page', 'templates/bootstrap.css' );
 
 require( 'template-page.php' );
