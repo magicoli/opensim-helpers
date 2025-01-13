@@ -47,6 +47,7 @@ class OpenSim {
     }
 
     public function includes() {
+        require_once( OSHELPERS_DIR . 'classes/class-exception.php' );
         require_once( OSHELPERS_DIR . 'includes/functions.php' );
         require_once( OSHELPERS_DIR . 'classes/class-locale.php' );
         require_once( OSHELPERS_DIR . 'classes/class-ini.php' );
@@ -122,7 +123,7 @@ class OpenSim {
             }
         }
         if ( ! $dir ) {
-            throw new Error( 'No writable temporary directory found.' );
+            throw new OpenSim_Error( 'No writable temporary directory found.' );
         }
         
         self::$tmp_dir = $dir;
@@ -197,17 +198,6 @@ class OpenSim {
         }
         
         self::notify( $message, $type );
-
-        $message = strip_tags( $message );
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        if( ! empty( $trace[1] ) ) {
-            $class = $trace[1]['class'] ?? '';
-            $function = $trace[1]['function'] ?? '';
-        }
-        if( ! empty( trim ( $class . $function ) ) ) {
-            $prefix .= '(' . ( empty( $class ) ? '' : $class . '::' ) . $function . ') ';
-        }
-        error_log( $prefix . $message );
     }
 
     public static function notify( $message, $type = 'info' ) {
@@ -647,6 +637,15 @@ class OpenSim {
             // self::icon( 'arrow-right-square' ),
         );
     }
+
+    public static function is_error( $thing ) {
+        // Throwable includes Exception and probably other things.
+        if ( $thing instanceof Throwable ) {
+            return true;
+        }
+        return false;
+    }
+    
 }
 
 $OpenSim = new OpenSim();

@@ -15,7 +15,7 @@ class OpenSim_Ini {
 
     public function __construct( $args ) {
         if( empty( $args ) ) {
-            throw new Error( __FUNCTION__ .'() empty value received');
+            throw new OpenSim_Error( __FUNCTION__ .'() empty value received');
         }
 
         if( is_string( $args ) && file_exists( $args ) ) {
@@ -31,7 +31,7 @@ class OpenSim_Ini {
         } elseif( is_array( $args ) ) {
             $this->raw_ini_array = $args;
         } else {
-            throw new Error( __CLASS__ .' accepts only string, array or file path value' );
+            throw new OpenSim_Error( __CLASS__ .' accepts only string, array or file path value' );
         }
 
         $this->sanitize_and_parse( $this->raw_ini_array );

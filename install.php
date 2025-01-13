@@ -51,7 +51,7 @@ class OpenSim_Install extends OpenSim_Page {
                     try {
                         $result = call_user_func( $task['callback'] );
                         if( ! $result ) {
-                            throw new Error( $task['error'] ?? $callback_name . '() failed.' );
+                            throw new OpenSim_Error( $task['error'] ?? $callback_name . '() failed.' );
                         }
                     } catch (Throwable $e) {
                         $result = false;
@@ -106,7 +106,7 @@ class OpenSim_Install extends OpenSim_Page {
         try {
             $config = $_SESSION[self::FORM_ID]['config'] ?? null;
             if( empty( $config ) ) {
-                throw new Error( _('No configuration found.') );
+                throw new OpenSim_Error( _('No configuration found.') );
             }
         } catch (Throwable $e) {
             OpenSim::notify_error( $e );
@@ -191,7 +191,7 @@ class OpenSim_Install extends OpenSim_Page {
         try {
             $result = file_put_contents($temp_config_file, $php_template);
             if ( ! $result ) {
-                throw new Error( sprintf(
+                throw new OpenSim_Error( sprintf(
                     _( 'Error writing temporary file, make sure the web server has read/write permissions to %s directory.'),
                     '<nobr><code>' . dirname( $temp_config_file ) . '/</code></nobr>'
                 ) );
@@ -247,7 +247,7 @@ class OpenSim_Install extends OpenSim_Page {
                     // $message = 
                     // OpenSim::notify_error( _('Invalid answer from is_robust_ini_file') );
                     // Should not happen, is_robust_ini_file should have thrown an error instead of returning false
-                    throw new Error( _('is_robust_ini_file returned an invalid value.') );
+                    throw new OpenSim_Error( _('is_robust_ini_file returned an invalid value.') );
                     $errors++;
                 }
                 // $ini = new OpenSim_Ini( $values['robust_ini_path'] );
@@ -432,7 +432,7 @@ class OpenSim_Install extends OpenSim_Page {
                         if( $valid === false ) {
                             // OpenSim::notify_error( _('Invalid answer from is_robust_ini_file') );
                             // Should not happen, is_robust_ini_file should have thrown an error instead of returning false
-                            throw new Error( _('Invalid answer from is_robust_ini_file()') );
+                            throw new OpenSim_Error( _('Invalid answer from is_robust_ini_file()') );
                             $errors++;
                         }
                     } catch (Throwable $e) {
