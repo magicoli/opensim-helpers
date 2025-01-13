@@ -14,6 +14,7 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
     <header class="bg-primary text-center mt-auto">
+        <a class="skip visually-hidden-focusable" href="#main">Skip to main content</a>
         <nav class="container navbar navbar-expand-lg">
             <?php echo $branding; ?>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbar-header" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,7 +32,7 @@
             // $sidebar_left = '<div class="card">Card<div>';
             // $sidebar_right = '<div class="card">Card<div>';
             ?>
-            <main class="col-lg-auto">
+            <main id="main" class="col-lg-auto">
                 <h1 class="page-title"><?php echo $page_title; ?></h1>
                 <div class="content text-start">
                     <?php echo $content; ?>
@@ -51,7 +52,7 @@
             if ( ! empty( $sidebar_right ) ) : 
             ?>
             <aside id="sidebar-right" class="col-lg-4 col-xl-3 sidebar">
-                <div class="d-grid d-md-flex d-lg-grid gap-4">
+                <div class="cards d-grid d-md-flex d-lg-grid gap-4">
                     <?php echo $sidebar_right; ?>
                 </div>
             </aside>

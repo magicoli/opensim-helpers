@@ -54,31 +54,47 @@ class OpenSim_Grid {
         if( empty( $info ) ) {
             return;
         }
+        $hide_first = '';
         if( ! empty( $args['title'] ) && is_string( $args['title'] ) ) {
             $title = $args['title'];
         } else {
-            $title = array_shift( $info );
+            $title = array_values( $info )[0];
+            if( is_numeric( array_keys( $info )[0] ) ) {
+                $hide_first = 'hidden d-none';
+            }
         }
 
+        $collapse_head = '';
+        $collapse_class = '';
+        $collapse_data = '';
         $html = sprintf(
-            '<div class="flex-fill">
-                <div id="card-%1$s" class="card card-$1$s">   
-                    <ul class="list-group list-group-flush ">',
+            '<div id="card-%1$s" class="accordion flex-fill">
+                <div class="accordion-item card card-$1$s bg-primary">
+                    <h5 class="card-title p-0 m-0 accordion-header" %4$s>
+                        <button class="accordion-button p-3" data-bs-toggle="collapse" href="#card-list-%1$s" aria-expanded="true" aria-controls="collapse-card-list-%1$s">
+                            %2$s
+                        </button>
+                    </h5>
+                <ul id="card-list-%s" class="list-group list-group-flush accordion-collapse collapse show" data-bs-parent="#card-%1$s">',
             $id,
+            $title,
+            $collapse_head,
+            $collapse_class,
+            $collapse_data
         );
 
-        $html .= sprintf(
-            '<li class="list-group-item active">
-                <h5 class="card-title p-0 m-0">%s</h5>
-            </li>',
-            $title,
-        );
         foreach( $info as $key => $value ) {
             $html .= sprintf(
-                '<li class="list-group-item">%s %s</li>',
+                '
+                <li class="list-group-item %2$s">
+                %3$s %4$s
+                </li>',
+                $id,
+                $hide_first,
                 is_numeric( $key ) ? '' : $key . ':',
                 $value
             );
+            $hide_first = '';
             $class="";
         }
         $html .= '</ul>';
@@ -131,25 +147,14 @@ class OpenSim_Grid {
 
     public static function grid_status_card( $grid_uri = null, $args = null ) {
         $info = self::grid_status( $grid_uri, $args );
-        error_log( __FUNCTION__ . ' info: ' . print_r($info, true) );
-
-
-        return self::array_to_card( 'grid-status', $info );
-
         if( ! $info || OpenSim::is_error( $info ) ) {
             return false;
         }
-        $title = false;
-        if( ! empty( $args['title'])) {
-            $title = $args['title'] === true ? _( 'Grid Information' ) : $args['title'];
-        }
-
-        $html = self::array_to_card( 'grid-status', $info, $title );
-        return $html;
+        return self::array_to_card( 'grid-status', $info );
     }
 
     public static function grid_status( $grid_url = null ) {
-        // Fake data for debugging purpose
+        // DEBUG - Fake data for debugging purpose
         $info = array(
             _('Status') => _('Grid Online'),
             _('Members') => 113,
@@ -161,7 +166,7 @@ class OpenSim_Grid {
             _('Total area') => '1.44 km²',
         );
         return $info;
-        // End debugging
+        // End DEBUG
 
         global $OpenSimDB;
         // If db is not yet configured, calls to $OpenSimDB would crash otherwise
