@@ -20,12 +20,32 @@ class OpenSim_Page {
         return '';
     }
 
-    public function get_sidebar_right() {
-        $html = '';
-        $html .= OpenSim_Grid::grid_info_card();
-        if( ! empty( $html ) ) {
-            $html = '<div class="sidebar sidebar-right">' . $html . '</div>';
+    public function get_sidebar( $id = 'right' ) {
+        if( empty( $id ) ) {
+            return '';
         }
+        $html = '';
+        switch( $id ) {
+            case 'left':
+                // $html = OpenSim_Grid::grid_status_card();
+                break;
+                case 'right':
+                $html .= OpenSim_Grid::grid_info_card();
+                $html .= OpenSim_Grid::grid_status_card();
+                break;
+            default:
+                break;
+        }
+
+        $class="flex";
+        // if( ! empty( $html ) ) {
+        //     $html = sprintf(
+        //         '<div id="sidebar-%s" class="sidebar sidebar-%s flex-row">%s</div>',
+        //         $id,
+        //         $id,
+        //         $html
+        //     );
+        // }
         return $html;
     }
 }

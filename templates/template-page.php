@@ -6,6 +6,7 @@
     <title><?php echo $page_title; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous" async></script>
     <?php 
         OpenSim::get_styles( 'head', true );
         OpenSim::get_scripts( 'head', true );
@@ -36,14 +37,23 @@
                     <?php echo $content; ?>
                 </div>
             </main>
-            <?php if ( ! empty( $sidebar_left ) ) : ?>
-            <aside class="col-lg-3 col-xl-3 order-2 order-lg-first">
-                <?php echo $sidebar_left; ?>
+            <?php 
+            $sidebar_left = $page->get_sidebar('left');
+            if ( ! empty( $sidebar_left ) ) : 
+            ?>
+            <aside id="sidebar-left" class="col-lg-4 col-xl-3 sidebar">
+                <div class="d-grid d-md-flex d-lg-grid gap-4">
+                    <?php echo $sidebar_left; ?>
             </aside>
             <?php endif; ?>
-            <?php if ( ! empty( $sidebar_right ) ) : ?>
-                <aside class="col-xl-3">
-                <?php echo $sidebar_right; ?>
+            <?php 
+            $sidebar_right = $page->get_sidebar('right');
+            if ( ! empty( $sidebar_right ) ) : 
+            ?>
+            <aside id="sidebar-right" class="col-lg-4 col-xl-3 sidebar">
+                <div class="d-grid d-md-flex d-lg-grid gap-4">
+                    <?php echo $sidebar_right; ?>
+                </div>
             </aside>
             <?php endif; ?>
         </div>

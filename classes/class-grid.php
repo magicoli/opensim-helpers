@@ -50,6 +50,43 @@ class OpenSim_Grid {
         return $info;
     }
 
+    public static function array_to_card( $id, $info, $args = array() ) {
+        if( empty( $info ) ) {
+            return;
+        }
+        if( ! empty( $args['title'] ) && is_string( $args['title'] ) ) {
+            $title = $args['title'];
+        } else {
+            $title = array_shift( $info );
+        }
+
+        $html = sprintf(
+            '<div class="flex-fill">
+                <div id="card-%1$s" class="card card-$1$s">   
+                    <ul class="list-group list-group-flush ">',
+            $id,
+        );
+
+        $html .= sprintf(
+            '<li class="list-group-item active">
+                <h5 class="card-title p-0 m-0">%s</h5>
+            </li>',
+            $title,
+        );
+        foreach( $info as $key => $value ) {
+            $html .= sprintf(
+                '<li class="list-group-item">%s %s</li>',
+                is_numeric( $key ) ? '' : $key . ':',
+                $value
+            );
+            $class="";
+        }
+        $html .= '</ul>';
+        $html .= '</div>';
+        $html .= '</div>';
+        return $html;
+    }
+
     /**
      * Get grid information as a card
      */
@@ -62,31 +99,8 @@ class OpenSim_Grid {
         if( ! empty( $args['title'])) {
             $title = $args['title'] === true ? _( 'Grid Information' ) : $args['title'];
         }
-        if( empty( $info ) ) {
-            return;
-        }
-        $html = '<div class="block grid-info card">';
-        $title = empty( $title ) ? array_shift( $info ) : $title;
-        // $html .= '<h5 class="card-title">' . $title . '</h5>';
-        $html .= '<ul class="list-group list-group-flush">';
-        $html .= sprintf(
-            '<li class="list-group-item active">
-                <h5 class="card-title p-0 m-0">%s</h5>
-            </li>',
-            $title,
-            'Now that\'s something else',
-        );
-        foreach( $info as $key => $value ) {
-            $html .= sprintf(
-                '<li class="list-group-item">%s %s</li>',
-                is_numeric( $key ) ? '' : $key . ':',
-                $value
-            );
-            $class="";
-        }
-        $html .= '</ul>';
-        $html .= '</div>';
-        return $html;
+
+        return self::array_to_card( 'grid-info', $info, $title );
     }
 
     // public function get_grid_status() {
@@ -115,30 +129,47 @@ class OpenSim_Grid {
     //     return $html;
     // }
 
-    // public function get_grid_status_card() {
-    //     $status = $this->get_grid_status();
-    //     $html = '';
-    //     if( ! empty( $status ) ) {
-    //         $html .= '<div class="card">';
-    //         $html .= '<div class="card-header">';
-    //         $html .= '<h5 class="card-title">' . _('Grid Status') . '</h5>';
-    //         $html .= '</div>';
-    //         $html .= '<div class="card-body">';
-    //         $html .= OpenSim::array2table( $status, 'gridstatus' );
-    //         $html .= '</div>';
-    //         $html .= '</div>';
-    //     }
-    //     return $html;
-    // }
+    public static function grid_status_card( $grid_uri = null, $args = null ) {
+        $info = self::grid_status( $grid_uri, $args );
+        error_log( __FUNCTION__ . ' info: ' . print_r($info, true) );
 
-    function opensim_grid_status( $grid_url = null ) {
+
+        return self::array_to_card( 'grid-status', $info );
+
+        if( ! $info || OpenSim::is_error( $info ) ) {
+            return false;
+        }
+        $title = false;
+        if( ! empty( $args['title'])) {
+            $title = $args['title'] === true ? _( 'Grid Information' ) : $args['title'];
+        }
+
+        $html = self::array_to_card( 'grid-status', $info, $title );
+        return $html;
+    }
+
+    public static function grid_status( $grid_url = null ) {
+        // Fake data for debugging purpose
+        $info = array(
+            _('Status') => _('Grid Online'),
+            _('Members') => 113,
+            _('Active Members (30 days)') => 6,
+            _('Members in world') => 0,
+            _('Active users (30 days)') =>	33,
+            _('Total users in world') => 0,
+            _('Regions') => 22,
+            _('Total area') => '1.44 km²',
+        );
+        return $info;
+        // End debugging
+
         global $OpenSimDB;
         // If db is not yet configured, calls to $OpenSimDB would crash otherwise
         if ( ! $OpenSimDB ) {
             return false;
         }
-        return 'got a db';
-    
+
+
         // $status = wp_cache_get( 'gridstatus', 'w4os' );
         // if ( false === $status ) {
         // 	// $cached="uncached";
