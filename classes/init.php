@@ -31,6 +31,8 @@ class OpenSim {
     public function init() {
         $this->constants();
         $this->includes();
+
+        $this->grid = new OpenSim_Grid();
     }
 
     public function constants() {
@@ -47,6 +49,8 @@ class OpenSim {
     public function includes() {
         require_once( OSHELPERS_DIR . 'includes/functions.php' );
         require_once( OSHELPERS_DIR . 'classes/class-locale.php' );
+        require_once( OSHELPERS_DIR . 'classes/class-ini.php' );
+        require_once( OSHELPERS_DIR . 'classes/class-grid.php' );
     }
 
     public function get_helpers_url() {
@@ -612,59 +616,6 @@ class OpenSim {
 
         // Otherwise return global option
         return $config[$option] ?? $default;
-    }
-
-    public static function grid_info_card( $grid_uri = false, $args = array() ) {
-        $info = array();
-        $title = false;
-        if( ! empty( $args['title'])) {
-            $title = $args['title'] === true ? _( 'Grid Information' ) : $args['title'];
-        }
-        if( ! $grid_uri ) {
-            $info = array_filter( array_merge(
-                $info,
-                array(
-                    self::get_option( 'GridInfoService.gridname' ),
-                    'Login URI' => self::hop( self::get_option( 'Hypergrid.HomeURI' ) ),
-                )
-            ) );
-            // $info = self::get_option( 'GridInfoService' );
-            // $login_uri = self::get_option( 'Hypergrid.HomeURI' );
-        } else {
-            $info = array(
-                'Grid Name' => 'External Grid, not implemented.',
-            );
-            $title = false;
-            if( ! empty( $args['title'])) {
-                $title = $args['title'] === true ? _( 'Grid Information' ) : $args['title'];
-            }
-        }
-        if( empty( $info ) ) {
-            return;
-        }
-        $html = '<div class="block grid-info card">';
-        $title = empty( $title ) ? array_shift( $info ) : $title;
-        // $html .= '<h5 class="card-title">' . $title . '</h5>';
-        $html .= '<ul class="list-group list-group-flush">';
-        $html .= sprintf(
-            '<li class="list-group-item active">
-                <h5 class="card-title p-0 m-0">%s</h5>
-            </li>',
-            $title,
-            'Now that\'s something else',
-        );
-        foreach( $info as $key => $value ) {
-            $html .= sprintf(
-                '<li class="list-group-item %s">%s %s</li>',
-                $class,
-                is_numeric( $key ) ? '' : $key . ':',
-                $value
-            );
-            $class="";
-        }
-        $html .= '</ul>';
-        $html .= '</div>';
-        return $html;
     }
 
     static function hop( $url = null, $string = null, $format = true ) {

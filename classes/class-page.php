@@ -1,4 +1,5 @@
 <?php
+
 class OpenSim_Page {
     protected $page_title;
     protected $content;
@@ -21,7 +22,7 @@ class OpenSim_Page {
 
     public function get_sidebar_right() {
         $html = '';
-        $html .= OpenSim::grid_info_card();
+        $html .= OpenSim_Grid::grid_info_card();
         if( ! empty( $html ) ) {
             $html = '<div class="sidebar sidebar-right">' . $html . '</div>';
         }

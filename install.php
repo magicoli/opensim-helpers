@@ -11,7 +11,6 @@
 
 require_once( __DIR__ . '/classes/init.php' );
 require_once( __DIR__ . '/classes/class-page.php' );
-require_once( __DIR__ . '/classes/class-ini.php' );
 require_once( __DIR__ . '/classes/class-form.php' );
 
 class OpenSim_Install extends OpenSim_Page {
