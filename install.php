@@ -81,8 +81,8 @@ class OpenSim_Install extends OpenSim_Page {
                     $message = $prefix . ( $form->steps[$next_step_key]['success'] ?? 'Success' );
                     OpenSim::notify( $message, 'success' );
                     // Register the form again to update values
-                    $this->register_form_installation();
                     $form->complete( $next_step_key );
+                    $this->register_form_installation();
                 }
             }
         }
@@ -93,7 +93,7 @@ class OpenSim_Install extends OpenSim_Page {
     private function robust_generate_config() {
         $template = 'includes/config.example.php';
         if ( ! file_exists( $template )) {
-            OpenSim::notify(_('Template file not found.') );
+            OpenSim::notify_error( _('Template file not found.') );
             return false;
         }
 
@@ -201,7 +201,6 @@ class OpenSim_Install extends OpenSim_Page {
             return false;
         }
         // OpenSim::notify(_('Configuration file generated successfully.'), 'success');
-        $this->form->complete('config_robust');
         return true;
     }
 
@@ -258,6 +257,7 @@ class OpenSim_Install extends OpenSim_Page {
             if( file_exists($values['robust_ini_path']) ) {
                 $_SESSION[self::FORM_ID]['robust_ini_path'] = realpath( $values['robust_ini_path'] );
             } else {
+                OpenSim::notify_error( _('File not found') );
                 $form->task_error('robust_ini_path', _('File not found'), 'danger' );
                 $errors++;
             }
