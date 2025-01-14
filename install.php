@@ -9,9 +9,15 @@
  * @package		magicoli/opensim-helpers
 **/
 
-require_once( __DIR__ . '/classes/init.php' );
-require_once( __DIR__ . '/classes/class-page.php' );
-require_once( __DIR__ . '/classes/class-form.php' );
+if ( __FILE__ !== $_SERVER['SCRIPT_FILENAME'] ) {
+    // The file must only be called directly.
+    http_response_code(403);
+    exit( "I'm not that kind of girl, I don't want to be included." );
+}
+
+require_once( __DIR__ . '/classes/init.php' ); // Common to all main scripts
+require_once( __DIR__ . '/classes/class-page.php' ); // Specific, because we generate the page
+require_once( __DIR__ . '/classes/class-form.php' ); // Specific, because we use forms
 
 class OpenSim_Install extends OpenSim_Page {
     private $user_notices = array();
@@ -22,17 +28,24 @@ class OpenSim_Install extends OpenSim_Page {
     const FORM_ID = 'installation';
 
     public function __construct() {
-        if( ! defined( 'ABSPATH' ) ) {
-            define( 'ABSPATH', dirname( __FILE__ ) . '/' );
-        }
+        $this->page_title = _('Helpers Installation');
+
+        $this->init();
+        $this->register_form_installation();
+        $this->process_form();
+        $this->content = $this->render_content();
+    }    
+
+    public function init() {
+
         if( ! isset( $_SESSION[self::FORM_ID] ) ) {
             $_SESSION[self::FORM_ID] = array();
         }
+
         $this->handle_reset();
+    }
 
-        $this->page_title = _('Helpers Installation');
-
-        $this->register_form_installation();
+    public function process_form() {
         $form = $this->form;
         if( ! $form ) {
             OpenSim::notify_error( 'Could not create form');
@@ -86,8 +99,6 @@ class OpenSim_Install extends OpenSim_Page {
                 }
             }
         }
-
-        $this->content = $this->render_content();
     }
 
     private function robust_generate_config() {
