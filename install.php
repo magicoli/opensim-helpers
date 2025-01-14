@@ -215,28 +215,32 @@ class OpenSim_Install extends OpenSim_Page {
         return true;
     }
 
-    private function process_forms() {
-        if( empty( $_POST ) ) {
-            return;
+    private function robust_test_config() {
+        $temp_config_file = $_SESSION[self::FORM_ID]['config_file'] . '.install.temp';
+
+        // The file was validated by the previous task, so it should always exist
+        if ( ! file_exists( $temp_config_file )) {
+            throw new OpenSim_Error( _( 'The generated configuration file could not be found.' ) . '<br><code>' . $temp_config_file . '</code>' );
         }
-        $form_id = $_POST['form_id'] ?? null;
-        if( empty( $form_id ) ) {
-            error_log( __FUNCTION__ . ' ERROR: Missing form ID.' );
-            return false;
-        }
-        $form = $this->form ?? null;
-        if( empty( $form ) ) {
-            error_log( __FUNCTION__ . ' ERROR: Form empty.' );
+        
+        try {
+            include_once( $temp_config_file );
+            // error_log( 'OPENSIM_GRID_NAME ' . OPENSIM_GRID_NAME );
+        } catch (Throwable $e) {
+            OpenSim::notify_error( $e );
             return false;
         }
 
-        $callback = 'process_form_' . $form_id;
-        if( is_callable( [ $this, $callback ] ) ) {
-            return call_user_func( [ $this, $callback ] );
-        } else {
-            error_log( 'callback ' . $callback . ' not found.' );
-            return false;
+        // TODO: more extensive tests with all the constants used by the other scripts
+        if( ! defined( 'OPENSIM_GRID_NAME' ) ) {
+            throw new OpenSim_Error( _('Some required values are missing from the configuration file.') );
         }
+
+        
+        // OpenSim::notify( _('Configuration file loaded successfully.'), 'success' );
+        // TODO: copy the temp file to the final location on success.
+        // return true;
+        throw new OpenSim_Error(  _('The robust_test_config routine is not finished yet, but so far, so good.' ) );
     }
 
     public function process_form_installation() {
@@ -366,13 +370,10 @@ class OpenSim_Install extends OpenSim_Page {
                     array(
                         'label' => _('Process form'),
                         'callback' => [ $form, 'process' ],
-                        // 'error' => sprintf( _('Error processing %s.'), ( $_POST['robust_ini_path'] ?? $values['robust_ini_path'] ?? $_SESSION[self::FORM_ID]['robust_ini_path'] ?? 'Robust.ini' ) ),
-                        // 'success' => _('Submission validated.'),
                     ),
                     array(
                         'label' => _('Process ini file'),
                         'callback' => [ $this, 'robust_process_ini' ],
-                        'error' => _('Error parsing Robust ini file.'),
                         'success' => _('Robust ini parsed and converted.'),
                     ),
                     array(
@@ -381,6 +382,11 @@ class OpenSim_Install extends OpenSim_Page {
                         'error' => _('Error generating PHP config file.'),
                         'success' => _('PHP config file generated.'),
                     ),
+                    array(
+                        'label' => _('Test config'),
+                        'callback' => [ $this, 'robust_test_config' ],
+                        'success' => _('The PHP configuration file loaded like a breeze.'),
+                    )
                 )
             ),
             'config_opensim' => array(
