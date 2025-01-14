@@ -196,8 +196,9 @@ class OpenSim {
             $message = _('Unknown error, see log for details');
             error_log( $prefix . 'Unidentified error type: ' . gettype( $error ) . ' ' . print_r( $error, true ) );
         }
-        
-        self::notify( $message, $type );
+        if( ! empty( $message ) ) {
+            self::notify( $message, $type );
+        }        
     }
 
     public static function notify( $message, $type = 'info' ) {

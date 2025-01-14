@@ -51,7 +51,7 @@ class OpenSim_Install extends OpenSim_Page {
                     try {
                         $result = call_user_func( $task['callback'] );
                         if( ! $result ) {
-                            throw new OpenSim_Error( $task['error'] ?? $callback_name . '() failed.' );
+                            throw new OpenSim_Error( $task['error'] ?? null );
                         }
                     } catch (Throwable $e) {
                         $result = false;
