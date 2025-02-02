@@ -232,6 +232,46 @@ class OpenSim_Install extends OpenSim_Page {
         }
 
         // TODO: more extensive tests with all the constants used by the other scripts
+        $required_constants=array(
+            'CURRENCY_DB_HOST',
+            'CURRENCY_DB_NAME',
+            'CURRENCY_DB_PASS',
+            'CURRENCY_DB_USER',
+            'CURRENCY_HELPER_URL',
+            'CURRENCY_MONEY_TBL',
+            'CURRENCY_PROVIDER',
+            'CURRENCY_RATE',
+            'CURRENCY_RATE_PER',
+            'CURRENCY_SCRIPT_KEY',
+            'CURRENCY_TRANSACTION_TBL',
+            'CURRENCY_USE_MONEYSERVER',
+            'HYPEVENTS_URL',
+            'OFFLINE_MESSAGE_TBL',
+            'OPENSIM_DB',
+            'OPENSIM_DB_HOST',
+            'OPENSIM_DB_NAME',
+            'OPENSIM_DB_PASS',
+            'OPENSIM_DB_USER',
+            'OPENSIM_GRID_NAME',
+            'OPENSIM_MAIL_SENDER',
+            'SEARCH_DB_HOST',
+            'SEARCH_DB_NAME',
+            'SEARCH_DB_PASS',
+            'SEARCH_DB_USER',
+            'SEARCH_REGISTRARS',
+            'SEARCH_TABLE_EVENTS',
+        );
+        foreach( $required_constants as $constant ) {
+            if( ! defined( $constant ) ) {
+                $missing[$constant] = sprintf( _('Constant %s is missing.'), $constant );
+            }
+            $missing_count = ( ! empty( $missing ) ) ? count( $missing ) : 0;
+        }
+        if( $missing_count > 0 ) {
+            $message = sprintf( _('%s error(s) while generating config file.'), $missing_count );
+            $message .= '<ul><li>' . implode( '</li><li>', $missing ) . '</li></ul>';
+            throw new OpenSim_Error( $message );
+        }
         if( ! defined( 'OPENSIM_GRID_NAME' ) ) {
             throw new OpenSim_Error( _('Some required values are missing from the configuration file.') );
         }
