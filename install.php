@@ -16,7 +16,7 @@ if ( __FILE__ !== $_SERVER['SCRIPT_FILENAME'] ) {
 }
 
 require_once( __DIR__ . '/classes/init.php' ); // Common to all main scripts
-require_once( __DIR__ . '/classes/class-page.php' ); // Specific, because we generate the page
+require_once( __DIR__ . '/classes/class-page.php' ); // Specific, because we generate a page
 require_once( __DIR__ . '/classes/class-form.php' ); // Specific, because we use forms
 
 class OpenSim_Install extends OpenSim_Page {
@@ -239,8 +239,8 @@ class OpenSim_Install extends OpenSim_Page {
         
         // OpenSim::notify( _('Configuration file loaded successfully.'), 'success' );
         // TODO: copy the temp file to the final location on success.
-        // return true;
-        throw new OpenSim_Error(  _('The robust_test_config routine is not finished yet, but so far, so good.' ) );
+        return true;
+        // throw new OpenSim_Error(  _('The robust_test_config routine is not finished yet, but so far, so good.' ) );
     }
 
     public function process_form_installation() {

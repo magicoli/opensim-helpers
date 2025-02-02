@@ -27,11 +27,11 @@ class OpenSim_Page {
         $html = '';
         switch( $id ) {
             case 'left':
-                // $html = OpenSim_Grid::grid_status_card();
+                // $html = OpenSim_Grid::grid_stats_card();
                 break;
                 case 'right':
                 $html .= OpenSim_Grid::grid_info_card();
-                $html .= OpenSim_Grid::grid_status_card();
+                $html .= OpenSim_Grid::grid_stats_card();
                 break;
             default:
                 break;
