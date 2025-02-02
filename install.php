@@ -342,7 +342,7 @@ class OpenSim_Install extends OpenSim_Page {
                     'robust_ini_path' => array(
                         'label' => _('Robust config file path'),
                         'type' => 'plaintext',
-                        'value' => $_SESSION[self::FORM_ID]['robust_ini_path'],
+                        'value' => $_SESSION[self::FORM_ID]['robust_ini_path'] ?? '',
                         'readonly' => true,
                     ),
                     'opensim_ini_path' => array(
