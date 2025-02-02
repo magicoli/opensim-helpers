@@ -11,12 +11,27 @@ class OpenSim_Grid {
     private $grid_info;
     private $grid_info_card;
     private $grid_stats_card;
+    private static $labels = array();
 
     public function __construct() {
+        $this->constants();
         // $this->grid_stats = $this->get_grid_stats();
         // $this->grid_info = $this->get_grid_info();
         // $this->grid_info_card = $this->get_grid_info_card();
         // $this->grid_stats_card = $this->get_grid_stats_card();
+    }
+
+    public function constants() {
+        self::$labels = array(
+            'status' => _('Status'),
+            'members' => _('Members'),
+            'active_members' => _('Active members (30 days)'),
+            'members_in_world' => _('Members in world'),
+            'active_users' => _('Active users (30 days)'),
+            'total_users' => _('Total users in world'),
+            'regions' => _('Regions'),
+            'total_area' => _('Total area'),
+        );
     }
 
     public static function get_grid_info( $grid_uri = false, $args = array() ) {
@@ -140,7 +155,6 @@ class OpenSim_Grid {
 
         $title = false;
         if( ! empty( $args['title'])) {
-            error_log('using args title = ' . print_r($args['title'], true));
             $title = $args['title'] === true ? _( 'Grid Information' ) : $args['title'];
         } else {
             $title = _( 'Grid Information' );
@@ -152,16 +166,14 @@ class OpenSim_Grid {
 
     public static function grid_stats_card( $args = null ) {
         $grid_stats = self::get_grid_stats( $args );
-        error_log( __METHOD__ . ' info = ' . print_r( $grid_stats, true ) );
 
-        if( ! $grid_stats || OpenSim::is_error( $info ) ) {
+        if( ! $grid_stats || OpenSim::is_error( $grid_stats ) ) {
             error_log( __METHOD__ . ' grid stats empty or error' );
             return false;
         }
 
         $title = false;
         if( ! empty( $args['title'])) {
-            error_log('using args title = ' . print_r($args['title'], true));
             $title = $args['title'] === true ? _( 'Grid Information' ) : $args['title'];
         } else {
             $title = _( 'Grid Status' );
@@ -172,130 +184,103 @@ class OpenSim_Grid {
         ) );
     }
 
+    private static function array_to_xml($array, $xml) {
+        foreach($array as $key => $value) {
+            if(is_array($value)) {
+                $subnode = $xml->addChild($key);
+                self::array_to_xml($value, $subnode);
+            } else {
+                $xml->addChild($key, htmlspecialchars($value));
+            }
+        }
+    }
+
     public static function get_grid_stats( $args = null ) {
         $grid_info = self::get_grid_info();
         $grid_uri = $grid_info['login'];
 
-        error_log('grid_uri = ' . print_r($grid_uri, true));
+        $args = array_merge(array(
+            'output' => 'array',
+            'title' => true,
+        ));
 
-        // DEBUG - Fake data for debugging purpose
-        $labels = array(
-            'status' => _('Status'),
-            'members' => _('Members'),
-            'active_members' => _('Active Members (30 days)'),
-            'members_in_world' => _('Members in world'),
-            'active_users' => _('Active users (30 days)'),
-            'total_users' => _('Total users in world'),
-            'regions' => _('Regions'),
-            'total_area' => _('Total area'),
-        );
-        $values = array_map( function( $label ) {
-            return 'TBD';
-        }, $labels );
-
-        $values = array(
+        $stats = array(
             'status' => $grid_info['online'] ? _('Online') : _('Offline'),
         );
-        $labels = array_intersect_key( $labels, $values );
-        error_log('labels = ' . print_r($labels, true));
 
-        // $values['status'] = $grid_info['online'] ? _('Online') : _('Offline');
-        $stats = array_combine( $labels, $values );
-        global $OpenSimDB;
-        // If db is not yet configured, calls to $OpenSimDB would crash otherwise
-        if ( ! $OpenSimDB ) {
-            $stats['error'] = _('Database not configured.');
+        $robust_db = OpenSim::$robust_db;
+        if ( ! $robust_db || OpenSim::is_error($robust_db) ) {
+            $stats['error'] = _('Database not connected.');
+        } else {
+            error_log('querying robust db');
+            $lastmonth = time() - 30 * 86400;
+            $gridonline = $grid_info['online'] ? _('Yes') : _('No');
+            
+            $filter = '';
+            // if ( get_option( 'w4os_exclude_models' ) ) {
+            //     $filter .= "u.FirstName != '" . get_option( 'w4os_model_firstname' ) . "'
+            //     AND u.LastName != '" . get_option( 'w4os_model_lastname' ) . "'";
+            // }
+            // if ( get_option( 'w4os_exclude_nomail' ) ) {
+            //     $filter .= " AND u.Email != ''";
+            // }
+            if ( ! empty( $filter ) ) {
+                $filter = "$filter AND ";
+            }
+
+            $stats = array(
+                'status' => $grid_info['online'] ? _('Online') : _('Offline'),
+                'members' => $robust_db->get_var( "SELECT COUNT(*)
+                    FROM UserAccounts as u WHERE $filter active=1"
+                ),
+                'active_members' => $robust_db->get_var( "SELECT COUNT(*)
+                    FROM GridUser as g, UserAccounts as u 
+                    WHERE $filter PrincipalID = UserID AND g.Login > :lastmonth",
+                    array(
+                        'lastmonth' => $lastmonth,
+                    )
+                ),
+                'members_in_world' => $robust_db->get_var( "SELECT COUNT(*)
+                    FROM Presence AS p, UserAccounts AS u
+                    WHERE $filter RegionID != '00000000-0000-0000-0000-000000000000'
+                    AND p.UserID = u.PrincipalID;"
+                ),
+                'active_users' => $robust_db->get_var( "SELECT COUNT(*)
+                    FROM GridUser WHERE Login > :lastmonth",
+                    array(
+                        'lastmonth' => $lastmonth,
+                    )
+                ),
+                'total_users' => $robust_db->get_var( "SELECT COUNT(*)
+                    FROM Presence WHERE RegionID != '00000000-0000-0000-0000-000000000000';"
+                ),
+                'regions' => $robust_db->get_var( "SELECT COUNT(*)
+                    FROM regions"
+                ),
+                'total_area' => $robust_db->get_var( "SELECT round(sum(sizex * sizey / 1000000),2)
+                    FROM regions" 
+                ) . '&nbsp;km²',
+            );
+
+            // Replace keys with values of self::$labels
+            $labels = self::$labels;
+            $labels = array_intersect_key( self::$labels, $stats );
+            error_log( 'labels: ' . print_r( $labels, true ) . ' stats: ' . print_r( $stats, true ) );
+            $stats = array_combine( $labels, $stats );
+    
         }
 
+        switch( $args['output'] ) {
+            case 'xml':
+                $xml = new SimpleXMLElement('<gridstatus/>');
+                self::array_to_xml($stats, $xml);
+                return $xml->asXML();
+            case 'array':
+                return $stats;
+            default:
+                return $stats;
+        }   
+
         return $stats;
-        // End DEBUG
-
-
-
-        // $status = wp_cache_get( 'gridstatus', 'w4os' );
-        // if ( false === $status ) {
-        // 	// $cached="uncached";
-        // 	if ( $OpenSimDB->check_connection() ) {
-        // 		$lastmonth = time() - 30 * 86400;
-    
-        // 		// $urlinfo    = explode( ':', get_option( 'w4os_login_uri' ) );
-        // 		// $host       = $urlinfo['0'];
-        // 		// $port       = $urlinfo['1'];
-        // 		// $fp         = @fsockopen( $host, $port, $errno, $errstr, 1.0 );
-        // 		$gridonline = w4os_grid_stats();
-    
-        // 		// if ($fp) {
-        // 		// $gridonline = __("Yes", 'w4os' );
-        // 		// } else {
-        // 		// $gridonline = __("No", 'w4os' );
-        // 		// }
-        // 		$filter = '';
-        // 		if ( get_option( 'w4os_exclude_models' ) ) {
-        // 			$filter .= "u.FirstName != '" . get_option( 'w4os_model_firstname' ) . "'
-        // 			AND u.LastName != '" . get_option( 'w4os_model_lastname' ) . "'";
-        // 		}
-        // 		if ( get_option( 'w4os_exclude_nomail' ) ) {
-        // 			$filter .= " AND u.Email != ''";
-        // 		}
-        // 		if ( ! empty( $filter ) ) {
-        // 			$filter = "$filter AND ";
-        // 		}
-        // 	}
-        // 	$status                                     = array(
-        // 		__( 'Status', 'w4os' )                   => $gridonline,
-        // 		__( 'Members', 'w4os' )                  => number_format_i18n(
-        // 			$OpenSimDB->get_var(
-        // 				"SELECT COUNT(*)
-        // 		FROM UserAccounts as u WHERE $filter active=1"
-        // 			)
-        // 		),
-        // 		__( 'Active members (30 days)', 'w4os' ) => number_format_i18n(
-        // 			$OpenSimDB->get_var(
-        // 				"SELECT COUNT(*)
-        // 		FROM GridUser as g, UserAccounts as u WHERE $filter PrincipalID = UserID AND g.Login > $lastmonth"
-        // 			)
-        // 		),
-        // 	);
-        // 	$status[ __( 'Members in world', 'w4os' ) ] = number_format_i18n(
-        // 		$OpenSimDB->get_var(
-        // 			"SELECT COUNT(*)
-        // 	FROM Presence AS p, UserAccounts AS u
-        // 	WHERE $filter RegionID != '00000000-0000-0000-0000-000000000000'
-        // 	AND p.UserID = u.PrincipalID;"
-        // 		)
-        // 	);
-        // 	// 'Active citizens (30 days)' => number_format_i18n($OpenSimDB->get_var("SELECT COUNT(*)
-        // 	// FROM GridUser as g, UserAccounts as u WHERE g.UserID = u.PrincipalID AND Login > $lastmonth" )),
-        // 	if ( ! get_option( 'w4os_exclude_hypergrid' ) ) {
-        // 		$status[ __( 'Active users (30 days)', 'w4os' ) ] = number_format_i18n(
-        // 			$OpenSimDB->get_var(
-        // 				"SELECT COUNT(*)
-        // 		FROM GridUser WHERE Login > $lastmonth"
-        // 			)
-        // 		);
-        // 		$status[ __( 'Total users in world', 'w4os' ) ]   = number_format_i18n(
-        // 			$OpenSimDB->get_var(
-        // 				"SELECT COUNT(*)
-        // 		FROM Presence
-        // 		WHERE RegionID != '00000000-0000-0000-0000-000000000000';	"
-        // 			)
-        // 		);
-        // 	}
-        // 	$status[ __( 'Regions', 'w4os' ) ]    = number_format_i18n(
-        // 		$OpenSimDB->get_var(
-        // 			'SELECT COUNT(*)
-        // 	FROM regions'
-        // 		)
-        // 	);
-        // 	$status[ __( 'Total area', 'w4os' ) ] = number_format_i18n(
-        // 		$OpenSimDB->get_var(
-        // 			'SELECT round(sum(sizex * sizey / 1000000),2)
-        // 	FROM regions'
-        // 		),
-        // 		2
-        // 	) . '&nbsp;km²';
-        // 	wp_cache_add( 'gridstatus', $status, 'w4os' );
-        // }
-        // return $status;
     }
 }

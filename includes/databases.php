@@ -54,6 +54,19 @@ class OSPDO extends PDO {
 		$statement = $this->prepare( $sql );
 		return $statement->execute( $values );
 	}
+
+	/**
+	 * Prepare query and return single value (without using prepareAndExecute)
+	 */
+	public function get_var( $query, $options = array() ) {
+		$statement = $this->prepareAndExecute( $query, $options );
+		if ( $statement ) {
+			$result = $statement->fetchColumn();
+			$statement->closeCursor();
+			return $result;
+		}
+		return false;
+	}
 }
 
 function tableExists( $pdo, $tables ) {

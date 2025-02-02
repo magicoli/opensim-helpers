@@ -128,7 +128,7 @@ class OpenSim_Install extends OpenSim_Page {
         //     OpenSim::notify_error( __FUNCTION__ . '() ' . _('No configuration found.') );
         //     return false;
         // }
-        $robust_db = OpenSim::connectionstring_to_array($config['DatabaseService']['ConnectionString']);
+        $robust_creds = OpenSim::connectionstring_to_array($config['DatabaseService']['ConnectionString']);
 
         $registrars = array(
             'DATA_SRV_W4OSDev' => "http://dev.w4os.org/helpers/register.php",
@@ -149,13 +149,13 @@ class OpenSim_Install extends OpenSim_Page {
             'OPENSIM_GRID_NAME'   => $config['Const']['BaseURL'],
             'OPENSIM_LOGIN_URI'   => $config['Const']['BaseURL'] . ':' . $config['Const']['PublicPort'],
             'OPENSIM_MAIL_SENDER' => "no-reply@" . parse_url($config['Const']['BaseURL'], PHP_URL_HOST),
-            'ROBUST_DB'           => $robust_db,
+            'ROBUST_DB'           => $robust_creds,
             'OPENSIM_DB'          => true, // Changed from string to boolean
-            'OPENSIM_DB_HOST'     => $robust_db['host'],
-            'OPENSIM_DB_PORT'     => $robust_db['port'] ?? null,
-            'OPENSIM_DB_NAME'     => $robust_db['name'],
-            'OPENSIM_DB_USER'     => $robust_db['user'],
-            'OPENSIM_DB_PASS'     => $robust_db['pass'],
+            'OPENSIM_DB_HOST'     => $robust_creds['host'],
+            'OPENSIM_DB_PORT'     => $robust_creds['port'] ?? null,
+            'OPENSIM_DB_NAME'     => $robust_creds['name'],
+            'OPENSIM_DB_USER'     => $robust_creds['user'],
+            'OPENSIM_DB_PASS'     => $robust_creds['pass'],
             'SEARCH_REGISTRARS'   => $registrars,
             'ROBUST_CONSOLE'     => $console,
             'CURRENCY_NAME'       => $config['LoginService']['Currency'] ?? 'L$',

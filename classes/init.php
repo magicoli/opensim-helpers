@@ -23,6 +23,8 @@ class OpenSim {
     private static $styles;
     private static $is_dev;
 
+    public static $robust_db;
+
     public function __construct() {
         // Check if domain name starts with "dev." or usual wp debug constants are set
         self::$is_dev = ( strpos( $_SERVER['HTTP_HOST'], 'dev.' ) === 0 ) || ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG );
@@ -48,10 +50,35 @@ class OpenSim {
 
     public function includes() {
         require_once( OSHELPERS_DIR . 'classes/class-exception.php' );
+        require_once( OSHELPERS_DIR . 'includes/databases.php' );
         require_once( OSHELPERS_DIR . 'includes/functions.php' );
+        $this->connect_db();
+
         require_once( OSHELPERS_DIR . 'classes/class-locale.php' );
         require_once( OSHELPERS_DIR . 'classes/class-ini.php' );
         require_once( OSHELPERS_DIR . 'classes/class-grid.php' );
+    }
+
+    public function connect_db() {
+        $DatabaseService = self::get_option( 'DatabaseService', false );
+
+        $connectionstring = self::get_option( 'DatabaseService.ConnectionString', false);
+        if( $connectionstring ) {
+            $creds = self::connectionstring_to_array( $connectionstring );
+            $dsn = sprintf(
+                'mysql:host=%s;dbname=%s',
+                $creds['host'] . ( empty( $creds['port'] ) ? '' : ':' . $creds['port'] ),
+                $creds['name'],
+            );
+            $db = new OSPDO( $dsn, $creds['user'], $creds['pass'] );
+            if( $db->connected ) {
+                $db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+                $db->setAttribute( PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC );
+                self::$robust_db = $db;
+            }
+        } else {
+            error_log('No connection string found');
+        }
     }
 
     public function get_helpers_url() {
@@ -600,9 +627,9 @@ class OpenSim {
         // Give value of $config[$section][$key] if when given $option = 'section.key'
         if( strpos( $option, '.' ) !== false ) {
             $parts = explode( '.', $option );
-            $section = $parts[0];
-            $key = $parts[1];
-            return $config[$section][$key] ?? $default;
+            $section = $config[$parts[0]];
+            $key = trim($parts[1]);
+            return $section[$key] ?? $default;
         }
 
         // Otherwise return global option
