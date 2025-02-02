@@ -41,6 +41,9 @@ class OpenSim_Grid {
             $is_local_grid = true;
             // Default, get login_uri from config, query grid for live grid_info
             $grid_uri = OpenSim::get_option( 'Hypergrid.HomeURI' );
+            if( empty( $grid_uri ) ) {
+                return false;
+            }
         } else {
             $is_local_grid = false;
             // External grid lookup, not yet implemented
@@ -168,7 +171,6 @@ class OpenSim_Grid {
         $grid_stats = self::get_grid_stats( $args );
 
         if( ! $grid_stats || OpenSim::is_error( $grid_stats ) ) {
-            error_log( __METHOD__ . ' grid stats empty or error' );
             return false;
         }
 
@@ -197,6 +199,10 @@ class OpenSim_Grid {
 
     public static function get_grid_stats( $args = null ) {
         $grid_info = self::get_grid_info();
+        if( empty( $grid_info ) ) {
+            return false;
+        }
+
         $grid_uri = $grid_info['login'];
 
         $args = array_merge(array(
@@ -212,7 +218,6 @@ class OpenSim_Grid {
         if ( ! $robust_db || OpenSim::is_error($robust_db) ) {
             $stats['error'] = _('Database not connected.');
         } else {
-            error_log('querying robust db');
             $lastmonth = time() - 30 * 86400;
             $gridonline = $grid_info['online'] ? _('Yes') : _('No');
             
@@ -265,7 +270,6 @@ class OpenSim_Grid {
             // Replace keys with values of self::$labels
             $labels = self::$labels;
             $labels = array_intersect_key( self::$labels, $stats );
-            error_log( 'labels: ' . print_r( $labels, true ) . ' stats: ' . print_r( $stats, true ) );
             $stats = array_combine( $labels, $stats );
     
         }

@@ -236,7 +236,17 @@ class OpenSim_Install extends OpenSim_Page {
             throw new OpenSim_Error( _('Some required values are missing from the configuration file.') );
         }
 
-        
+        // Connect to Robust to check credential and get up-to-date grid info
+        global $OpenSim;
+        try {
+            $OpenSim->db_connect();
+            if( ! OpenSim::$robust_db ) {
+                throw new OpenSim_Error( _('Could not connect to the database.') );
+            }
+        } catch (Throwable $e) {
+            OpenSim::notify_error( $e );
+            return false;
+        }
         // OpenSim::notify( _('Configuration file loaded successfully.'), 'success' );
         // TODO: copy the temp file to the final location on success.
         return true;

@@ -52,14 +52,14 @@ class OpenSim {
         require_once( OSHELPERS_DIR . 'classes/class-exception.php' );
         require_once( OSHELPERS_DIR . 'includes/databases.php' );
         require_once( OSHELPERS_DIR . 'includes/functions.php' );
-        $this->connect_db();
+        $this->db_connect();
 
         require_once( OSHELPERS_DIR . 'classes/class-locale.php' );
         require_once( OSHELPERS_DIR . 'classes/class-ini.php' );
         require_once( OSHELPERS_DIR . 'classes/class-grid.php' );
     }
 
-    public function connect_db() {
+    public function db_connect() {
         $DatabaseService = self::get_option( 'DatabaseService', false );
 
         $connectionstring = self::get_option( 'DatabaseService.ConnectionString', false);
@@ -77,7 +77,7 @@ class OpenSim {
                 self::$robust_db = $db;
             }
         } else {
-            error_log('No connection string found');
+            return false;
         }
     }
 
