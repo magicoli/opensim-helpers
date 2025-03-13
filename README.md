@@ -39,7 +39,8 @@ Yes, my first suggestion is not to install this, funny, isn't it? Relying on an 
 
   ```
   [Search]
-  SearchURL = "http://2do.directory/helpers/query.php?gk=http://yourgrid.org:8002"
+  SearchURL = "https://2do.directory/helpers/query.php?gk=${Const|BaseURL}:${Const|PublicPort}"
+  ;SearchURL = "http://2do.directory/helpers/query.php?gk=http://yourgrid.org:8002"
 
   [DataSnapshot]
   index_sims = true
@@ -61,7 +62,7 @@ If you want to keep the control, or combine with a wider range of services, here
 
 1. Copy the needed modules, according to your OpenSim version from this bin/ directory to your OpenSim bin/ directory. Copy only the ones you need, as OpenSim loads them all and will trigger errors if they are not properly configured. (e.g. do not copy MoneyServer if you use Gloebit and vice-versa, do not copy any of those if you don't plan to use currency.)
 2. Copy the content of this directory on your web server, in a folder named "helpers" (or anything you want, adjust your settings accordingly). It should be reachable as something like <http://yourgrid.org/helpers/>
-3. Rename includes/config.example.php as includes/config.php and edit with your grid and database settings
+3. Copy includes/config.example.php to includes/config.php and edit with your grid and database settings
 4. Edit your OpenSim config file for search (adjust your grid name, server url and login uri). Edit MoneyServer.ini or Gloebit.ini according to their instructions.
 
 ```
@@ -83,8 +84,8 @@ If you have trust issues with Gloebit (I mean seriously, if your console shows e
 Use a task scheduler to parse data regularly. It's useless to parse data too often, as they don't change that fast, it's better to keep both search and opensim servers load low and avoid triggering spam reject. With cron, it could be something like this.
 
 ```
-0 * * * * curl -s http://2do.directory/helpers/parse.php
-30 */2 * * * curl -s http://2do.directory/helpers/eventsparser.php
+0 * * * * curl -s http://yourgrid.org/parser.php
+30 */2 * * * curl -s http://yourgrid.org/eventsparser.php
 ```
 
 ## Credits
