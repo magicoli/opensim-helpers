@@ -114,8 +114,8 @@ function dir_places_query( $method_name, $params, $app_data ) {
 	}
 
 	if ( empty( $data ) ) {
-		// osXmlDie( 'Nothing found' );
-		osXmlResponse( true, 'No results', $data );
+		osXmlResponse( false, 'No results', $data );
+		// osXmlResponse( false );
 	} else {
 		osXmlResponse( true, '', $data );
 	}
