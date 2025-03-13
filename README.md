@@ -101,8 +101,8 @@ If you have trust issues with Gloebit (I mean seriously, if your console shows e
 Use a task scheduler to parse data regularly. It's useless to parse data too often, as they don't change that fast, it's better to keep both search and opensim servers load low and avoid triggering spam reject. With cron, it could be something like this.
 
 ```
-0 * * * * curl -s http://2do.directory/helpers/parse.php
-30 */2 * * * curl -s http://2do.directory/helpers/eventsparser.php
+0 * * * * curl -s http://yourgrid.org/parser.php
+30 */2 * * * curl -s http://yourgrid.org/eventsparser.php
 ```
 
 ## Credits
