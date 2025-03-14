@@ -629,10 +629,35 @@ function classifieds_info_query( $method_name, $params, $app_data ) {
 	osXmlResponse( true, '', $data );
 }
 
+$tmp_dir = get_writable_tmp_dir();
+
 //
 // Process the request
 //
 $request_xml = file_get_contents( 'php://input' );
+
+// error_log( __FILE__ . ':' . __LINE__ . ' request xml ' . $request_xml );
+
+if( ! $request_xml ) {
+	// Wrong request, probably called directly instead of by sending xml request,
+	// or no data sent, issue proper http response and error message, then die
+	header( 'HTTP/1.1 400 Bad Request' );
+	header( 'Content-Type: text/plain' );
+	die( '400 Bad Request' . PHP_EOL );
+}
+
+$request_array = array(
+	$_SERVER['REMOTE_ADDR'],
+	$_SERVER['REQUEST_URI'],
+	$request_xml
+);
+$request_key = md5( serialize( $request_array ) );
+
+// error_log( __FILE__ . ':' . __LINE__ 
+// . PHP_EOL . 'request xml ' . $request_xml
+// . PHP_EOL . 'client ip ' . $_SERVER['REMOTE_ADDR'] 
+// . PHP_EOL . 'request uri ' . $_SERVER['REQUEST_URI'] );
+
 xmlrpc_server_call_method( $xmlrpc_server, $request_xml, '' );
 
 xmlrpc_server_destroy( $xmlrpc_server );
