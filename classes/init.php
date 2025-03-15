@@ -487,7 +487,7 @@ class OpenSim {
         try {
             $id = transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $id );
             $id = preg_replace('/[-\s]+/', '-', $id );
-        } catch ( Exception $e ) {
+        } catch ( Error $e ) {
             error_log( 'Error sanitizing slug: ' . $e->getMessage() );
             $id = $string;
         }
