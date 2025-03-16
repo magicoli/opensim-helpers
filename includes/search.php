@@ -24,7 +24,9 @@ function ossearch_db_tables( $db ) {
 	if ( ! $db->connected ) {
 		return false;
 	}
-
+  $SEARCH_TABLE_EVENTS = SEARCH_TABLE_EVENTS;
+  $SEARCH_REGION_TABLE = SEARCH_REGION_TABLE;
+  
 	$query = $db->prepare(
 		"CREATE TABLE IF NOT EXISTS `allparcels` (
     `regionUUID` char(36) NOT NULL,
@@ -59,7 +61,7 @@ function ossearch_db_tables( $db ) {
     PRIMARY KEY  (`classifieduuid`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-  CREATE TABLE IF NOT EXISTS `" . SEARCH_TABLE_EVENTS . "` (
+  CREATE TABLE IF NOT EXISTS `$SEARCH_TABLE_EVENTS` (
     `owneruuid` char(36) NOT NULL,
     `name` varchar(255) NOT NULL,
     `eventid` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -151,7 +153,7 @@ function ossearch_db_tables( $db ) {
     PRIMARY KEY  (`parcelUUID`)
   ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-  CREATE TABLE IF NOT EXISTS `" . SEARCH_REGION_TABLE . '` (
+  CREATE TABLE IF NOT EXISTS `$SEARCH_REGION_TABLE` (
     `regionname` varchar(255) NOT NULL,
     `regionUUID` char(36) NOT NULL,
     `regionhandle` varchar(255) NOT NULL,
@@ -161,7 +163,14 @@ function ossearch_db_tables( $db ) {
     `gatekeeperURL` varchar(255),
     PRIMARY KEY  (`regionUUID`)
   ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-  '
+
+  CREATE TABLE IF NOT EXISTS oshelpers_cache (
+    `key` VARCHAR(255) NOT NULL,
+    `value` LONGBLOB,
+    `expires_at` TIMESTAMP NULL DEFAULT NULL,
+    PRIMARY KEY (`key`)
+  ) ENGINE=InnoDB;
+  "
 	);
 
 	$result = $query->execute();
@@ -266,7 +275,7 @@ if ( $SearchDB && $SearchDB->connected ) {
 	}
 	define( 'SEARCH_REGION_TABLE', $regions_table );
 
-	if ( ! tableExists( $SearchDB, array( SEARCH_REGION_TABLE, 'parcels', 'parcelsales', 'allparcels', 'objects', 'popularplaces', SEARCH_TABLE_EVENTS, 'classifieds', 'hostsregister' ) ) ) {
+	if ( ! tableExists( $SearchDB, array( 'oshelpers_cache', SEARCH_REGION_TABLE, 'parcels', 'parcelsales', 'allparcels', 'objects', 'popularplaces', SEARCH_TABLE_EVENTS, 'classifieds', 'hostsregister' ) ) ) {
 		error_log( 'Creating missing OpenSimSearch tables in ' . SEARCH_DB_NAME );
 		ossearch_db_tables( $SearchDB );
 	}

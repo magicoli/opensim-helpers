@@ -570,6 +570,16 @@ if( ! defined( 'TPLINK_LOCAL') ) {
 
 define( 'HELPERS_LOCALE_DIR', dirname( __DIR__ ) . '/languages' );
 
+function os_cache_get( $key, $default = null ) {
+	global $oshelpers_cache;
+	return isset( $oshelpers_cache[$key] ) ? $oshelpers_cache[$key] : $default;
+}
+
+function os_cache_set( $key, $value, $expire = 0 ) {
+	global $oshelpers_cache;
+	$oshelpers_cache[$key] = $value;
+}
+
 /**
  * OpenSim source to help further attempts to allow Hypergrid search results.
  * Infouuid is a fake parcelid resolving to region handle and (region-level?)
