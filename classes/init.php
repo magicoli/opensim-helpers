@@ -52,6 +52,15 @@ class OpenSim {
         require_once( OSHELPERS_DIR . 'classes/class-exception.php' );
         require_once( OSHELPERS_DIR . 'includes/databases.php' );
         require_once( OSHELPERS_DIR . 'includes/functions.php' );
+
+        if ( file_exists( OSHELPERS_DIR . 'includes/config.php' ) ) {
+            try {
+                include_once( OSHELPERS_DIR . 'includes/config.php' );
+            } catch ( Error $e ) {
+                self::notify_error( $e );
+            }
+        }
+
         $this->db_connect();
 
         require_once( OSHELPERS_DIR . 'classes/class-locale.php' );
