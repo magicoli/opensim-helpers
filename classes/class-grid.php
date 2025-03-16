@@ -6,6 +6,8 @@ if( ! defined( 'OSHELPERS' ) ) {
     exit;
 }
 
+require_once( dirname(__DIR__) . '/includes/functions.php' );
+
 class OpenSim_Grid {
     private static $grid_stats;
     private $grid_info;
@@ -38,10 +40,12 @@ class OpenSim_Grid {
         // global $oshelpers_cache;
 
         $key = __METHOD__ . md5( serialize( func_get_args() ) );
-        $grids_info = os_cache_get( 'grid_info', array() );
+        $grids_info = os_cache_get( 'grids_info', array() );
         if( isset( $grids_info[$key] ) ) {
-            error_log( 'Cache hit: ' . $key );
-            return $grids_info[$key];
+            $info = $grids_info[$key];
+            if( ! empty( $info['gridname'] ) ) {
+                return $grids_info[$key];
+            }
         }
 
         $HomeURI = OpenSim::get_option( 'Hypergrid.HomeURI' );
@@ -53,13 +57,19 @@ class OpenSim_Grid {
             }
         }
 
+        // If gridname not found, only try once to fetch grid info again
+        $info = os_cache_get( 'grid_info_' . $key, false );
+        if( $info ) {
+            return $info;
+        }
+
         $info = array();
 
         // Fetch live info from grid using $login_uri/get_grid_info and parse xml result in array
         // Example xml result:
         $xml_url = $grid_uri . '/get_grid_info';
         try {
-            $xml = simplexml_load_file( $xml_url );
+            $xml = @simplexml_load_file( $xml_url );
         } catch( Exception $e ) {
             $xml = false;
         }
@@ -94,7 +104,11 @@ class OpenSim_Grid {
 
         // $oshelpers_cache[$key] = $info;
         $grids_info[$key] = $info;
-        os_cache_set( 'grid_info', $grids_info );
+        os_cache_set( 'grids_info', $grids_info );
+        if( is_array( $info ) && empty( $info['gridname'] ) ) {
+            $info['gridname'] = opensim_format_tp( $grid_uri, TPLINK_TXT );
+        }
+        os_cache_set( 'grid_info_' . $key, $info );
         return $info;
     }
 

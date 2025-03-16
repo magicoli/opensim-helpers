@@ -494,12 +494,12 @@ class OpenSim {
         
         $id = $string;
         try {
-            $id = transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $id );
-            $id = preg_replace('/[-\s]+/', '-', $id );
+            $id = @transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $id );
         } catch ( Error $e ) {
-            error_log( 'Error sanitizing slug: ' . $e->getMessage() );
+            error_log( 'Warning (php-intl missing) ' . $e->getMessage() );
             $id = $string;
         }
+        $id = preg_replace('/[-\s]+/', '-', $id );
             
         return $id;
     }

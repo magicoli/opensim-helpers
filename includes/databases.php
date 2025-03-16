@@ -33,8 +33,15 @@ class OSPDO extends PDO {
 		$trace = debug_backtrace()[0];
 		$trace = $trace['file'] . ':' . $trace['line'];
 
-		$statement = $this->prepare( $query, $options );
-		$result    = $statement->execute( $params );
+		try {
+			$statement = $this->prepare( $query, $options );
+			$result    = $statement->execute( $params );
+		} catch ( PDOException $e ) {
+			error_log( 'Error ' . $e->getCode() . ' ' . $e->getMessage() . ' query ' . print_r( $query, true ) . ' params ' . print_r( $params, true ) . ' ' . $trace );
+			return false;
+		}
+		// $statement = $this->prepare( $query, $options );
+		// $result    = $statement->execute( $params );
 
 		if ( $result ) {
 			return $statement;

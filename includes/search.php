@@ -165,10 +165,10 @@ function ossearch_db_tables( $db ) {
   ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
   CREATE TABLE IF NOT EXISTS oshelpers_cache (
-    `key` VARCHAR(255) NOT NULL,
-    `value` LONGBLOB,
-    `expires_at` TIMESTAMP NULL DEFAULT NULL,
-    PRIMARY KEY (`key`)
+    `cache_key` VARCHAR(255) NOT NULL,
+    `cache_value` LONGBLOB,
+    `cache_expires` int(10) default 0,
+    PRIMARY KEY (`cache_key`)
   ) ENGINE=InnoDB;
   "
 	);
@@ -250,6 +250,71 @@ function ossearch_hostUnregister( $hostname, $port ) {
 			$SearchDB->prepareAndExecute( 'DELETE FROM ' . SEARCH_REGION_TABLE . ' WHERE regionUUID = ?', array( $regionUUID ) );
 		}
 	}
+}
+
+function osdb_cache_get( $key, $default = null ) {
+  global $SearchDB;
+  if ( ! $SearchDB ) {
+    return $default;
+  }
+
+  $now = time();
+  $query = $SearchDB->prepareAndExecute( 
+    'SELECT cache_value FROM oshelpers_cache WHERE cache_key = :key AND (cache_expires IS NULL OR cache_expires = 0 OR cache_expires > :now)',
+    array( 
+      'key' => $key,
+      'now' => $now,
+    ),
+  );
+
+  if ( $query ) {
+    $result = $query->fetchAll( PDO::FETCH_ASSOC );
+    if( is_array( $result ) && isset( $result[0] ) ) {
+      $raw = $result[0]['cache_value'];
+  
+      if ( $raw ) {
+        $value = json_decode( $raw, true );
+        if( ! $value ) {
+          $value = $raw;
+        }
+        return $value;
+      } else if( $result ) {
+        return $result;
+      }
+    }
+  }
+  return $default;
+}
+
+function osdb_cache_set( $key, $value, $expire_delay = 0 ) {
+  global $SearchDB;
+  if ( ! $SearchDB ) {
+    return false;
+  }
+
+  $now = time();
+  if( $expire_delay > $now ) {
+    $expires = $expire_delay;
+  } else if( ! empty( $expire_delay ) ) {
+    $expires = $now + $expire_delay;
+  } else {
+    $expires = 0;
+  }
+
+  $sql = 'INSERT INTO oshelpers_cache (`cache_key`, `cache_value`, `cache_expires`)
+      VALUES (:key, :value, :expires) 
+      ON DUPLICATE KEY UPDATE `cache_value` = :value, `cache_expires` = :expires';
+
+  $query = $SearchDB->prepareAndExecute( 
+    $sql,
+    array( 
+      'key' => $key,
+      'value' => json_encode( $value ),
+      'expires' => $expires,
+    ),
+  );
+
+  return $query;
 }
 
 try {
