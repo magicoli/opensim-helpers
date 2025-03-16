@@ -1,11 +1,12 @@
 <?php
 
 $site_title = $site_title ?? 'OpenSimulator Helpers';
-$page_title = $page_title ?? 'Unknown page';
-$content = $content ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris.';
 
-$sidebar_left = $sidebar_left ?? '';
-$sidebar_right = $sidebar_right ?? '';
+$page_title = $page_title ?? $page->get_page_title() ?? 'Unknown page';
+$content = $content ?? $page->get_content() ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris.';
+$sidebar_left = $sidebar_left ?? $page->get_sidebar('left');
+$sidebar_right = $sidebar_right ?? $page->get_sidebar('right');
+
 $version = OpenSim::get_version();
 $footer = $footer ?? sprintf( _('OpenSimulator Helpers %s'), $version );
 
