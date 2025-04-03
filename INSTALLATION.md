@@ -81,7 +81,8 @@ According to your setup, you need to adjust some settings in one of these files:
 - `Robust.ini` (private grid, hypergrid not enabled)
 - `config-include/StandaloneCommon.ini` (standalone simulator, no grid)
 
-```Robust.HG.ini
+```ini
+;; Robust.HG.ini
 [LoginService]
   ; Currency = YC$ ;; Your Currency symbol, optional
 
@@ -107,7 +108,8 @@ Each simulator also needs specific settings. They are usually set in
 
 To enable in-world search, add the following configuration to each simulator:
 
-```OpenSim.ini
+```ini
+;; OpenSim.ini
 [Search]
   Module = OpenSimSearch
   SearchURL = "http://example.org/helpers/query.php?gk=http://yourgrid.org:8002"
@@ -133,7 +135,8 @@ Make sure both sections are properly configured for search to work correctly.
 
 Gloebit is a third-party currency provider that works across multiple grids. It requires registering on the [Gloebit website](https://www.gloebit.com/) to get API keys.
 
-```OpenSim.ini
+```ini
+;; OpenSim.ini
 [Economy]
   economymodule = Gloebit
   economy = https://example.org/helpers/
@@ -166,7 +169,8 @@ Step 1: Install and configure MoneyServer
   - OpenSim.exe (region simulators)
 
 Step 2: Configure OpenSim to use MoneyServer
-```OpenSim.ini
+```ini
+;; OpenSim.ini
 [Economy]
   economymodule = DTLMoneyModule
   ; economymodule = DTLNSLMoneyModule ;; for some MoneyServer versions
