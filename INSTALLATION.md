@@ -182,7 +182,9 @@ Step 2: Configure OpenSim to use MoneyServer
 ```
 
 Step 3: Configure MoneyServer settings
-```MoneyServer.ini
+```ini
+;; MoneyServer.ini
+
 ;; See additional parameters in MoneyServer.ini.example
 [MoneyServer]
   EnableScriptSendMoney = true
