@@ -378,19 +378,41 @@ function oxXmlRequest( $gatekeeper, $method, $request ) {
 }
 
 function osXmlResponse( $success = true, $errorMessage = false, $data = false ) {
+	global $request_key;
+
+	// Data given, output as xmlrpc
 	if ( is_array( $data ) ) {
+		if( ! $success && ! empty( $errorMessage ) ) {
+			# Avoid duplicate error messages
+			# TODO: improve to make sure we don't cache error messages for different requests
+			#	(currently $request_key only identifies search arguments, client IP and gateway url,
+			# 	but client IP is the simulator, not the actual user, so in theory, the key could 
+			# 	be identical for two simultaneous requests by different users in the same region, 
+			#	although this is unlikely to happen)
+
+			$tmp_dir = get_writable_tmp_dir();
+			$cache = $tmp_dir . '/cache-' . $request_key;
+			# Check if file exists and is not older than 5 seconds
+			if ( file_exists( $cache ) && ( time() - filemtime( $cache ) < 1.5 ) ) {
+				$errorMessage = '';
+			} else {
+				file_put_contents( $cache, $errorMessage );
+			}
+		}
+
 		$array = array(
 			'success'      => $success,
 			'errorMessage' => $errorMessage,
+			'data'		 => $data,
 		);
-		if ( ! empty( $data ) ) {
-			$array['data'] = $data;
-		}
-		array_filter( $array );
+
 		$response_xml = xmlrpc_encode( $array );
+		
 		echo $response_xml;
 		return;
 	}
+
+	// No data given, output simple boolean or error message, no change here
 	if ( $success ) {
 		$answer = new SimpleXMLElement( '<boolean>true</boolean>' );
 	} else {
@@ -517,18 +539,46 @@ function set_helpers_locale( $locale = null, $domain = 'messages' ) {
 	textdomain( $domain );
 }
 
-define( 'NULL_KEY', '00000000-0000-0000-0000-000000000000' );
-define( 'TPLINK_LOCAL', 1 ); // seconlife://Region/x/y/z
-define( 'TPLINK_HG', 2 ); // seconlife://yourgrid.org:8002 Region/x/y/z
-define( 'TPLINK_V3HG', 4 ); // the overcomplicated stuff!
-define( 'TPLINK_HOP', 8 ); // hop://yourgrid.org:8002:Region/x/y/z
-define( 'TPLINK_TXT', 16 ); // yourgrid.org:8002:Region/x/y/z
-define( 'TPLINK_APPTP', 32 ); // secondlife:///app/teleport/yourgrid.org:8002:Region/x/y/z
-define( 'TPLINK_MAP', 64 ); // secondlife:///app/map/yourgrid.org:8002:Region/x/y/z
-define( 'TPLINK', pow( 2, 8 ) - 1 ); // all formats
-define( 'TPLINK_DEFAULT', TPLINK_HOP ); // default
+function get_writable_tmp_dir() {
+	if(isset($_GLOBALS['tmp_dir'])) {
+		return $_GLOBALS['tmp_dir'];
+	}
+	$dirs = array( sys_get_temp_dir(), ini_get('upload_tmp_dir'), '/tmp', '/var/tmp', '/usr/tmp', '.' );
+	foreach ( $dirs as $dir ) {
+		if ( @is_writable( $dir ) ) {
+			$_GLOBALS['tmp_dir'] = $dir;
+			return $dir;
+		}
+	}
+	error_log( __FILE__ . ':' . __LINE__ . ' ERROR - could not find a writable temporary directory, check web server and PHP config' );
+	return false;
+	// return '/tmp';
+}
+
+if( ! defined( 'NULL_KEY') ) define( 'NULL_KEY', '00000000-0000-0000-0000-000000000000' );
+if( ! defined( 'TPLINK_LOCAL') ) {
+	define( 'TPLINK_LOCAL', 1 ); // seconlife://Region/x/y/z
+	define( 'TPLINK_HG', 2 ); // seconlife://yourgrid.org:8002 Region/x/y/z
+	define( 'TPLINK_V3HG', 4 ); // the overcomplicated stuff!
+	define( 'TPLINK_HOP', 8 ); // hop://yourgrid.org:8002:Region/x/y/z
+	define( 'TPLINK_TXT', 16 ); // yourgrid.org:8002:Region/x/y/z
+	define( 'TPLINK_APPTP', 32 ); // secondlife:///app/teleport/yourgrid.org:8002:Region/x/y/z
+	define( 'TPLINK_MAP', 64 ); // secondlife:///app/map/yourgrid.org:8002:Region/x/y/z
+	define( 'TPLINK', pow( 2, 8 ) - 1 ); // all formats
+	define( 'TPLINK_DEFAULT', TPLINK_HOP ); // default
+}
 
 define( 'HELPERS_LOCALE_DIR', dirname( __DIR__ ) . '/languages' );
+
+function os_cache_get( $key, $default = null ) {
+	global $oshelpers_cache;
+	return isset( $oshelpers_cache[$key] ) ? $oshelpers_cache[$key] : $default;
+}
+
+function os_cache_set( $key, $value, $expire = 0 ) {
+	global $oshelpers_cache;
+	$oshelpers_cache[$key] = $value;
+}
 
 /**
  * OpenSim source to help further attempts to allow Hypergrid search results.

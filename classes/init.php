@@ -52,6 +52,15 @@ class OpenSim {
         require_once( OSHELPERS_DIR . 'classes/class-exception.php' );
         require_once( OSHELPERS_DIR . 'includes/databases.php' );
         require_once( OSHELPERS_DIR . 'includes/functions.php' );
+
+        if ( file_exists( OSHELPERS_DIR . 'includes/config.php' ) ) {
+            try {
+                include_once( OSHELPERS_DIR . 'includes/config.php' );
+            } catch ( Error $e ) {
+                self::notify_error( $e );
+            }
+        }
+
         $this->db_connect();
 
         require_once( OSHELPERS_DIR . 'classes/class-locale.php' );
@@ -485,12 +494,12 @@ class OpenSim {
         
         $id = $string;
         try {
-            $id = transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $id );
-            $id = preg_replace('/[-\s]+/', '-', $id );
-        } catch ( Exception $e ) {
-            error_log( 'Error sanitizing slug: ' . $e->getMessage() );
+            $id = @transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $id );
+        } catch ( Error $e ) {
+            error_log( 'Warning (php-intl missing) ' . $e->getMessage() );
             $id = $string;
         }
+        $id = preg_replace('/[-\s]+/', '-', $id );
             
         return $id;
     }

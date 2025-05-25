@@ -57,13 +57,32 @@ define( 'ROBUST_DB', array (
 	'pass' => '',
 ) );
 
-define( 'OPENSIM_DB', true ); // Set to false for search only, see above
+/**
+ * Robust console settings.
+ * 
+ * It will allow more interactions with the Robust server in the future.
+ * e.g. access to some region information without requiring a direct connection
+ * to each simulator.
+ */
+define( 'ROBUST_CONSOLE', array(
+	// 'ConsoleUser' => 'user',
+	// 'ConsolePass' => 'password',
+	// 'ConsolePort' => 8004,
+) );
+
+/**
+ * OpenSim DB refers here to the main database, i.e. Robust DB in the case
+ * of a grid, or OpenSim db for a standalone simulator. It is only the historical
+ * name of the settings and can be left as aliases of Robust DB credentials.
+ * Transition is in progress to better differentiate the Robust/Standalone
+ * main database from potential simulators/regions specific databases.
+ */
+define( 'OPENSIM_DB', true ); // Set to false for search only, see below
 define( 'OPENSIM_DB_HOST', ROBUST_DB['host'] );
 define( 'OPENSIM_DB_PORT', ROBUST_DB['port'] );
 define( 'OPENSIM_DB_NAME', ROBUST_DB['name'] );
 define( 'OPENSIM_DB_USER', ROBUST_DB['user'] );
 define( 'OPENSIM_DB_PASS', ROBUST_DB['pass'] );
-define( 'SEARCH_TABLE_EVENTS', 'events' );
 
 /**
  * Search database credentials and settings.
@@ -73,7 +92,8 @@ define( 'SEARCH_TABLE_EVENTS', 'events' );
  *   - strongly recommended if the search engine is shared by several grids
  *   - recommended and more efficient for large and/or hypergrid-enabled grids
  *   - optional for closed grids and standalone simulators
- * These are recommendations, the Robust database can safely be used instead.
+ * These are recommendations, the Robust/Main database can safely be used
+ * in all cases.
  */
 
 define( 'SEARCH_DB', array(
@@ -88,6 +108,8 @@ define( 'SEARCH_DB_PORT', SEARCH_DB['port'] );
 define( 'SEARCH_DB_NAME', SEARCH_DB['name'] );
 define( 'SEARCH_DB_USER', SEARCH_DB['user'] );
 define( 'SEARCH_DB_PASS', SEARCH_DB['pass'] );
+
+define( 'SEARCH_TABLE_EVENTS', 'events' );
 
 /**
  * Other registrars to forward hosts registrations (deprecated)

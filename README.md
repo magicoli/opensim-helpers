@@ -1,7 +1,7 @@
 # OpenSimulator Helpers
 
-![Version 2.4.0](https://badgen.net/badge/Version/2.4.0/blue)
-![Stable 2.4.0](https://badgen.net/badge/Stable/2.4.0/green)
+![Version 2.5.0](https://badgen.net/badge/Version/2.5.0/blue)
+![Stable 2.5.0](https://badgen.net/badge/Stable/2.5.0/green)
 ![Requires PHP 5.7](https://badgen.net/badge/PHP/5.7/7884bf)
 ![License AGPLv3](https://badgen.net/badge/License/AGPLv3/552b55)
 
@@ -42,68 +42,39 @@ Formerly known as Flexible Helper Scripts.
 
 ## Installation
 
-### Option 1: Just enable in-world search (don't install this)
+For detailed installation instructions, please see [INSTALLATION.md](INSTALLATION.md).
 
-Yes, my first suggestion is not to install this, funny, isn't it? Relying on an external search engine may have advantages:
+If you encounter issues during installation or usage, please refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
-- For small grids and standalone, it can be confusing to install the whole package, while it's easy to benefit of its main advantage.
-- An external engine can collect and distribute data from several grids, which is good for an hypergrid-enabled installation.
+### Quick Start Options
 
-[2do directory](http://2do.directory/) provides a cross-grid search engine. This is the easiest solution if you don't have specific needs (and you don't need classifieds, which require access to both Robust and search databases).
+#### Option 1: Just enable in-world search (no helpers installation)
 
-1. Download [OpenSimSearch.Module.dll](https://github.com/GuduleLapointe/flexible_helper_scripts/tree/master/bin) and put it inside your OpenSim bin/ folder.
+If you only need basic in-world search, you can use an external service like [2do directory](http://2do.directory/) without installing the helpers.
 
-2. Add the following settings to each simulator OpenSim.ini file. Replace "Your Grid" and "yourgrid.org:8002" with your own values.
+1. Download [OpenSimSearch.Module.dll](https://github.com/magicoli/opensim-helpers/tree/master/bin) and put it inside your OpenSim bin/ folder.
 
+2. Add search settings to OpenSim.ini:
   ```
   [Search]
-  SearchURL = "http://2do.directory/helpers/query.php?gk=http://yourgrid.org:8002"
+  SearchURL = "https://2do.directory/helpers/query.php?gk=${Const|BaseURL}:${Const|PublicPort}"
 
   [DataSnapshot]
   index_sims = true
   gridname = "Your Grid"
   snapshot_cache_directory = "./DataSnapshot"
   DATA_SRV_2do = http://2do.directory/helpers/register.php
-  ;DATA_SRV_OtherEngine = http://example.org/helpers/register.py
   ```
 
 3. Restart the simulators.
 
-### Option 2: WordPress website
+#### Option 2: WordPress website
 
-If you have a WordPress website, we suggest you to install [W4OS Plugin](https://w4os.org/) instead. It includes these helpers and a lot of other cool features like avatar registration, web profiles, web assets server, grid info (...), along with documented admin pages.
+If you have a WordPress website, we recommend installing [W4OS Plugin](https://w4os.org/) which includes these helpers along with many other features like avatar registration and web profiles.
 
-### Option 3: The real stuff
+#### Option 3: Full helpers installation
 
-If you want to keep the control, or combine with a wider range of services, here is how to setup your search engine.
-
-1. Copy the needed modules, according to your OpenSim version from this bin/ directory to your OpenSim bin/ directory. Copy only the ones you need, as OpenSim loads them all and will trigger errors if they are not properly configured. (e.g. do not copy MoneyServer if you use Gloebit and vice-versa, do not copy any of those if you don't plan to use currency.)
-2. Copy the content of this directory on your web server, in a folder named "helpers" (or anything you want, adjust your settings accordingly). It should be reachable as something like <http://yourgrid.org/helpers/>
-3. Rename includes/config.example.php as includes/config.php and edit with your grid and database settings
-4. Edit your OpenSim config file for search (adjust your grid name, server url and login uri). Edit MoneyServer.ini or Gloebit.ini according to their instructions.
-
-```
-[Search]
-SearchURL = "http://yourgrid.org/helpers/query.php?gk=http://yourgrid.org:8002"
-
-[DataSnapshot]
-index_sims = true
-gridname = "Your Grid"
-snapshot_cache_directory = "./DataSnapshot"
-DATA_SRV_YourGrid = http://yourgrid.org/helpers/register.php
-;DATA_SRV_2do = http://2do.directory/helpers/register.php
-```
-
-(you can add several DATA_SRV_* lines if you want to register on multiple search engines)
-
-If you have trust issues with Gloebit (I mean seriously, if your console shows errors about Trust Failures), see README-Gloebit.md for instructions.
-
-Use a task scheduler to parse data regularly. It's useless to parse data too often, as they don't change that fast, it's better to keep both search and opensim servers load low and avoid triggering spam reject. With cron, it could be something like this.
-
-```
-0 * * * * curl -s http://yourgrid.org/parser.php
-30 */2 * * * curl -s http://yourgrid.org/eventsparser.php
-```
+For a complete installation with all features (search, currency, events, etc.), see the detailed instructions in [INSTALLATION.md](INSTALLATION.md).
 
 ## Credits
 
@@ -118,6 +89,6 @@ While most of the code is new or rewritten from scratch, portions of code may re
 - [Offline Messaging](http://opensimulator.org/wiki/Offline_Messaging)
 - [w4os OpenSim Web Interface](https://w4os.org/)
 - [2do HYPEvents](https://2do.directory)
-- [Speculoos' Flexible helper scripts](https://github.com/GuduleLapointe/flexible_helper_scripts)
+- [Speculoos' Flexible helper scripts](https://github.com/magicoli/opensim-helpers)
 
 Unless otherwise specified, code is distributed as part of Flexible Helper Scripts package, under Affero GPL v3 license.

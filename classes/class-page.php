@@ -4,8 +4,9 @@ class OpenSim_Page {
     protected $page_title;
     protected $content;
 
-    public function __construct() {
-
+    public function __construct( $page_title = null, $content = null, $args = array() ) {
+        $this->page_title = $page_title;
+        $this->content = $content;
     }
 
     public function get_page_title() {

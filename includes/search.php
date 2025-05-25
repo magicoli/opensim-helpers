@@ -24,7 +24,9 @@ function ossearch_db_tables( $db ) {
 	if ( ! $db->connected ) {
 		return false;
 	}
-
+  $SEARCH_TABLE_EVENTS = SEARCH_TABLE_EVENTS;
+  $SEARCH_REGION_TABLE = SEARCH_REGION_TABLE;
+  
 	$query = $db->prepare(
 		"CREATE TABLE IF NOT EXISTS `allparcels` (
     `regionUUID` char(36) NOT NULL,
@@ -59,7 +61,7 @@ function ossearch_db_tables( $db ) {
     PRIMARY KEY  (`classifieduuid`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-  CREATE TABLE IF NOT EXISTS `" . SEARCH_TABLE_EVENTS . "` (
+  CREATE TABLE IF NOT EXISTS `$SEARCH_TABLE_EVENTS` (
     `owneruuid` char(36) NOT NULL,
     `name` varchar(255) NOT NULL,
     `eventid` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -151,7 +153,7 @@ function ossearch_db_tables( $db ) {
     PRIMARY KEY  (`parcelUUID`)
   ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-  CREATE TABLE IF NOT EXISTS `" . SEARCH_REGION_TABLE . '` (
+  CREATE TABLE IF NOT EXISTS `$SEARCH_REGION_TABLE` (
     `regionname` varchar(255) NOT NULL,
     `regionUUID` char(36) NOT NULL,
     `regionhandle` varchar(255) NOT NULL,
@@ -161,7 +163,14 @@ function ossearch_db_tables( $db ) {
     `gatekeeperURL` varchar(255),
     PRIMARY KEY  (`regionUUID`)
   ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-  '
+
+  CREATE TABLE IF NOT EXISTS oshelpers_cache (
+    `cache_key` VARCHAR(255) NOT NULL,
+    `cache_value` LONGBLOB,
+    `cache_expires` int(10) default 0,
+    PRIMARY KEY (`cache_key`)
+  ) ENGINE=InnoDB;
+  "
 	);
 
 	$result = $query->execute();
@@ -243,6 +252,71 @@ function ossearch_hostUnregister( $hostname, $port ) {
 	}
 }
 
+function osdb_cache_get( $key, $default = null ) {
+  global $SearchDB;
+  if ( ! $SearchDB ) {
+    return $default;
+  }
+
+  $now = time();
+  $query = $SearchDB->prepareAndExecute( 
+    'SELECT cache_value FROM oshelpers_cache WHERE cache_key = :key AND (cache_expires IS NULL OR cache_expires = 0 OR cache_expires > :now)',
+    array( 
+      'key' => $key,
+      'now' => $now,
+    ),
+  );
+
+  if ( $query ) {
+    $result = $query->fetchAll( PDO::FETCH_ASSOC );
+    if( is_array( $result ) && isset( $result[0] ) ) {
+      $raw = $result[0]['cache_value'];
+  
+      if ( $raw ) {
+        $value = json_decode( $raw, true );
+        if( ! $value ) {
+          $value = $raw;
+        }
+        return $value;
+      } else if( $result ) {
+        return $result;
+      }
+    }
+  }
+  return $default;
+}
+
+function osdb_cache_set( $key, $value, $expire_delay = 0 ) {
+  global $SearchDB;
+  if ( ! $SearchDB ) {
+    return false;
+  }
+
+  $now = time();
+  if( $expire_delay > $now ) {
+    $expires = $expire_delay;
+  } else if( ! empty( $expire_delay ) ) {
+    $expires = $now + $expire_delay;
+  } else {
+    $expires = 0;
+  }
+
+  $sql = 'INSERT INTO oshelpers_cache (`cache_key`, `cache_value`, `cache_expires`)
+      VALUES (:key, :value, :expires) 
+      ON DUPLICATE KEY UPDATE `cache_value` = :value, `cache_expires` = :expires';
+
+  $query = $SearchDB->prepareAndExecute( 
+    $sql,
+    array( 
+      'key' => $key,
+      'value' => json_encode( $value ),
+      'expires' => $expires,
+    ),
+  );
+
+  return $query;
+}
+
 try {
 	$SearchDB = new OSPDO( 'mysql:host=' . SEARCH_DB_HOST . ';dbname=' . SEARCH_DB_NAME, SEARCH_DB_USER, SEARCH_DB_PASS );
 } catch ( PDOException $e ) {
@@ -266,7 +340,7 @@ if ( $SearchDB && $SearchDB->connected ) {
 	}
 	define( 'SEARCH_REGION_TABLE', $regions_table );
 
-	if ( ! tableExists( $SearchDB, array( SEARCH_REGION_TABLE, 'parcels', 'parcelsales', 'allparcels', 'objects', 'popularplaces', SEARCH_TABLE_EVENTS, 'classifieds', 'hostsregister' ) ) ) {
+	if ( ! tableExists( $SearchDB, array( 'oshelpers_cache', SEARCH_REGION_TABLE, 'parcels', 'parcelsales', 'allparcels', 'objects', 'popularplaces', SEARCH_TABLE_EVENTS, 'classifieds', 'hostsregister' ) ) ) {
 		error_log( 'Creating missing OpenSimSearch tables in ' . SEARCH_DB_NAME );
 		ossearch_db_tables( $SearchDB );
 	}

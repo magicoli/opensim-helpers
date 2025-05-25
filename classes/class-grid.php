@@ -6,6 +6,8 @@ if( ! defined( 'OSHELPERS' ) ) {
     exit;
 }
 
+require_once( dirname(__DIR__) . '/includes/functions.php' );
+
 class OpenSim_Grid {
     private static $grid_stats;
     private $grid_info;
@@ -35,29 +37,39 @@ class OpenSim_Grid {
     }
 
     public static function get_grid_info( $grid_uri = false, $args = array() ) {
-        $info = array();
+        // global $oshelpers_cache;
+
+        $key = __METHOD__ . md5( serialize( func_get_args() ) );
+        $grids_info = os_cache_get( 'grids_info', array() );
+        if( isset( $grids_info[$key] ) ) {
+            $info = $grids_info[$key];
+            if( ! empty( $info['gridname'] ) ) {
+                return $grids_info[$key];
+            }
+        }
+
         $HomeURI = OpenSim::get_option( 'Hypergrid.HomeURI' );
-        if( ! $grid_uri || $grid_uri === $HomeURI ) {
-            $is_local_grid = true;
-            // Default, get login_uri from config, query grid for live grid_info
-            $grid_uri = OpenSim::get_option( 'Hypergrid.HomeURI' );
+        $is_local_grid = ( ! $grid_uri || $grid_uri === $HomeURI );
+        if( $is_local_grid ) {
+            $grid_uri = $HomeURI;
             if( empty( $grid_uri ) ) {
                 return false;
             }
-        } else {
-            $is_local_grid = false;
-            // External grid lookup, not yet implemented
-            $info = array(
-                'Grid Name' => 'External Grid, not implemented.',
-            );
-            return false;
         }
-        
+
+        // If gridname not found, only try once to fetch grid info again
+        $info = os_cache_get( 'grid_info_' . $key, false );
+        if( $info ) {
+            return $info;
+        }
+
+        $info = array();
+
         // Fetch live info from grid using $login_uri/get_grid_info and parse xml result in array
         // Example xml result:
         $xml_url = $grid_uri . '/get_grid_info';
         try {
-            $xml = simplexml_load_file( $xml_url );
+            $xml = @simplexml_load_file( $xml_url );
         } catch( Exception $e ) {
             $xml = false;
         }
@@ -86,6 +98,17 @@ class OpenSim_Grid {
             }
         }
 
+        if(empty($info)) {
+            $info = false;
+        }
+
+        // $oshelpers_cache[$key] = $info;
+        $grids_info[$key] = $info;
+        os_cache_set( 'grids_info', $grids_info );
+        if( is_array( $info ) && empty( $info['gridname'] ) ) {
+            $info['gridname'] = opensim_format_tp( $grid_uri, TPLINK_TXT );
+        }
+        os_cache_set( 'grid_info_' . $key, $info );
         return $info;
     }
 
