@@ -85,7 +85,7 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
             $html .= '<li class="nav-item dropdown dropdown-hover">';
             $html .= sprintf(
                 '<a class="nav-link dropdown-toggle" href="%s" id="%s" role="button" aria-expanded="false">%s%s</a>',
-                OpenSim::sanitize_url($item['url']),
+                OpenSim::sanitize_uri($item['url']),
                 $item_id,
                 OpenSim::icon($item['icon']),
                 strip_tags($item['label']),
@@ -97,7 +97,7 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
                 $html .= sprintf( 
                     '<li><a class="dropdown-item" id="%s" href="%s">%s%s</a></li>',
                     $child_id,
-                    OpenSim::sanitize_url($child['url']),
+                    OpenSim::sanitize_uri($child['url']),
                     OpenSim::icon($child['icon']),
                     strip_tags($child['label']),
                 );

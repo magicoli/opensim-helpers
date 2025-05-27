@@ -499,13 +499,6 @@ class OpenSim {
         return self::sanitize_id( $string );
     }
 
-    public static function sanitize_url( $url ) {
-        $url = trim( $url );
-        $url = str_replace( ' ', '+', $url );
-        $url = filter_var( $url, FILTER_SANITIZE_URL );
-        return $url;
-    }
-
     public static function validate_condition( $condition ) {
         if( is_callable( $condition ) ) {
             return $condition();
