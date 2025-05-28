@@ -18,7 +18,7 @@
  *   Fumi.Iseki for CMS/LMS '09 5/31
  **/
 
-require_once 'functions.php';
+require_once dirname(dirname(__DIR__)) . '/engine/includes/functions.php';
 
 if ( defined( 'CURRENCY_DB_HOST' ) ) {
 	$CurrencyDB = new OSPDO( 'mysql:host=' . CURRENCY_DB_HOST . ';dbname=' . CURRENCY_DB_NAME, CURRENCY_DB_USER, CURRENCY_DB_PASS );

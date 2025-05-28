@@ -258,7 +258,7 @@ if ( $SearchDB && $SearchDB->connected ) {
 	// table, although it has a different structure and a different purpose. It
 	// could be renamed but some developers are reluctant to do it, so we keep the
 	// original name for backward compatibility when in a separate database.
-	if ( tableExists( $SearchDB, array( 'regions' ) ) ) {
+	if ( $SearchDB->tables_exist( array( 'regions' ) ) ) {
 		$formatCheck   = $SearchDB->query( "SHOW COLUMNS FROM regions LIKE 'uuid'" );
 		$regions_table = ( $formatCheck->rowCount() == 0 ) ? 'regions' : 'regionsregister';
 	} else {
@@ -266,7 +266,7 @@ if ( $SearchDB && $SearchDB->connected ) {
 	}
 	define( 'SEARCH_REGION_TABLE', $regions_table );
 
-	if ( ! tableExists( $SearchDB, array( SEARCH_REGION_TABLE, 'parcels', 'parcelsales', 'allparcels', 'objects', 'popularplaces', SEARCH_TABLE_EVENTS, 'classifieds', 'hostsregister' ) ) ) {
+	if ( ! $SearchDB->tables_exist( array( SEARCH_REGION_TABLE, 'parcels', 'parcelsales', 'allparcels', 'objects', 'popularplaces', SEARCH_TABLE_EVENTS, 'classifieds', 'hostsregister' ) ) ) {
 		error_log( 'Creating missing OpenSimSearch tables in ' . SEARCH_DB_NAME );
 		ossearch_db_tables( $SearchDB );
 	}

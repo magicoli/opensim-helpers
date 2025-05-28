@@ -435,7 +435,7 @@ function dir_events_query( $method_name, $params, $app_data ) {
 xmlrpc_server_register_method( $xmlrpc_server, 'dir_classified_query', 'dir_classified_query' );
 function dir_classified_query( $method_name, $params, $app_data ) {
 	global $OpenSimDB;
-	if ( ! tableExists( $OpenSimDB, array( 'classifieds' ) ) ) {
+	if ( ! $OpenSimDB->tables_exist( array( 'classifieds' ) ) ) {
 		osXmlResponse( false );
 		die();
 	}
@@ -597,7 +597,7 @@ function event_info_query( $method_name, $params, $app_data ) {
 xmlrpc_server_register_method( $xmlrpc_server, 'classifieds_info_query', 'classifieds_info_query' );
 function classifieds_info_query( $method_name, $params, $app_data ) {
 	global $OpenSimDB;
-	if ( ! tableExists( $OpenSimDB, array( 'classifieds' ) ) ) {
+	if ( ! $OpenSimDB->tables_exist( array( 'classifieds' ) ) ) {
 		osXmlResponse( false );
 		die();
 	}

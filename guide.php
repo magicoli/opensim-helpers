@@ -16,7 +16,7 @@
  */
 
 // require_once __DIR__ . '/includes/config.php'; // DEBUG: disabled until we're ready with WP
-require_once __DIR__ . '/includes/functions.php';
+require_once dirname(__DIR__) . '/engine/includes/functions.php';
 
 class OpenSim_Guide {
 	private $destinations = array();
