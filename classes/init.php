@@ -49,6 +49,12 @@ class Helpers {
     }
 
     public function includes() {
+        $exceptions_file = dirname(OSHELPERS_DIR) . 'engine/includes/class-exceptions.php';
+        if( file_exists( $exceptions_file ) ) {
+            require_once( $exceptions_file );
+        // } else {
+        //     error_log( 'OpenSim Helpers: Exception class file not found: ' . $exceptions_file );
+        }
         require_once( OSHELPERS_DIR . 'classes/class-exception.php' );
         require_once( OSHELPERS_DIR . 'includes/databases.php' );
         require_once( OSHELPERS_DIR . 'includes/functions.php' );
@@ -64,7 +70,7 @@ class Helpers {
 
         $connectionstring = self::helpers_get_option( 'DatabaseService.ConnectionString', false);
         if( $connectionstring ) {
-            $creds = self::connectionstring_to_array( $connectionstring );
+            $creds = OSPDO::connectionstring_to_array( $connectionstring );
             $dsn = sprintf(
                 'mysql:host=%s;dbname=%s',
                 $creds['host'] . ( empty( $creds['port'] ) ? '' : ':' . $creds['port'] ),
@@ -171,27 +177,6 @@ class Helpers {
         return array_merge( $defaults, $args );
     }
 
-	public static function connectionstring_to_array( $connectionstring ) {
-		$parts = explode( ';', $connectionstring );
-		$creds = array();
-		foreach ( $parts as $part ) {
-			$pair              = explode( '=', $part );
-			$creds[ $pair[0] ] = $pair[1] ?? '';
-		}
-        if( preg_match( '/:[0-9]+$/', $creds['Data Source'] ) ) {
-            $host = explode( ':', $creds['Data Source'] );
-            $creds['Data Source'] = $host[0];
-            $creds['Port'] = empty( $host[1] || $host[1] == 3306 ) ? null : $creds['Port'];
-        }
-        $result = array(
-            'host' => $creds['Data Source'],
-            'port' => $creds['Port'] ?? null,
-            'name' => $creds['Database'],
-            'user' => $creds['User ID'],
-            'pass' => $creds['Password'],
-        );
-		return $result;
-	}
 
     // Clone of WP trailingslashit function
     public static function trailingslashit( $value ) {

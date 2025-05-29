@@ -41,8 +41,32 @@ class OpenSim_Ini {
         return $this->config;
     }
 
-    public function get_ini() {
-        return $this->ini;
+    /**
+     * Check if the parsed config contains any missing constant markers
+     * 
+     * @return array Array of missing constants found
+     */
+    public function get_missing_constants() {
+        $missing = array();
+        
+        array_walk_recursive($this->config, function($value, $key) use (&$missing) {
+            if (is_string($value) && preg_match_all('/\[MISSING_CONSTANT:([^]]+)\]/', $value, $matches)) {
+                foreach ($matches[1] as $constant) {
+                    $missing[] = $constant;
+                }
+            }
+        });
+        
+        return array_unique($missing);
+    }
+
+    /**
+     * Check if config parsing had any issues
+     * 
+     * @return bool True if there are missing constants
+     */
+    public function has_errors() {
+        return !empty($this->get_missing_constants());
     }
 
 	/**
@@ -80,7 +104,16 @@ class OpenSim_Ini {
             $config_value = $value;
             while ( preg_match( '/\${Const\|([a-zA-Z]+)}/', $config_value, $matches ) ) {
                 $const = $matches[1];
-                $config_value = str_replace( '${Const|' . $const . '}', $this->config['Const'][$const], $config_value );
+                if ( isset($this->config['Const'][$const]) ) {
+                    $config_value = str_replace( '${Const|' . $const . '}', $this->config['Const'][$const], $config_value );
+                } else {
+                    // Log the missing constant error
+                    $error_msg = "Missing constant: \${Const|{$const}} in section [{$section}], key '{$key}'";
+                    error_log( "OpenSim_Ini: " . $error_msg );
+                    
+                    // Replace with clear error marker instead of empty string
+                    $config_value = str_replace( '${Const|' . $const . '}', "[MISSING_CONSTANT:Const|{$const}]", $config_value );
+                }
             }
             $this->config[$section][$key] = $config_value;
 

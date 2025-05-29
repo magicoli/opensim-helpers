@@ -222,13 +222,6 @@ class OpenSim_Grid {
             $gridonline = $grid_info['online'] ? _('Yes') : _('No');
             
             $filter = '';
-            // if ( get_option( 'w4os_exclude_models' ) ) {
-            //     $filter .= "u.FirstName != '" . get_option( 'w4os_model_firstname' ) . "'
-            //     AND u.LastName != '" . get_option( 'w4os_model_lastname' ) . "'";
-            // }
-            // if ( get_option( 'w4os_exclude_nomail' ) ) {
-            //     $filter .= " AND u.Email != ''";
-            // }
             if ( ! empty( $filter ) ) {
                 $filter = "$filter AND ";
             }
