@@ -246,7 +246,7 @@ function ossearch_hostUnregister( $hostname, $port ) {
 try {
 	$SearchDB = new OSPDO( 'mysql:host=' . SEARCH_DB_HOST . ';dbname=' . SEARCH_DB_NAME, SEARCH_DB_USER, SEARCH_DB_PASS );
 } catch ( PDOException $e ) {
-	// error_log("could not connect to " . SEARCH_DB_HOST);
+	error_log("could not connect to " . SEARCH_DB_HOST);
 	error_log( $e );
 	$SearchDB = null;
 }

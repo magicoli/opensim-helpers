@@ -120,7 +120,7 @@ function dir_places_query( $method_name, $params, $app_data ) {
 		error_log( __FILE__ . ':' . __LINE__ . ' Nothing found' );
 		osXmlResponse( true, 'No results', $data );
 	} else {
-		error_log( __FILE__ . ':' . __LINE__ . ' Found ' . count( $data ) . ' results' );
+		// error_log( __FILE__ . ':' . __LINE__ . ' Found ' . count( $data ) . ' results' );
 		osXmlResponse( true, '', $data );
 	}
 	die();
