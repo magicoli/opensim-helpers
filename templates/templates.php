@@ -6,7 +6,7 @@ $content = $content ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 $sidebar_left = $sidebar_left ?? '';
 $sidebar_right = $sidebar_right ?? '';
-$version = OpenSim::get_version();
+$version = Helpers::get_version();
 $footer = $footer ?? sprintf( _('OpenSimulator Helpers %s'), $version );
 
 // $menus['main'] = $menu ?? array(
@@ -23,7 +23,7 @@ $footer = $footer ?? sprintf( _('OpenSimulator Helpers %s'), $version );
 $menus['user'] = array(
     'userprofile' => array(
         'url' => '/profile',
-        'label' => OpenSim::display_name( _('Profile') ),
+        'label' => Helpers::display_name( _('Profile') ),
         'icon' => [ 'OpenSim', 'user_icon' ],
         'condition' => 'logged_in',
         'children' => array(
@@ -76,7 +76,7 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
         return '';
     }
     foreach ($menu as $key => $item) {
-        if (isset($item['condition']) && ! OpenSim::validate_condition($item['condition'])) {
+        if (isset($item['condition']) && ! Helpers::validate_condition($item['condition'])) {
             continue;
         }
         $item_id = "nav-$slug-$key";
@@ -85,9 +85,9 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
             $html .= '<li class="nav-item dropdown dropdown-hover">';
             $html .= sprintf(
                 '<a class="nav-link dropdown-toggle" href="%s" id="%s" role="button" aria-expanded="false">%s%s</a>',
-                OpenSim::sanitize_uri($item['url']),
+                Helpers::sanitize_uri($item['url']),
                 $item_id,
-                OpenSim::icon($item['icon']),
+                Helpers::icon($item['icon']),
                 strip_tags($item['label']),
             );
 
@@ -97,8 +97,8 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
                 $html .= sprintf( 
                     '<li><a class="dropdown-item" id="%s" href="%s">%s%s</a></li>',
                     $child_id,
-                    OpenSim::sanitize_uri($child['url']),
-                    OpenSim::icon($child['icon']),
+                    Helpers::sanitize_uri($child['url']),
+                    Helpers::icon($child['icon']),
                     strip_tags($child['label']),
                 );
                 '<li><a class="dropdown-item" href="' . htmlspecialchars($child['url']) . '">' . htmlspecialchars($child['label']) . '</a></li>';
@@ -124,7 +124,7 @@ $main_menu_html = format_menu( ($menus['main'] ?? null ), 'main' );
 $user_menu_html = format_menu( $menus['user'], 'user' );
 $footer_menu_html = format_menu( $menus['footer'], 'footer' );
 
-OpenSim::enqueue_script( 'template-page', 'templates/bootstrap.js' );
-OpenSim::enqueue_style( 'template-page', 'templates/bootstrap.css' );
+Helpers::enqueue_script( 'template-page', 'templates/bootstrap.js' );
+Helpers::enqueue_style( 'template-page', 'templates/bootstrap.css' );
 
 require( 'template-page.php' );

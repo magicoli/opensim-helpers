@@ -36,11 +36,11 @@ class OpenSim_Grid {
 
     public static function get_grid_info( $grid_uri = false, $args = array() ) {
         $info = array();
-        $HomeURI = OpenSim::get_option( 'Hypergrid.HomeURI' );
+        $HomeURI = Helpers::get_option( 'Hypergrid.HomeURI' );
         if( ! $grid_uri || $grid_uri === $HomeURI ) {
             $is_local_grid = true;
             // Default, get login_uri from config, query grid for live grid_info
-            $grid_uri = OpenSim::get_option( 'Hypergrid.HomeURI' );
+            $grid_uri = Helpers::get_option( 'Hypergrid.HomeURI' );
             if( empty( $grid_uri ) ) {
                 return false;
             }
@@ -80,7 +80,7 @@ class OpenSim_Grid {
         }
 
         if( $is_local_grid ) {
-            $config_info = OpenSim::get_option( 'GridInfoService' );
+            $config_info = Helpers::get_option( 'GridInfoService' );
             if( is_array( $config_info ) ) {
                 $info = array_merge( $config_info, $info );
             }
@@ -147,13 +147,13 @@ class OpenSim_Grid {
      */
     public static function grid_info_card( $grid_uri = false, $args = array() ) {
         $grid_info = self::get_grid_info( $grid_uri, $args );
-        if( ! $grid_info || OpenSim::is_error( $grid_info ) ) {
+        if( ! $grid_info || Helpers::is_error( $grid_info ) ) {
             return false;
         }
 
         $info = array(
             _('Grid Name') => $grid_info['gridname'],
-            _('Login URI') => OpenSim::hop( $grid_info['login'] ),
+            _('Login URI') => Helpers::hop( $grid_info['login'] ),
         );
 
         $title = false;
@@ -170,7 +170,7 @@ class OpenSim_Grid {
     public static function grid_stats_card( $args = null ) {
         $grid_stats = self::get_grid_stats( $args );
 
-        if( ! $grid_stats || OpenSim::is_error( $grid_stats ) ) {
+        if( ! $grid_stats || Helpers::is_error( $grid_stats ) ) {
             return false;
         }
 
@@ -214,8 +214,8 @@ class OpenSim_Grid {
             'status' => $grid_info['online'] ? _('Online') : _('Offline'),
         );
 
-        $robust_db = OpenSim::$robust_db;
-        if ( ! $robust_db || OpenSim::is_error($robust_db) ) {
+        $robust_db = Helpers::$robust_db;
+        if ( ! $robust_db || Helpers::is_error($robust_db) ) {
             $stats['error'] = _('Database not connected.');
         } else {
             $lastmonth = time() - 30 * 86400;

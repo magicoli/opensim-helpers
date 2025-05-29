@@ -48,7 +48,7 @@ class OpenSim_Install extends OpenSim_Page {
     public function process_form() {
         $form = $this->form;
         if( ! $form ) {
-            OpenSim::notify_error( 'Could not create form');
+            Helpers::notify_error( 'Could not create form');
         } else {
             
             $next_step_key = $form->get_next_step();
@@ -58,7 +58,7 @@ class OpenSim_Install extends OpenSim_Page {
                 error_log( "Starting tasks of $next_step_key label $next_step_label" );
                 $result = false;
                 foreach( $form->tasks as $key => $task ) {
-                    $callback_name = OpenSim::callback_name_string( $task['callback'] );
+                    $callback_name = Helpers::callback_name_string( $task['callback'] );
                     // error_log( 'starting task ' . $task['label'] );
 
                     try {
@@ -69,30 +69,30 @@ class OpenSim_Install extends OpenSim_Page {
                     } catch (Throwable $e) {
                         $result = false;
                         // error_log( $message );
-                        OpenSim::notify_error( $e );
+                        Helpers::notify_error( $e );
                         break;
                     }
                     // if( ! $result ) {
                     //     $message = $callback_name . '() ' . ( $task['error'] ?? 'Failed' );
                     //     error_log( $message );
-                    //     OpenSim::notify_error( $message );
+                    //     Helpers::notify_error( $message );
                     //     break;
                     // }
                     $message = ( $task['label'] ?? $callback_name . '()' ) . ': ' . ( $task['success'] ?? 'Success' );
                     error_log( '[' . __CLASS__ . '] ' . $message );
-                    OpenSim::notify( $message, 'task-checked' );
+                    Helpers::notify( $message, 'task-checked' );
                 }
 
                 $prefix = '<strong>' . $next_step_label . '</strong>: ';
                 if( ! $result ) {
                     $message = $prefix . ( $form->steps[$next_step_key]['error'] ?? 'Failed' );
-                    OpenSim::notify_error( $message, 'danger' );
+                    Helpers::notify_error( $message, 'danger' );
                 } else if ( $result instanceof Error ) {
                     $message = $prefix . $result->getMessage();
-                    OpenSim::notify_error( $message, 'danger' );
+                    Helpers::notify_error( $message, 'danger' );
                 } else {
                     $message = $prefix . ( $form->steps[$next_step_key]['success'] ?? 'Success' );
-                    OpenSim::notify( $message, 'success' );
+                    Helpers::notify( $message, 'success' );
                     // Register the form again to update values
                     $form->complete( $next_step_key );
                     $this->register_form_installation();
@@ -104,14 +104,14 @@ class OpenSim_Install extends OpenSim_Page {
     private function robust_generate_config() {
         $template = 'includes/config.example.php';
         if ( ! file_exists( $template )) {
-            OpenSim::notify_error( _('Template file not found.') );
+            Helpers::notify_error( _('Template file not found.') );
             return false;
         }
 
         try {
             $php_template = file_get_contents($template);
         } catch (Throwable $e) {
-            OpenSim::notify_error( $e );
+            Helpers::notify_error( $e );
             return false;
         }
         try {
@@ -120,15 +120,15 @@ class OpenSim_Install extends OpenSim_Page {
                 throw new OpenSim_Error( _('No configuration found.') );
             }
         } catch (Throwable $e) {
-            OpenSim::notify_error( $e );
+            Helpers::notify_error( $e );
             return false;
         }
         // $config = $_SESSION[self::FORM_ID]['config'] ?? null;
         // if( empty( $config ) ) {
-        //     OpenSim::notify_error( __FUNCTION__ . '() ' . _('No configuration found.') );
+        //     Helpers::notify_error( __FUNCTION__ . '() ' . _('No configuration found.') );
         //     return false;
         // }
-        $robust_creds = OpenSim::connectionstring_to_array($config['DatabaseService']['ConnectionString']);
+        $robust_creds = Helpers::connectionstring_to_array($config['DatabaseService']['ConnectionString']);
 
         $registrars = array(
             'DATA_SRV_W4OSDev' => "http://dev.w4os.org/helpers/register.php",
@@ -194,7 +194,7 @@ class OpenSim_Install extends OpenSim_Page {
             // Should not happen, it has been validated before
             $message = _( 'No config file specified, should be possible at this stage.' );
             error_log( 'ERROR ' . __FUNCTION__ . '() ' . $message );
-            OpenSim::notify_error( __FUNCTION__ . '() ' . _('No config file specified, should not have occured.'), 'danger');
+            Helpers::notify_error( __FUNCTION__ . '() ' . _('No config file specified, should not have occured.'), 'danger');
             return false;
         }
         $temp_config_file = $_SESSION[self::FORM_ID]['config_file'] . '.install.temp';
@@ -208,10 +208,10 @@ class OpenSim_Install extends OpenSim_Page {
                 ) );
             }
         } catch (Throwable $e) {
-            OpenSim::notify_error( $e );
+            Helpers::notify_error( $e );
             return false;
         }
-        // OpenSim::notify(_('Configuration file generated successfully.'), 'success');
+        // Helpers::notify(_('Configuration file generated successfully.'), 'success');
         return true;
     }
 
@@ -227,7 +227,7 @@ class OpenSim_Install extends OpenSim_Page {
             include_once( $temp_config_file );
             // error_log( 'OPENSIM_GRID_NAME ' . OPENSIM_GRID_NAME );
         } catch (Throwable $e) {
-            OpenSim::notify_error( $e );
+            Helpers::notify_error( $e );
             return false;
         }
 
@@ -277,17 +277,17 @@ class OpenSim_Install extends OpenSim_Page {
         }
 
         // Connect to Robust to check credential and get up-to-date grid info
-        global $OpenSim;
+        global $Helpers;
         try {
-            $OpenSim->db_connect();
-            if( ! OpenSim::$robust_db ) {
+            $Helpers->db_connect();
+            if( ! Helpers::$robust_db ) {
                 throw new OpenSim_Error( _('Could not connect to the database.') );
             }
         } catch (Throwable $e) {
-            OpenSim::notify_error( $e );
+            Helpers::notify_error( $e );
             return false;
         }
-        // OpenSim::notify( _('Configuration file loaded successfully.'), 'success' );
+        // Helpers::notify( _('Configuration file loaded successfully.'), 'success' );
         // TODO: copy the temp file to the final location on success.
         return true;
         // throw new OpenSim_Error(  _('The robust_test_config routine is not finished yet, but so far, so good.' ) );
@@ -309,20 +309,20 @@ class OpenSim_Install extends OpenSim_Page {
                 $valid = $form->is_robust_ini_file( 'robust_ini_path', $values['robust_ini_path'] );
                 if( $valid === false ) {
                     // $message = 
-                    // OpenSim::notify_error( _('Invalid answer from is_robust_ini_file') );
+                    // Helpers::notify_error( _('Invalid answer from is_robust_ini_file') );
                     // Should not happen, is_robust_ini_file should have thrown an error instead of returning false
                     throw new OpenSim_Error( _('is_robust_ini_file returned an invalid value.') );
                     $errors++;
                 }
                 // $ini = new OpenSim_Ini( $values['robust_ini_path'] );
             } catch (Throwable $e) {
-                // OpenSim::notify_error( $e );
+                // Helpers::notify_error( $e );
                 $errors++;
             }
             if( file_exists($values['robust_ini_path']) ) {
                 $_SESSION[self::FORM_ID]['robust_ini_path'] = realpath( $values['robust_ini_path'] );
             } else {
-                OpenSim::notify_error( _('File not found') );
+                Helpers::notify_error( _('File not found') );
                 $form->task_error('robust_ini_path', _('File not found'), 'danger' );
                 $errors++;
             }
@@ -465,7 +465,7 @@ class OpenSim_Install extends OpenSim_Page {
             try {
                 $this->validate_form_installation( $form, $next_step_key );
             } catch (Throwable $e) {
-                OpenSim::notify_error( '$e' );
+                Helpers::notify_error( '$e' );
             }
             $this->validate_form_installation( $form, $next_step_key );
         }
@@ -497,13 +497,13 @@ class OpenSim_Install extends OpenSim_Page {
                         // At this stage, we only check if the file exists
                         $valid = $form->is_robust_ini_file( 'robust_ini_path', $values['robust_ini_path'] );
                         if( $valid === false ) {
-                            // OpenSim::notify_error( _('Invalid answer from is_robust_ini_file') );
+                            // Helpers::notify_error( _('Invalid answer from is_robust_ini_file') );
                             // Should not happen, is_robust_ini_file should have thrown an error instead of returning false
                             throw new OpenSim_Error( _('Invalid answer from is_robust_ini_file()') );
                             $errors++;
                         }
                     } catch (Throwable $e) {
-                        OpenSim::notify_error( $e );
+                        Helpers::notify_error( $e );
                         $form->task_error('robust_ini_path', _('Invalid Robust config file'), 'danger' );
                         $errors++;
                     }
@@ -538,7 +538,7 @@ class OpenSim_Install extends OpenSim_Page {
 
     public function render_content() {
 
-        $content = OpenSim::get_notices();
+        $content = Helpers::get_notices();
         $content .= $this->form->render_progress();
         $content .= $this->form->render_form();
         $content .= ( $this->content ?? '' );
@@ -553,18 +553,18 @@ class OpenSim_Install extends OpenSim_Page {
         try {
             $ini = new OpenSim_Ini( $_SESSION[self::FORM_ID]['robust_ini_path'] );
         } catch (Throwable $e) {
-            OpenSim::notify_error( $e );
+            Helpers::notify_error( $e );
             return false;
         }
         if ( ! $ini ) {
-            OpenSim::notify( _('Error parsing file.') );
+            Helpers::notify( _('Error parsing file.') );
             return false;
         }
 
         $config = $ini->get_config();
         $_SESSION[self::FORM_ID]['config'] = $config;
         if ( ! $config ) {
-            OpenSim::notify( _('Error parsing file.') );
+            Helpers::notify( _('Error parsing file.') );
             return false;
         }
         return true;
@@ -577,7 +577,7 @@ class OpenSim_Install extends OpenSim_Page {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['reset'])) {
                 unset($_SESSION[self::FORM_ID]);
-                OpenSim::notify(_('Installation session has been cleared. Restarting installation.'), 'success');
+                Helpers::notify(_('Installation session has been cleared. Restarting installation.'), 'success');
                 header("Location: " . $_SERVER['PHP_SELF']);
                 exit();
             }

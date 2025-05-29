@@ -14,7 +14,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-class OpenSim {
+class Helpers {
     private static $tmp_dir;
     private static $user_notices = array();
     private static $version;
@@ -669,5 +669,5 @@ class OpenSim {
     
 }
 
-$OpenSim = new OpenSim();
-$OpenSim->init();
+$Helpers = new Helpers();
+$Helpers->init();

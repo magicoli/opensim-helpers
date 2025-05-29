@@ -44,7 +44,7 @@ class OpenSim_Form {
             throw new InvalidArgumentException('Invalid argument type: ' . gettype($args));
         }
 
-        $args = OpenSim::parse_args($args, array(
+        $args = Helpers::parse_args($args, array(
             'form_id' => uniqid('form-', true),
             'fields' => array(),
             'callback' => null,
@@ -74,7 +74,7 @@ class OpenSim_Form {
             return new self($args, $step);
         } catch (InvalidArgumentException $e) {
             error_log($e->getMessage());
-            OpenSim::notify_error($e->getMessage() );
+            Helpers::notify_error($e->getMessage() );
             return false;
         }
     }
@@ -83,14 +83,14 @@ class OpenSim_Form {
         if( empty( $steps )) {
             return false;
         }
-        $this->steps = OpenSim::parse_args( $steps, $this->steps );
+        $this->steps = Helpers::parse_args( $steps, $this->steps );
     }
 
     public function add_fields( $fields) {
         if( empty( $fields )) {
             return;
         }
-        $this->fields = OpenSim::parse_args( $fields, $this->fields );
+        $this->fields = Helpers::parse_args( $fields, $this->fields );
         $this->get_next_step();
     }
 
@@ -136,7 +136,7 @@ class OpenSim_Form {
             $add_attrs = '';
             if( ! empty( $this->errors[$field] ) ) {
                 $field_error = $this->errors[$field];
-                $data['help'] = OpenSim::error_html( $field_error, 'warning' ) . ( $data['help'] ?? '' );
+                $data['help'] = Helpers::error_html( $field_error, 'warning' ) . ( $data['help'] ?? '' );
                 if( $field_error['type'] == 'danger' ) {
                     $add_class .= ' is-invalid';
                 }
@@ -191,8 +191,8 @@ class OpenSim_Form {
             $html . $buttons
         );
 
-        OpenSim::enqueue_script( 'form', 'js/form.js' );
-        OpenSim::enqueue_style( 'form', 'css/form.css' );
+        Helpers::enqueue_script( 'form', 'js/form.js' );
+        Helpers::enqueue_style( 'form', 'css/form.css' );
 
         $this->html = $html;
         return $html;
