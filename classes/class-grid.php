@@ -36,11 +36,11 @@ class OpenSim_Grid {
 
     public static function get_grid_info( $grid_uri = false, $args = array() ) {
         $info = array();
-        $HomeURI = Helpers::get_option( 'Hypergrid.HomeURI' );
+        $HomeURI = Helpers::helpers_get_option( 'Hypergrid.HomeURI' );
         if( ! $grid_uri || $grid_uri === $HomeURI ) {
             $is_local_grid = true;
             // Default, get login_uri from config, query grid for live grid_info
-            $grid_uri = Helpers::get_option( 'Hypergrid.HomeURI' );
+            $grid_uri = Helpers::helpers_get_option( 'Hypergrid.HomeURI' );
             if( empty( $grid_uri ) ) {
                 return false;
             }
@@ -80,7 +80,7 @@ class OpenSim_Grid {
         }
 
         if( $is_local_grid ) {
-            $config_info = Helpers::get_option( 'GridInfoService' );
+            $config_info = Helpers::helpers_get_option( 'GridInfoService' );
             if( is_array( $config_info ) ) {
                 $info = array_merge( $config_info, $info );
             }

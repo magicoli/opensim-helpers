@@ -60,9 +60,9 @@ class Helpers {
     }
 
     public function db_connect() {
-        $DatabaseService = self::get_option( 'DatabaseService', false );
+        $DatabaseService = self::helpers_get_option( 'DatabaseService', false );
 
-        $connectionstring = self::get_option( 'DatabaseService.ConnectionString', false);
+        $connectionstring = self::helpers_get_option( 'DatabaseService.ConnectionString', false);
         if( $connectionstring ) {
             $creds = self::connectionstring_to_array( $connectionstring );
             $dsn = sprintf(
@@ -600,7 +600,7 @@ class Helpers {
     }
 
     /**
-     * get_option()
+     * helpers_get_option()
      * 
      * Retrieve an option value from 
      * - $_SESSION['installation']['config'], if exists, organized as an array(
@@ -612,7 +612,7 @@ class Helpers {
      * - constants defined includes/config.php (map to be implemented later)
      * - site configuration data (to be implemented later)
      */
-    public static function get_option( $option, $default = null ) {
+    public static function helpers_get_option( $option, $default = null ) {
         $config = $_SESSION['installation']['config'] ?? self::$config ?? array();
         if( empty( $config ) ) {
             return $default;
