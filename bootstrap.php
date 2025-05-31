@@ -17,3 +17,6 @@ require_once __DIR__ . '/includes/class-api.php';
 require_once __DIR__ . '/includes/class-economy-helper.php';
 require_once __DIR__ . '/includes/class-search-helper.php';
 require_once __DIR__ . '/includes/class-profile-helper.php';
+
+// Migration from v2 to v3
+require_once __DIR__ . '/includes/helpers-migration-v2to3.php';
