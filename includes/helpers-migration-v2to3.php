@@ -20,12 +20,13 @@ class Helpers_Migration_2to3 {
 
                 'OSHelpersDir' => 'OS_HELPERS_DIR',
 
-                'SearchDB' => ['SEARCH_DB', 'use_default'],
+                'SearchDB' => ['SEARCH_DB', 'ROBUST_DB', 'OPENSIM_DB', 'transform' => 'db_credentials'],
                 'SearchEventsTable' => 'SEARCH_TABLE_EVENTS',
                 'SearchRegionTable' => 'SEARCH_REGION_TABLE',
 
-                'OfflineDB' => ['OFFLINE_DB', 'use_default'],
+                'OfflineDB' => ['OFFLINE_DB', 'transform' => 'db_credentials'],
                 'OfflineMessageTable' => 'OFFLINE_MESSAGE_TBL',
+                'MuteDB' => ['MUTE_DB', 'ROBUST_DB', 'OPENSIM_DB', 'transform' => 'db_credentials'],
                 'MuteListTable' => 'MUTE_LIST_TBL',
 
                 'CurrencyMoneyTable' => 'CURRENCY_MONEY_TBL',
@@ -79,19 +80,26 @@ class Helpers_Migration_2to3 {
             ],
             
             'DatabaseService' => [
-                'ConnectionString' => ['ROBUST_DB', 'OPENSIM_DB'],
+                'ConnectionString' => ['ROBUST_DB', 'OPENSIM_DB', 'transform' => 'db_credentials'],
             ],
 
             'Network' => [
-                'ConsoleUser' => 'ROBUST_CONSOLE.ConsoleUser',
-                'ConsolePass' => 'ROBUST_CONSOLE.ConsolePass',
-                'ConsolePort' => 'ROBUST_CONSOLE.ConsolePort',
+                'ConsoleUser' => ['ROBUST_CONSOLE', 'transform' => 'extract_console_user'],
+                'ConsolePass' => ['ROBUST_CONSOLE', 'transform' => 'extract_console_pass'],
+                'ConsolePort' => ['ROBUST_CONSOLE', 'transform' => 'extract_console_port'],
             ],
+
+            'AssetService' => [
+                'ConnectionString' => ['ASSETS_DB', 'ROBUST_DB', 'OPENSIM_DB', 'transform' => 'db_credentials'],
+            ],
+            'UserProfilesService' => [
+                'ConnectionString' => ['PROFILE_DB', 'ROBUST_DB', 'OPENSIM_DB', 'transform' => 'db_credentials'],
+            ],            
         ],
 
         'opensim' => [
             'DatabaseService' => [
-                'ConnectionString' => ['OPENSIM_DB', 'ROBUST_DB'],
+                'ConnectionString' => ['OPENSIM_DB', 'ROBUST_DB', 'transform' => 'db_credentials'],
             ],
 
             'Search' => [
@@ -116,7 +124,7 @@ class Helpers_Migration_2to3 {
             'Gloebit' => [
                 'Enabled' => ['CURRENCY_PROVIDER', 'transform' => 'is_gloebit_enabled'],
                 // 'GLBSpecificStorageProvider' => ['transform' => 'get_storage_module_economy'], // To be implemented
-                'GLBSpecificConnectionString' => 'CURRENCY_DB',
+                'GLBSpecificConnectionString' => ['CURRENCY_DB', 'transform' => 'db_credentials'],
                 'GLBOwnerEmail' => 'OPENSIM_MAIL_SENDER',
             ],
 
@@ -154,7 +162,7 @@ class Helpers_Migration_2to3 {
     /**
      * Transform a value according to the specified transformation
      */
-    protected static function transform_value($value, $transform, $all_values = array()) {
+    protected static function transform_value($value, $transform, $all_values = array(), $constant_config = null) {
         switch ($transform) {
             case 'boolean_to_string':
                 return self::normalize_boolean($value);
@@ -171,18 +179,6 @@ class Helpers_Migration_2to3 {
                 
             case 'add_offline_path':
                 return $value ? rtrim($value, '/') . '/offline/' : $value;
-                
-            case 'array_to_connection_string':
-                return self::build_connection_string_from_array($value);
-                
-            case 'build_currency_connection_string':
-                return self::build_connection_string_from_individual_constants($all_values, 'CURRENCY_DB');
-                
-            case 'build_search_connection_string':
-                return self::build_connection_string_from_individual_constants($all_values, 'SEARCH_DB');
-                
-            case 'build_offline_connection_string':
-                return self::build_connection_string_from_individual_constants($all_values, 'OFFLINE_DB');
                 
             case 'extract_console_user':
                 return is_array($value) && isset($value['ConsoleUser']) ? $value['ConsoleUser'] : null;
@@ -249,6 +245,63 @@ class Helpers_Migration_2to3 {
                 ], $parts);
                 return $parts['scheme'] . '://' . $parts['host'] . ':' . $parts['port'];
                 
+            case 'db_credentials':
+                if (!is_array($constant_config)) {
+                    $constant_config = array($constant_config);
+                }
+
+                foreach ($constant_config as $key => $constant_name) {
+                    if ($key === 'transform') {
+                        continue; // Skip the transform key
+                    }
+                    
+                    if (!is_string($constant_name) || empty($constant_name)) {
+                        continue;
+                    }
+                    
+                    $value = $all_values[$constant_name] ?? null;
+                    
+                    if (is_array($value)) {
+                        error_log("$constant_name is array: " . print_r($value, true));
+                        // Already an array, normalize it to W4OS format
+                        $db_array = array(
+                            'type' => $value['type'] ?? null,
+                            'host' => $value['host'] ?? null,
+                            'name' => $value['name'] ?? $value['database'] ?? null,
+                            'user' => $value['user'] ?? $value['username'] ?? null,
+                            'pass' => $value['pass'] ?? $value['password'] ?? null,
+                            'port' => isset($value['port']) ? intval($value['port']) : null,
+                        );
+                        if (!empty($db_array['host']) && !empty($db_array['name'])) {
+                            error_log("Returning array from $constant_name: " . print_r($db_array, true));
+                            return $db_array;
+                        }
+                    } else {
+                        // Look for individual constants with same prefix
+                        $host = $all_values[$constant_name . '_HOST'] ?? null;
+                        $name = $all_values[$constant_name . '_NAME'] ?? null;
+                        
+                        if (!empty($host) && !empty($name)) {
+                            $user = $all_values[$constant_name . '_USER'] ?? null;
+                            $pass = $all_values[$constant_name . '_PASS'] ?? null;
+                            $port = $all_values[$constant_name . '_PORT'] ?? null;
+                            
+                            // Build array in W4OS format
+                            $db_array = array(
+                                'host' => $host,
+                                'name' => $name,
+                                'user' => $user,
+                                'pass' => $pass,
+                                'port' => $port,
+                            );
+                            return $db_array;
+                        }
+                    }
+                }
+                
+                error_log("No valid database credentials found in " . print_r($constant_config, true));
+                return null;
+                
             case 'get_dst_zone':
                 // If OPENSIM_USE_UTC_TIME is false, return "none"
                 if ($value === false || $value === 'false') {
@@ -279,61 +332,7 @@ class Helpers_Migration_2to3 {
         
         return $value; // Return as-is if not clearly boolean
     }
-    
-    /**
-     * Build connection string from array (ROBUST_DB, CURRENCY_DB, etc.)
-     */
-    protected static function build_connection_string_from_array($db_array) {
-        if (!is_array($db_array)) {
-            return null;
-        }
-        
-        $host = $db_array['host'] ?? '';
-        $name = $db_array['name'] ?? $db_array['database'] ?? '';
-        $user = $db_array['user'] ?? '';
-        $pass = $db_array['pass'] ?? $db_array['password'] ?? '';
-        $port = $db_array['port'] ?? 3306;
-        
-        if (empty($host) || empty($name)) {
-            return null;
-        }
-        
-        $parts = array();
-        $parts[] = "Data Source=" . $host;
-        $parts[] = "Database=" . $name;
-        if (!empty($user)) $parts[] = "User ID=" . $user;
-        if (!empty($pass)) $parts[] = "Password=" . $pass;
-        if ($port != 3306) $parts[] = "Port=" . $port;
-        $parts[] = "Old Guids=true";
-        
-        return implode(';', $parts) . ';';
-    }
-    
-    /**
-     * Build connection string from individual constants
-     */
-    protected static function build_connection_string_from_individual_constants($all_values, $prefix) {
-        $host = $all_values[$prefix . '_HOST'] ?? '';
-        $name = $all_values[$prefix . '_NAME'] ?? '';
-        $user = $all_values[$prefix . '_USER'] ?? '';
-        $pass = $all_values[$prefix . '_PASS'] ?? '';
-        $port = $all_values[$prefix . '_PORT'] ?? 3306;
-        
-        if (empty($host) || empty($name)) {
-            return null;
-        }
-        
-        $parts = array();
-        $parts[] = "Data Source=" . $host;
-        $parts[] = "Database=" . $name;
-        if (!empty($user)) $parts[] = "User ID=" . $user;
-        if (!empty($pass)) $parts[] = "Password=" . $pass;
-        if ($port != 3306) $parts[] = "Port=" . $port;
-        $parts[] = "Old Guids=true";
-        
-        return implode(';', $parts) . ';';
-    }
-    
+
     /**
      * Find constant value using precedence rules
      * 
@@ -345,7 +344,8 @@ class Helpers_Migration_2to3 {
         // Handle simple string constant name
         if (is_string($constant_config)) {
             if (isset($all_values[$constant_config])) {
-                return $all_values[$constant_config];
+                $value = $all_values[$constant_config];
+                return $value;
             }
             return null;
         }
@@ -359,7 +359,12 @@ class Helpers_Migration_2to3 {
         if (count($constant_config) === 1 && isset($constant_config['transform'])) {
             return 'TRANSFORM_ONLY';
         }
-        
+
+        if( isset($constant_config['transform']) && $constant_config['transform'] == 'db_credentials' ) {
+            // Special case for db_credentials - allow transform even if no constants found
+            return 'TRANSFORM_ONLY';
+        }
+
         // Go through precedence order - get just the constant names (not transform)
         foreach ($constant_config as $key => $constant_name) {
             // Skip 'transform' key
@@ -368,7 +373,8 @@ class Helpers_Migration_2to3 {
             }
             
             if (isset($all_values[$constant_name])) {
-                return $all_values[$constant_name];
+                $value = $all_values[$constant_name];
+                return $value;
             }
         }
         
@@ -391,7 +397,13 @@ class Helpers_Migration_2to3 {
         // Get all PHP constants if not provided
         if ($constants === null) {
             $all_constants = get_defined_constants(true);
-            $all_values = isset($all_constants['user']) ? $all_constants['user'] : [];
+            // Flatten all constants from all categories
+            $all_values = array();
+            foreach ($all_constants as $category => $constants_array) {
+                if (is_array($constants_array)) {
+                    $all_values = array_merge($all_values, $constants_array);
+                }
+            }
         } else {
             $all_values = $constants;
         }
@@ -406,8 +418,10 @@ class Helpers_Migration_2to3 {
             $instance = basename($ini_file, '.ini');
             
             foreach ($file_sections as $section => $section_mapping) {
+                
                 foreach ($section_mapping as $ini_key => $constant_config) {
                     try {
+                        
                         // Find the value using precedence rules
                         $value = self::find_constant_value_with_precedence($constant_config, $all_values);
                         
@@ -420,9 +434,9 @@ class Helpers_Migration_2to3 {
                         if (is_array($constant_config) && isset($constant_config['transform'])) {
                             if ($value === 'TRANSFORM_ONLY') {
                                 // Transform-only case, don't need source value
-                                $value = self::transform_value(null, $constant_config['transform'], $all_values);
+                                $value = self::transform_value(null, $constant_config['transform'], $all_values, $constant_config);
                             } else {
-                                $value = self::transform_value($value, $constant_config['transform'], $all_values);
+                                $value = self::transform_value($value, $constant_config['transform'], $all_values, $constant_config);
                             }
                         }
                         
@@ -440,21 +454,20 @@ class Helpers_Migration_2to3 {
                             $results['migrated'][] = $setting_key;
                         } else {
                             $results['errors'][] = 'Failed to set ' . $setting_key;
+                            error_log("Failed to set: $setting_key");
                         }
                         
                     } catch (Exception $e) {
                         $results['errors'][] = 'Error processing ' . $ini_key . ': ' . $e->getMessage();
+                        error_log("Exception processing $ini_key: " . $e->getMessage());
                     }
                 }
             }
         }
         
         // Save all instances if no errors occurred
-        if (empty($results['errors']) && class_exists('Engine_Settings')) {
-            foreach (array_keys(self::$constants_mapping) as $ini_file) {
-                $instance = basename($ini_file, '.ini');
-                // Engine_Settings should handle saving automatically when we call set()
-            }
+        if (empty($results['errors'])) {
+            Engine_Settings::save();
         }
         
         return $results;
