@@ -61,7 +61,7 @@ class Helpers {
         $this->db_connect();
 
         require_once( OSHELPERS_DIR . 'classes/class-locale.php' );
-        require_once( OSHELPERS_DIR . 'classes/class-ini.php' );
+        // require_once( OSHELPERS_DIR . 'classes/class-ini.php' );
         require_once( OSHELPERS_DIR . 'classes/class-grid.php' );
     }
 
