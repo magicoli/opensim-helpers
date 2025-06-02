@@ -16,7 +16,7 @@ class Helpers_Migration_2to3 {
     private static $constants_mapping = [
         'helpers' => [
             'Helpers' => [
-                'GridLogo' => 'OPENSIM_GRID_LOGO_URL',
+                'GridLogoURL' => 'OPENSIM_GRID_LOGO_URL',
 
                 'OSHelpersDir' => 'OS_HELPERS_DIR',
 
@@ -41,7 +41,7 @@ class Helpers_Migration_2to3 {
 
                 'HypeventsUrl' => 'HYPEVENTS_URL',
 
-                'OpensimMailSender' => 'OPENSIM_MAIL_SENDER',
+                'SenderEmail' => 'OPENSIM_MAIL_SENDER',
                 // 'OfflineHelperUri' => ['w4os_offline_helper_uri'],
             ],
         ],
@@ -51,11 +51,6 @@ class Helpers_Migration_2to3 {
                 'BaseHostname' => ['OPENSIM_LOGIN_URI', 'transform' => 'uri_to_hostname'],
                 'BaseURL' => ['OPENSIM_LOGIN_URI', 'transform' => 'uri_to_base_url'],
                 'PublicPort' => ['OPENSIM_LOGIN_URI', 'transform' => 'extract_public_port'],
-            ],
-            'LoginHandler' => [
-                'LoginURL' => ['OPENSIM_LOGIN_URI', 'transform' => 'sanitize_login_uri'],
-                // 'SearchURL' => ['w4os_search_url', 'transform' => 'add_search_path'], // In-world Search URL
-                // 'OfflineMessageURL' => ['w4os_offline_helper_uri', 'transform' => 'add_offline_path'], // Offline Message URL
             ],
             'LoginService' => [
                 // 'SearchURL' => '['w4os_grid_info.search'], // Web Search URL'
