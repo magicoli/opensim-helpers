@@ -14,35 +14,33 @@ if (!defined('ABSPATH') && !defined('OPENSIM_ENGINE')) {
 class Helpers_Migration_2to3 {
     
     private static $constants_mapping = [
-        'helpers' => [
+        'engine' => [
+            // Parameters not handled by OpenSim, usable regardless of framework
             'Helpers' => [
                 'GridLogoURL' => 'OPENSIM_GRID_LOGO_URL',
-
                 'OSHelpersDir' => 'OS_HELPERS_DIR',
-
+            ],
+            'Search' => [
                 'SearchDB' => ['SEARCH_DB', 'ROBUST_DB', 'OPENSIM_DB', 'transform' => 'db_credentials'],
                 'SearchEventsTable' => 'SEARCH_TABLE_EVENTS',
                 'SearchRegionTable' => 'SEARCH_REGION_TABLE',
-
+                'HypeventsUrl' => 'HYPEVENTS_URL',
+            ],
+            'Offline' => [
                 'OfflineDB' => ['OFFLINE_DB', 'transform' => 'db_credentials'],
                 'OfflineMessageTable' => 'OFFLINE_MESSAGE_TBL',
                 'MuteDB' => ['MUTE_DB', 'ROBUST_DB', 'OPENSIM_DB', 'transform' => 'db_credentials'],
                 'MuteListTable' => 'MUTE_LIST_TBL',
-
+                'SenderEmail' => 'OPENSIM_MAIL_SENDER',
+            ],
+            'Economy' => [
                 'CurrencyMoneyTable' => 'CURRENCY_MONEY_TBL',
                 'CurrencyTransactionTable' => 'CURRENCY_TRANSACTION_TBL',
                 'CurrencyHelperPath' => 'CURRENCY_HELPER_PATH',
-
                 'GloebitConversionThreshold' => 'GLOEBIT_CONVERSION_THRESHOLD',
                 'GloebitConversionTable' => 'GLOEBIT_CONVERSION_TABLE',
-
                 'PodexErrorMessage' => 'PODEX_ERROR_MESSAGE',
                 'PodexRedirectUrl' => 'PODEX_REDIRECT_URL',
-
-                'HypeventsUrl' => 'HYPEVENTS_URL',
-
-                'SenderEmail' => 'OPENSIM_MAIL_SENDER',
-                // 'OfflineHelperUri' => ['w4os_offline_helper_uri'],
             ],
         ],
 
