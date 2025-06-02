@@ -404,7 +404,7 @@ class OpenSim_Form {
 
         // If strict, use parse_ini_file
         if( $strict ) {
-            $ini = parse_ini_file( $file_path );
+            $ini = parse_ini_file_decode( $file_path );
             if( empty( $ini )) {
                 $message = sprintf( _('File %s does not comply with .ini standards.'), $file_path );
                 $this->task_error( $field_id, $message, 'danger' );
