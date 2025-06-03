@@ -168,7 +168,8 @@ function currency_xmlrpc_buy( $method_name, $params, $app_data ) {
 
 			default:
 				$errorMessage = 'Unable to process the transaction. The gateway denied your charge. Open help page?';
-				$errorURI     = empty( W4OS_GRID_INFO['help'] ) ? CURRENCY_HELPER_URL : W4OS_GRID_INFO['help'];
+				// TODO: return website help page URL
+				$errorURI     = CURRENCY_HELPER_URL ?? null;
 		}
 		$response_xml = xmlrpc_encode(
 			array(

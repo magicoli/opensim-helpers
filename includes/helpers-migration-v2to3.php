@@ -51,9 +51,7 @@ class Helpers_Migration_2to3 {
                 'PublicPort' => ['OPENSIM_LOGIN_URI', 'transform' => 'extract_public_port'],
             ],
             'LoginService' => [
-                // 'SearchURL' => '['w4os_grid_info.search'], // Web Search URL'
                 'Currency' => 'CURRENCY_NAME',
-                // 'DestinationGuide' => ['w4os-guide.url'],
 
                 // {DSTZone} {} Affects only Daylight Saving Time rules
                 // Default to "America/Los_Angeles;Pacific Standard Time" 
@@ -68,8 +66,6 @@ class Helpers_Migration_2to3 {
                 'gridname' => 'OPENSIM_GRID_NAME',
                 'login' => 'OPENSIM_LOGIN_URI',
                 'economy' => 'CURRENCY_HELPER_URL',
-                // 'search' => ['w4os_grid_info.search'], // Web Search URL
-                // 'OfflineMessageURL' => ['w4os_offline_helper_uri'],
             ],
             
             'DatabaseService' => [
@@ -97,7 +93,6 @@ class Helpers_Migration_2to3 {
 
             'Search' => [
                 // 'Module' => 'OpenSimSearch', // Fixed value if search URL is not empty, for user info only
-                // 'SearchURL' => ['w4os_search_url'], // In-world Search URL
             ],
     
             'DataSnapshot' => [
@@ -109,7 +104,6 @@ class Helpers_Migration_2to3 {
             'Economy' => [
                 'economymodule' => ['CURRENCY_PROVIDER', 'transform' => 'currency_provider_to_module'],
                 'economy' => 'CURRENCY_HELPER_URL',
-                // 'SellEnabled' => ['w4os_provide_economy_helpers', 'transform' => 'boolean_to_string'],
                 // 'PriceUpload' => 0, // Fixed value
                 // 'PriceGroupCreate' => 0, // Fixed value
             ],
@@ -121,11 +115,8 @@ class Helpers_Migration_2to3 {
                 'GLBOwnerEmail' => 'OPENSIM_MAIL_SENDER',
             ],
 
-            'Messaging' => [
-                // 'OfflineMessageModule' => 'OfflineMessageModule', // if w4os_provide_offline_messages is true
-                // 'Enabled' => ['w4os_provide_offline_messages', 'transform' => 'boolean_to_string'],
-                // 'OfflineMessageURL' => ['w4os_offline_helper_uri'],
-            ],
+            // 'Messaging' => [
+            // ],
         ],
 
         'moneyserver' => [
@@ -138,7 +129,6 @@ class Helpers_Migration_2to3 {
             ],
             'MoneyServer' => [
                 // - not used with Gloebit
-                // - default if w4os_provide_economy_helpers is true and w4os_currency_provider is empty)
                 // TODO: check if Podex uses MoneyServer
 
                 'BankerAvatar' => 'CURRENCY_BANKER_AVATAR', // TODO: check if both variants are legit
@@ -256,7 +246,7 @@ class Helpers_Migration_2to3 {
                     
                     if (is_array($value)) {
                         error_log("$constant_name is array: " . print_r($value, true));
-                        // Already an array, normalize it to W4OS format
+                        // Already an array, normalize it to db_credentials format
                         $db_array = array(
                             'type' => $value['type'] ?? null,
                             'host' => $value['host'] ?? null,
@@ -279,7 +269,7 @@ class Helpers_Migration_2to3 {
                             $pass = $all_values[$constant_name . '_PASS'] ?? null;
                             $port = $all_values[$constant_name . '_PORT'] ?? null;
                             
-                            // Build array in W4OS format
+                            // Build array in db_credentials format
                             $db_array = array(
                                 'host' => $host,
                                 'name' => $name,

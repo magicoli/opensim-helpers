@@ -131,7 +131,7 @@ class OpenSim_Install extends OpenSim_Page {
         $robust_creds = OSPDO::connectionstring_to_array($config['DatabaseService']['ConnectionString']);
 
         $registrars = array(
-            'DATA_SRV_W4OSDev' => "http://dev.w4os.org/helpers/register.php",
+            'DATA_SRV_Self' => "http://localhost/helpers/register.php",
             'DATA_SRV_2do' => 'http://2do.directory/helpers/register.php',
             'DATA_SRV_MISearch' => 'http://metaverseink.com/cgi-bin/register.py',
         );

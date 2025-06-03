@@ -616,8 +616,8 @@ class Helpers {
 
     static function hop( $url = null, $string = null, $format = true ) {
         if ( empty( $url ) ) {
-                // $url = get_option( 'w4os_login_uri' );
-                return $string;
+            // TODO: handle error or return grid default teleport URL
+            return $string;
         }
         $url = opensim_format_tp( $url, TPLINK_HOP );
 

@@ -24,10 +24,5 @@ if( file_exists( '.git/HEAD' ) ) {
 }
 
 // Handle API requests or show version
-$api = W4OS_Helper_API::getInstance();
-if (isset($_REQUEST['action']) || isset($_REQUEST['method'])) {
-    $api->handleRequest();
-} else {
-    echo $version;
-    die();
-}
+// TODO: handle engine  or helpers-specific API requests
+echo $version;

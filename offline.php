@@ -133,9 +133,9 @@ switch ( $method ) {
 			. $body
 			. "\r\n"
 			. "\r\n"
-			. ( empty( $outro ) ? '' : "<blockquote>$outro</blockquote>" )
 			. '<hr>'
-			. "<p style='font-size:small'><b>" . OPENSIM_GRID_NAME . '</b> Instant Messages mail forwarding by w4os.'
+			. ( empty( $outro ) ? '' : "<blockquote>$outro</blockquote>" )
+			. '<p style="font-size:small"><b>' . OPENSIM_GRID_NAME . '</b> Instant Messages mail forwarding.'
 			. '<br>Please log in-world to answer to this message. Emails to the sender address will not be processed.'
 			. '<br>To disable mail notifications, uncheck option "Send IM to mail" in your viewer preferences (tab "Chat" or "Communications").'
 			. '</p></body></html>';

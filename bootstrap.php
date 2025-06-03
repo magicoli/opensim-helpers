@@ -21,10 +21,9 @@ if (! defined('OPENSIM_ENGINE_PATH')) {
 require_once OPENSIM_ENGINE_PATH . '/bootstrap.php';
 
 // Load helper classes
-require_once OPENSIM_HELPERS_PATH . '/includes/class-api.php';
-require_once OPENSIM_HELPERS_PATH . '/includes/class-economy-helper.php';
-require_once OPENSIM_HELPERS_PATH . '/includes/class-search-helper.php';
-require_once OPENSIM_HELPERS_PATH . '/includes/class-profile-helper.php';
+// require_once OPENSIM_HELPERS_PATH . '/includes/class-api.php';
+// require_once OPENSIM_HELPERS_PATH . '/includes/class-search-helper.php';
+// require_once OPENSIM_HELPERS_PATH . '/includes/class-profile-helper.php';
 
 if( file_exists( OPENSIM_HELPERS_PATH . '/includes/config.php' ) ) {
     // Load configuration if exists
