@@ -62,7 +62,7 @@ $progress = $wizard->get_progress();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>W4OS Installation Wizard</title>
+    <title>OpenSimulator Helpers Installation Wizard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .wizard-container { max-width: 800px; margin: 2rem auto; }
@@ -77,7 +77,7 @@ $progress = $wizard->get_progress();
     <div class="container wizard-container">
         <div class="row">
             <div class="col-12">
-                <h1 class="text-center mb-4">W4OS Installation Wizard</h1>
+                <h1 class="text-center mb-4">OpenSimulator Helpers Installation Wizard</h1>
                 
                 <!-- Progress Bar -->
                 <div class="progress mb-4">
@@ -119,6 +119,7 @@ $progress = $wizard->get_progress();
                                         
                                         <?php
                                         $current_value = $wizard->get_wizard_data()[$field_key] ?? $field_config['default'] ?? '';
+                                        $required_attr = !empty($field_config['required']) ? 'required' : '';
                                         
                                         switch ($field_config['type']):
                                             case 'text':
@@ -131,7 +132,7 @@ $progress = $wizard->get_progress();
                                                    name="<?php echo $field_key; ?>" 
                                                    value="<?php echo htmlspecialchars($current_value); ?>"
                                                    placeholder="<?php echo htmlspecialchars($field_config['placeholder'] ?? ''); ?>"
-                                                   <?php echo !empty($field_config['required']) ? 'required' : ''; ?>>
+                                                   <?php echo $required_attr; ?>>
                                         <?php break; case 'radio': ?>
                                             <?php foreach ($field_config['options'] as $option_value => $option_label): ?>
                                                 <div class="form-check">
@@ -140,7 +141,8 @@ $progress = $wizard->get_progress();
                                                            name="<?php echo $field_key; ?>" 
                                                            id="<?php echo $field_key . '_' . $option_value; ?>" 
                                                            value="<?php echo $option_value; ?>"
-                                                           <?php echo $current_value === $option_value ? 'checked' : ''; ?>>
+                                                           <?php echo $current_value === $option_value ? 'checked' : ''; ?>
+                                                           <?php echo $required_attr; ?>>
                                                     <label class="form-check-label" for="<?php echo $field_key . '_' . $option_value; ?>">
                                                         <?php echo htmlspecialchars($option_label); ?>
                                                     </label>
@@ -184,5 +186,20 @@ $progress = $wizard->get_progress();
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Disable form validation when clicking Previous button
+        document.addEventListener('DOMContentLoaded', function() {
+            const previousBtn = document.querySelector('button[value="previous"]');
+            if (previousBtn) {
+                previousBtn.addEventListener('click', function() {
+                    // Remove required attributes temporarily
+                    const requiredFields = document.querySelectorAll('[required]');
+                    requiredFields.forEach(field => {
+                        field.removeAttribute('required');
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>
