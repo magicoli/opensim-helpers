@@ -1,315 +1,188 @@
 <?php
 /**
- * Installation Wizard for OpenSimulator Helpers
+ * Standalone Installation Wizard
  * 
- * Standalone installation wizard that uses the Engine's Installation_Wizard class
- * and renders HTML using Bootstrap for a clean interface.
+ * Direct access wizard for helpers installation
  */
 
-if (__FILE__ !== $_SERVER['SCRIPT_FILENAME']) {
-    http_response_code(403);
-    die("This file must be called directly.");
-}
-
 // Start session for wizard state
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Load the engine
-require_once __DIR__ . '/bootstrap.php';
+// Include required files
+require_once dirname(__FILE__) . '/../engine/class-installation-wizard.php';
+require_once dirname(__FILE__) . '/../engine/class-engine-settings.php';
 
-class OpenSim_Installation_Page {
-    private $wizard;
-    private $page_title = 'OpenSimulator Installation Wizard';
-    private $site_title = 'OpenSimulator Helpers';
-    
-    public function __construct() {
-        $this->wizard = new Installation_Wizard();
-        $this->process_form();
-        $this->render_page();
-    }
-    
-    /**
-     * Process form submissions
-     */
-    private function process_form() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (isset($_POST['action'])) {
-                switch ($_POST['action']) {
-                    case 'next_step':
-                        $result = $this->wizard->process_step($_POST);
-                        if ($result['success']) {
-                            $this->wizard->next_step();
-                            $this->add_notice('success', $result['message'] ?? 'Step completed successfully');
-                        } else {
-                            $this->add_notice('error', $result['message'] ?? 'Please correct the errors below');
-                            if (!empty($result['errors'])) {
-                                foreach ($result['errors'] as $error) {
-                                    $this->add_notice('error', $error);
-                                }
-                            }
-                        }
-                        break;
-                        
-                    case 'previous_step':
-                        $this->wizard->previous_step();
-                        break;
-                        
-                    case 'reset':
-                        $this->wizard->reset();
-                        $this->add_notice('info', 'Wizard has been reset');
-                        break;
+// Initialize wizard
+$wizard = new Installation_Wizard();
+
+// Handle form submission
+$message = '';
+$message_type = 'info';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action'])) {
+        switch ($_POST['action']) {
+            case 'next':
+                $result = $wizard->process_step($_POST);
+                if ($result['success']) {
+                    if ($wizard->next_step()) {
+                        // Continue to next step
+                    } else {
+                        // Wizard completed
+                        $message = 'Installation completed successfully!';
+                        $message_type = 'success';
+                    }
+                } else {
+                    $message = isset($result['errors']) ? implode('<br>', $result['errors']) : $result['message'];
+                    $message_type = 'error';
                 }
-            }
-        }
-        
-        // Handle GET parameters
-        if (isset($_GET['action'])) {
-            switch ($_GET['action']) {
-                case 'reset':
-                    $this->wizard->reset();
-                    $this->add_notice('info', 'Wizard has been reset');
-                    break;
-            }
+                break;
+                
+            case 'previous':
+                $wizard->previous_step();
+                break;
+                
+            case 'reset':
+                $wizard->reset();
+                $message = 'Wizard has been reset';
+                $message_type = 'info';
+                break;
         }
     }
-    
-    /**
-     * Render the complete page
-     */
-    private function render_page() {
-        $current_step = $this->wizard->get_current_step();
-        
-        if (!$current_step) {
-            $this->render_completion_page();
-            return;
-        }
-        
-        $content = $this->render_wizard_content($current_step);
-        
-        // Use helpers template system
-        $GLOBALS['site_title'] = $this->site_title;
-        $GLOBALS['page_title'] = $this->page_title;
-        $GLOBALS['content'] = $content;
-        
-        require_once __DIR__ . '/templates/templates.php';
-    }
-    
-    /**
-     * Render wizard step content
-     */
-    private function render_wizard_content($step) {
-        $wizard_data = $this->wizard->get_wizard_data();
-        $progress = $this->wizard->get_progress();
-        
-        ob_start();
-        ?>
-        
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
+}
+
+$current_step = $wizard->get_current_step();
+$progress = $wizard->get_progress();
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W4OS Installation Wizard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .wizard-container { max-width: 800px; margin: 2rem auto; }
+        .step-indicator { margin-bottom: 2rem; }
+        .step-indicator .step { display: inline-block; width: 30px; height: 30px; border-radius: 50%; background: #e9ecef; color: #6c757d; text-align: center; line-height: 30px; margin-right: 10px; }
+        .step-indicator .step.active { background: #0d6efd; color: white; }
+        .step-indicator .step.completed { background: #198754; color: white; }
+        .field-group { margin-bottom: 1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container wizard-container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">W4OS Installation Wizard</h1>
+                
+                <!-- Progress Bar -->
+                <div class="progress mb-4">
+                    <div class="progress-bar" role="progressbar" style="width: <?php echo $progress; ?>%" aria-valuenow="<?php echo $progress; ?>" aria-valuemin="0" aria-valuemax="100"><?php echo $progress; ?>%</div>
+                </div>
+                
+                <!-- Step Indicator -->
+                <div class="step-indicator text-center mb-4">
+                    <?php for ($i = 1; $i <= $current_step['total']; $i++): ?>
+                        <span class="step <?php echo $i < $current_step['number'] ? 'completed' : ($i == $current_step['number'] ? 'active' : ''); ?>"><?php echo $i; ?></span>
+                    <?php endfor; ?>
+                </div>
+                
+                <!-- Messages -->
+                <?php if ($message): ?>
+                    <div class="alert alert-<?php echo $message_type === 'error' ? 'danger' : ($message_type === 'success' ? 'success' : 'info'); ?> alert-dismissible fade show" role="alert">
+                        <?php echo $message; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Current Step -->
+                <?php if ($current_step): ?>
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title"><?php echo esc_html($step['title']); ?></h3>
-                            <div class="progress mt-2" style="height: 8px;">
-                                <div class="progress-bar bg-primary" role="progressbar" 
-                                     style="width: <?php echo $progress; ?>%" 
-                                     aria-valuenow="<?php echo $progress; ?>" 
-                                     aria-valuemin="0" aria-valuemax="100">
-                                </div>
-                            </div>
-                            <small class="text-muted">Step <?php echo $step['number']; ?> of <?php echo $step['total']; ?></small>
+                            <h3><?php echo htmlspecialchars($current_step['title']); ?></h3>
+                            <p class="text-muted mb-0"><?php echo htmlspecialchars($current_step['description']); ?></p>
                         </div>
-                        
                         <div class="card-body">
-                            <?php $this->render_notices(); ?>
-                            
-                            <?php if (!empty($step['description'])): ?>
-                                <p class="text-muted"><?php echo esc_html($step['description']); ?></p>
-                            <?php endif; ?>
-                            
-                            <form method="POST" action="">
-                                <input type="hidden" name="action" value="next_step">
-                                
-                                <?php $this->render_step_fields($step, $wizard_data); ?>
+                            <form method="post">
+                                <?php foreach ($current_step['fields'] as $field_key => $field_config): ?>
+                                    <div class="field-group">
+                                        <label for="<?php echo $field_key; ?>" class="form-label">
+                                            <?php echo htmlspecialchars($field_config['label']); ?>
+                                            <?php if (!empty($field_config['required'])): ?>
+                                                <span class="text-danger">*</span>
+                                            <?php endif; ?>
+                                        </label>
+                                        
+                                        <?php
+                                        $current_value = $wizard->get_wizard_data()[$field_key] ?? $field_config['default'] ?? '';
+                                        
+                                        switch ($field_config['type']):
+                                            case 'text':
+                                            case 'password':
+                                            case 'number':
+                                        ?>
+                                            <input type="<?php echo $field_config['type']; ?>" 
+                                                   class="form-control" 
+                                                   id="<?php echo $field_key; ?>" 
+                                                   name="<?php echo $field_key; ?>" 
+                                                   value="<?php echo htmlspecialchars($current_value); ?>"
+                                                   placeholder="<?php echo htmlspecialchars($field_config['placeholder'] ?? ''); ?>"
+                                                   <?php echo !empty($field_config['required']) ? 'required' : ''; ?>>
+                                        <?php break; case 'radio': ?>
+                                            <?php foreach ($field_config['options'] as $option_value => $option_label): ?>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" 
+                                                           type="radio" 
+                                                           name="<?php echo $field_key; ?>" 
+                                                           id="<?php echo $field_key . '_' . $option_value; ?>" 
+                                                           value="<?php echo $option_value; ?>"
+                                                           <?php echo $current_value === $option_value ? 'checked' : ''; ?>>
+                                                    <label class="form-check-label" for="<?php echo $field_key . '_' . $option_value; ?>">
+                                                        <?php echo htmlspecialchars($option_label); ?>
+                                                    </label>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php break; case 'file': ?>
+                                            <input type="file" 
+                                                   class="form-control" 
+                                                   id="<?php echo $field_key; ?>" 
+                                                   name="<?php echo $field_key; ?>"
+                                                   accept="<?php echo htmlspecialchars($field_config['accept'] ?? ''); ?>">
+                                        <?php break; endswitch; ?>
+                                    </div>
+                                <?php endforeach; ?>
                                 
                                 <div class="d-flex justify-content-between mt-4">
                                     <div>
-                                        <?php if ($step['number'] > 1): ?>
-                                            <button type="submit" name="action" value="previous_step" class="btn btn-outline-secondary">
-                                                <i class="bi bi-arrow-left"></i> Previous
-                                            </button>
+                                        <?php if ($current_step['number'] > 1): ?>
+                                            <button type="submit" name="action" value="previous" class="btn btn-secondary">Previous</button>
                                         <?php endif; ?>
                                     </div>
-                                    
                                     <div>
-                                        <button type="button" class="btn btn-outline-danger me-2" onclick="confirmReset()">
-                                            <i class="bi bi-arrow-clockwise"></i> Reset
-                                        </button>
-                                        
-                                        <button type="submit" class="btn btn-primary">
-                                            <?php if ($step['number'] < $step['total']): ?>
-                                                Next <i class="bi bi-arrow-right"></i>
-                                            <?php else: ?>
-                                                Complete Installation <i class="bi bi-check-circle"></i>
-                                            <?php endif; ?>
+                                        <button type="submit" name="action" value="reset" class="btn btn-outline-danger me-2">Reset</button>
+                                        <button type="submit" name="action" value="next" class="btn btn-primary">
+                                            <?php echo $current_step['number'] == $current_step['total'] ? 'Finish' : 'Next'; ?>
                                         </button>
                                     </div>
                                 </div>
                             </form>
                         </div>
                     </div>
-                </div>
+                <?php else: ?>
+                    <div class="alert alert-success text-center">
+                        <h4>Installation Complete!</h4>
+                        <p>Your W4OS installation has been completed successfully.</p>
+                        <a href="/" class="btn btn-primary">Continue to Website</a>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
-        
-        <script>
-        function confirmReset() {
-            if (confirm('Are you sure you want to reset the wizard? All entered data will be lost.')) {
-                window.location.href = '?action=reset';
-            }
-        }
-        </script>
-        
-        <?php
-        return ob_get_clean();
-    }
+    </div>
     
-    /**
-     * Render form fields for a step
-     */
-    private function render_step_fields($step, $wizard_data) {
-        if (empty($step['fields'])) {
-            return;
-        }
-        
-        foreach ($step['fields'] as $field_key => $field_config) {
-            $value = $wizard_data[$field_key] ?? ($field_config['default'] ?? '');
-            $required = !empty($field_config['required']) ? 'required' : '';
-            $field_id = 'field_' . $field_key;
-            
-            echo '<div class="mb-3">';
-            echo '<label for="' . $field_id . '" class="form-label">';
-            echo esc_html($field_config['label']);
-            if (!empty($field_config['required'])) {
-                echo ' <span class="text-danger">*</span>';
-            }
-            echo '</label>';
-            
-            switch ($field_config['type']) {
-                case 'text':
-                    $placeholder = !empty($field_config['placeholder']) ? 'placeholder="' . esc_attr($field_config['placeholder']) . '"' : '';
-                    echo '<input type="text" class="form-control" id="' . $field_id . '" name="' . $field_key . '" value="' . esc_attr($value) . '" ' . $placeholder . ' ' . $required . '>';
-                    break;
-                    
-                case 'password':
-                    echo '<input type="password" class="form-control" id="' . $field_id . '" name="' . $field_key . '" value="' . esc_attr($value) . '" ' . $required . '>';
-                    break;
-                    
-                case 'number':
-                    echo '<input type="number" class="form-control" id="' . $field_id . '" name="' . $field_key . '" value="' . esc_attr($value) . '" ' . $required . '>';
-                    break;
-                    
-                case 'radio':
-                    if (!empty($field_config['options'])) {
-                        foreach ($field_config['options'] as $option_key => $option_label) {
-                            $checked = ($value === $option_key) ? 'checked' : '';
-                            $radio_id = $field_id . '_' . $option_key;
-                            echo '<div class="form-check">';
-                            echo '<input class="form-check-input" type="radio" name="' . $field_key . '" id="' . $radio_id . '" value="' . $option_key . '" ' . $checked . ' ' . $required . '>';
-                            echo '<label class="form-check-label" for="' . $radio_id . '">';
-                            echo esc_html($option_label);
-                            echo '</label>';
-                            echo '</div>';
-                        }
-                    }
-                    break;
-                    
-                case 'file':
-                    $accept = !empty($field_config['accept']) ? 'accept="' . esc_attr($field_config['accept']) . '"' : '';
-                    echo '<input type="file" class="form-control" id="' . $field_id . '" name="' . $field_key . '" ' . $accept . ' ' . $required . '>';
-                    break;
-            }
-            
-            if (!empty($field_config['help'])) {
-                echo '<div class="form-text">' . esc_html($field_config['help']) . '</div>';
-            }
-            
-            echo '</div>';
-        }
-    }
-    
-    /**
-     * Render completion page
-     */
-    private function render_completion_page() {
-        $content = '
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-success mb-4">
-                                <i class="bi bi-check-circle-fill" style="font-size: 4rem;"></i>
-                            </div>
-                            <h2 class="card-title text-success">Installation Complete!</h2>
-                            <p class="card-text">Your OpenSimulator helpers have been successfully configured.</p>
-                            
-                            <div class="mt-4">
-                                <a href="/" class="btn btn-primary">Go to Home Page</a>
-                                <a href="?action=reset" class="btn btn-outline-secondary ms-2">Run Wizard Again</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>';
-        
-        $GLOBALS['site_title'] = $this->site_title;
-        $GLOBALS['page_title'] = 'Installation Complete';
-        $GLOBALS['content'] = $content;
-        
-        require_once __DIR__ . '/templates/templates.php';
-    }
-    
-    /**
-     * Add notice message
-     */
-    private function add_notice($type, $message) {
-        if (!isset($_SESSION['install_notices'])) {
-            $_SESSION['install_notices'] = array();
-        }
-        $_SESSION['install_notices'][] = array('type' => $type, 'message' => $message);
-    }
-    
-    /**
-     * Render notice messages
-     */
-    private function render_notices() {
-        if (!isset($_SESSION['install_notices']) || empty($_SESSION['install_notices'])) {
-            return;
-        }
-        
-        foreach ($_SESSION['install_notices'] as $notice) {
-            $alert_class = match($notice['type']) {
-                'success' => 'alert-success',
-                'error' => 'alert-danger',
-                'warning' => 'alert-warning',
-                'info' => 'alert-info',
-                default => 'alert-info'
-            };
-            
-            echo '<div class="alert ' . $alert_class . ' alert-dismissible fade show" role="alert">';
-            echo esc_html($notice['message']);
-            echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-            echo '</div>';
-        }
-        
-        // Clear notices after displaying
-        unset($_SESSION['install_notices']);
-    }
-}
-
-// Instantiate and run the installation page
-new OpenSim_Installation_Page();
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
