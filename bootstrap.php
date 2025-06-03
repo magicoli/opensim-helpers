@@ -16,8 +16,18 @@ if(!defined('OPENSIM_HELPERS_PATH')) {
 
 // If OPENSIM_ENGINE_PATH is not defined, fallback to OPENSIM_HELPERS_PATH/engine
 if (! defined('OPENSIM_ENGINE_PATH')) {
-    define('OPENSIM_ENGINE_PATH', OPENSIM_HELPERS_PATH . '/engine');
+    $lookup_path = array(
+        OPENSIM_HELPERS_PATH . '/engine',
+        dirname(OPENSIM_HELPERS_PATH) . '/engine',
+    );
+    foreach ($lookup_path as $path) {
+        if (file_exists($path . '/bootstrap.php')) {
+            define('OPENSIM_ENGINE_PATH', $path);
+            break;
+        }
+    }
 }
+
 require_once OPENSIM_ENGINE_PATH . '/bootstrap.php';
 
 // Load helper classes
