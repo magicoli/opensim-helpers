@@ -26,7 +26,7 @@ class Helpers_Migration_2to3 {
                 'SearchRegionTable' => 'SEARCH_REGION_TABLE',
                 'HypeventsUrl' => 'HYPEVENTS_URL',
             ],
-            'Offline' => [
+            'OfflineMessages' => [
                 'OfflineDB' => ['OFFLINE_DB', 'transform' => 'db_credentials'],
                 'OfflineMessageTable' => 'OFFLINE_MESSAGE_TBL',
                 'MuteDB' => ['MUTE_DB', 'ROBUST_DB', 'OPENSIM_DB', 'transform' => 'db_credentials'],
