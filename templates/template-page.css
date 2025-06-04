@@ -53,7 +53,7 @@ a.hop-link {
         --bs-primary-bg-subtle: rgba(13, 110, 253, 0.2);
     }
     
-    .wizard-form {
+    .helpers-form {
         background-color: var(--bs-body-bg);
         color: var(--bs-body-color);
     }
@@ -71,8 +71,8 @@ a.hop-link {
 }
 
 /* Dark mode class-based (for consistency with existing template-page.css) */
-.dark-mode .wizard-form,
-body.dark-mode .wizard-form {
+.dark-mode .helpers-form,
+body.dark-mode .helpers-form {
     background-color: #212529;
     color: #fff;
 }

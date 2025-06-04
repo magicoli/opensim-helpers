@@ -59,9 +59,6 @@
 }
 
 /* Wizard Progress Bar */
-.wizard-progress {
-    margin-bottom: 2rem;
-}
 
 .step-indicators {
     display: flex;

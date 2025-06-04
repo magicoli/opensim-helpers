@@ -298,7 +298,7 @@ function handleFormSubmit(event) {
 
 // Attach form validation to form submission
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('.wizard-form');
+    const form = document.querySelector('.helpers-form');
     if (form) {
         form.addEventListener('submit', handleFormSubmit);
     }
@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * Reset form to initial state
  */
 function resetWizardForm() {
-    const form = document.querySelector('.wizard-form');
+    const form = document.querySelector('.helpers-form');
     if (form) {
         form.reset();
         
@@ -334,7 +334,7 @@ function resetWizardForm() {
  * Utility function to get form data as object
  */
 function getFormData() {
-    const form = document.querySelector('.wizard-form');
+    const form = document.querySelector('.helpers-form');
     if (!form) return {};
     
     const formData = new FormData(form);
