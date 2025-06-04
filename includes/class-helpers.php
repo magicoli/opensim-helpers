@@ -110,7 +110,7 @@ class Helpers {
             return self::$version;
         }
         if( file_exists( OSHELPERS_DIR . '.version' ) ) {
-            $version = file_get_contents( '.version' );
+            $version = file_get_contents( OSHELPERS_DIR . '.version' );
         } else {
             $version = '0.0.0';
         }
@@ -379,17 +379,17 @@ class Helpers {
      * Use self::get_version() to define the version of the script unless it is already defined.
      */
     public static function enqueue_script( $handle, $src, $deps = array(), $ver = false, $in_footer = false ) {
-        if( ! file_exists( $src ) ) {
-            error_log( __FUNCTION__ . ' file not found: ' . $src );
-            return false;
-        }
-
         $handle = preg_match( '/^oshelpers-/', $handle ) ? $handle : 'oshelpers-' . $handle;
         $handle = ( rtrim ( $handle, '-css' ) ) . '-js';
 
         self::$scripts = self::$scripts ?? array( 'head' => array(), 'footer' => array() );
         if( strpos( $src, '://' ) === false ) {
+            $src_file = OSHELPERS_DIR . ltrim( $src, '/' );
             $src = OSHELPERS_URL . ltrim( $src, '/' );
+            if(! file_exists( $src_file ) ) {
+                error_log( __FUNCTION__ . ' file not found: ' . $src_file . ' in ' . __FILE__ . ':' . __LINE__ );
+                return false;
+            }
         }
         $ver = empty( $ver ) ? self::get_version( true ) : self::sanitize_slug( $ver );
         $src = self::add_query_args( $src, array( 'ver' => $ver ) );
@@ -438,18 +438,21 @@ class Helpers {
     }
 
     public static function enqueue_style( $handle, $src, $deps = array(), $ver = false, $media = 'all' ) {
-        if( ! file_exists( $src ) ) {
-            error_log( __FUNCTION__ . ' file not found: ' . $src );
-            return false;
-        }
-
         $handle = preg_match( '/^oshelpers-/', $handle ) ? $handle : 'oshelpers-' . $handle;
         $handle = ( rtrim ( $handle, '-css' ) ) . '-css';
 
         self::$styles = self::$styles ?? array( 'head' => array(), 'footer' => array() );
         if( strpos( $src, '://' ) === false ) {
+            $src_file = OSHELPERS_DIR . ltrim( $src, '/' );
             $src = OSHELPERS_URL . ltrim( $src, '/' );
+            if(! file_exists( $src_file ) ) {
+                error_log( __FUNCTION__ . ' file not found: ' . $src_file . ' in ' . __FILE__ . ':' . __LINE__ );
+                return false;
+            }
         }
+        // if( strpos( $src, '://' ) === false ) {
+        //     $src = OSHELPERS_URL . ltrim( $src, '/' );
+        // }
         $ver = empty( $ver ) ? self::get_version( true ) : self::sanitize_slug( $ver );
         $src = self::add_query_args( $src, array( 'ver' => $ver ) );
 
