@@ -1,3 +1,9 @@
+/**
+ * Avoid as much as possible using css to style the pages.
+ * Use bootstrap classes instead.
+ * This file is only used to cover what is not possible with bootstrap classes.
+**/
+
 .step-indicator { margin-bottom: 2rem; text-align: center; }
 .step-indicator .step { 
     display: inline-block; width: 40px; height: 40px; border-radius: 50%; 
@@ -48,7 +54,6 @@
     max-width: 80px;
 }
 
-/* Step states */
 
 .step-connector {
     flex: 1;

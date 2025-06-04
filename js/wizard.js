@@ -92,6 +92,33 @@ function toggleDbCredentials(fieldId) {
     }
 }
 
+/**
+ * Go to previous step
+ */
+function previousStep() {
+    // Implementation depends on how you want to handle going back
+    // For now, we can use browser history or implement step navigation
+    window.history.back();
+}
+
+/**
+ * Reset wizard - clear all data and go to first step
+ */
+function resetWizard() {
+    if (confirm('Are you sure you want to reset the wizard? All progress will be lost.')) {
+        // Clear session data and reload page
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'reset_wizard=1'
+        }).then(() => {
+            window.location.reload();
+        });
+    }
+}
+
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
     // Set up initial state for checked radio buttons
