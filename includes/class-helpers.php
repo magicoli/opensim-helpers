@@ -634,6 +634,15 @@ class Helpers {
         return $config[$option] ?? $default;
     }
 
+    public static function get_home_url() {
+        $parsed = array(
+            'scheme' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http',
+            'host' => $_SERVER['HTTP_HOST'] ?? 'localhost',
+            'path' => '/',
+        );
+        return self::build_url( $parsed );
+    }
+
     static function hop( $url = null, $string = null, $format = true ) {
         if ( empty( $url ) ) {
                 // $url = get_option( 'w4os_login_uri' );
