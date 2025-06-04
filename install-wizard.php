@@ -104,7 +104,7 @@ $progress = $wizard->get_progress();
                     <div class="card">
                         <div class="card-header">
                             <h3><?php echo htmlspecialchars($current_step['title']); ?></h3>
-                            <p class="text-muted mb-0"><?php echo htmlspecialchars($current_step['description']); ?></p>
+                            <p class="text-muted mb-0"><?php echo $current_step['description']; ?></p>
                         </div>
                         <div class="card-body">
                             <form method="post" id="wizardForm">
