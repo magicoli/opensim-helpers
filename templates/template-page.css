@@ -50,7 +50,9 @@ a.hop-link {
         --bs-secondary: #adb5bd;
         --bs-primary-bg-subtle: rgba(13, 110, 253, 0.2);
     }
-    
+    .bg-light {
+        background-color: var(--bs-gray-50) !important;
+    }
     .helpers-form {
         background-color: var(--bs-body-bg);
         color: var(--bs-body-color);
