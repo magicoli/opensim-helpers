@@ -49,29 +49,7 @@
 }
 
 /* Step states */
-.step-indicator.completed .step-number {
-    background-color: var(--bs-success);
-    color: white;
-}
-
-.step-indicator.active .step-number {
-    background-color: var(--bs-primary);
-    color: white;
-}
-
-.step-indicator.pending .step-number {
-    background-color: var(--bs-light);
-    color: var(--bs-secondary);
-}
 
 .step-connector {
-    height: 2px;
-    background-color: var(--bs-border-color);
     flex: 1;
-    margin: 0 10px;
-    margin-top: -20px;
-}
-
-.step-indicator.completed + .step-connector {
-    background-color: var(--bs-success);
 }
