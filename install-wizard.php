@@ -1,6 +1,6 @@
 <?php
 /**
- * Standalone Installation Wizard
+ * Standalone Setup Wizard
  * 
  * Direct access wizard for helpers installation
  */
@@ -62,7 +62,7 @@ $progress = $wizard->get_progress();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenSimulator Helpers Installation Wizard</title>
+    <title>OpenSimulator Helpers Setup Wizard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .wizard-container { max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
@@ -121,7 +121,7 @@ $progress = $wizard->get_progress();
     <div class="container wizard-container">
         <div class="row">
             <div class="col-12">
-                <h1 class="text-center mb-4">OpenSimulator Helpers Installation Wizard</h1>
+                <h1 class="text-center mb-4">OpenSimulator Helpers Setup Wizard</h1>
                 
                 <!-- Progress Bar -->
                 <div class="progress mb-4">

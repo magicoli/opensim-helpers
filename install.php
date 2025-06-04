@@ -2,7 +2,7 @@
 /**
  * OpenSimulator Helpers Installation Script (Legacy Redirect)
  * 
- * This file now redirects to the new installation wizard.
+ * This file now redirects to the new Setup Wizard.
  * The new wizard provides a better user experience and uses the modern Engine architecture.
  */
 
@@ -11,7 +11,7 @@ if (__FILE__ !== $_SERVER['SCRIPT_FILENAME']) {
     exit("I'm not that kind of girl, I don't want to be included.");
 }
 
-// Redirect to new installation wizard
+// Redirect to new Setup Wizard
 $new_wizard_url = dirname($_SERVER['REQUEST_URI']) . '/install-wizard.php';
 header("Location: $new_wizard_url");
 exit();
