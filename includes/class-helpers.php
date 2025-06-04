@@ -166,20 +166,6 @@ class Helpers {
         return $dir;
     }
 
-    public static function parse_args( $args, $defaults ) {
-        if( empty( $defaults ) ) {
-            $defaults = array();
-        }
-        if( is_object( $args ) ) {
-            $args = get_object_vars( $args );
-        } elseif( is_array( $args ) ) {
-            $args = $args;
-        } else {
-            parse_str( $args, $args );
-        }
-        return array_merge( $defaults, $args );
-    }
-
 	public static function connectionstring_to_array( $connectionstring ) {
 		$parts = explode( ';', $connectionstring );
 		$creds = array();
@@ -293,7 +279,7 @@ class Helpers {
         if( is_string( $error )) {
             $error = array( 'message', $error );
         }
-        $error = self::parse_args( $error, array(
+        $error = OpenSim::parse_args( $error, array(
             'message' => _('Error'),
             'type' => $type,
         ));
@@ -364,7 +350,7 @@ class Helpers {
     public static function add_query_args( $url, $args ) {
         $parsed = parse_url( $url );
         $query = $parsed['query'] ?? '';
-        $query = self::parse_args( $query, array() );
+        $query = OpenSim::parse_args( $query, array() );
         $query = array_merge( $query, $args );
         $query = http_build_query( $query );
         $parsed['query'] = $query;
