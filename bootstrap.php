@@ -46,5 +46,7 @@ if( file_exists( OPENSIM_HELPERS_PATH . '/includes/config.php' ) ) {
     }
 }
 
+require_once OPENSIM_HELPERS_PATH . '/includes/class-helpers.php';
+
 // Migration from v2 to v3
 require_once OPENSIM_HELPERS_PATH . '/includes/helpers-migration-v2to3.php';
