@@ -109,7 +109,13 @@ $progress = $wizard->get_progress();
                         <div class="card-body">
                             <form method="post" id="wizardForm">
                                 <?php foreach ($current_step['fields'] as $field_key => $field_config): ?>
-                                    <div class="field-group" <?php if (isset($field_config['section'])): ?>data-section="<?php echo $field_config['section']; ?>" style="display: none;"<?php endif; ?>>
+                                    <?php 
+                                    $field_sections = array();
+                                    if (isset($field_config['section'])) {
+                                        $field_sections = is_array($field_config['section']) ? $field_config['section'] : array($field_config['section']);
+                                    }
+                                    ?>
+                                    <div class="field-group" <?php if (!empty($field_sections)): ?>data-section="<?php echo implode(',', $field_sections); ?>" style="display: none;"<?php endif; ?>>
                                         <label for="<?php echo $field_key; ?>" class="form-label">
                                             <?php echo htmlspecialchars($field_config['label']); ?>
                                             <?php if (!empty($field_config['required'])): ?>
@@ -222,15 +228,18 @@ $progress = $wizard->get_progress();
             const selectedRadio = document.querySelector(`input[name="${fieldName}"]:checked`);
             if (selectedRadio) {
                 const selectedValue = selectedRadio.value;
-                const sectionsToShow = document.querySelectorAll(`[data-section="${selectedValue}"]`);
+                const sectionsToShow = document.querySelectorAll(`[data-section]`);
                 
                 sectionsToShow.forEach(section => {
-                    section.style.display = 'block';
-                    // Restore required attributes for visible fields
-                    const wasRequiredFields = section.querySelectorAll('[data-was-required="true"]');
-                    wasRequiredFields.forEach(field => {
-                        field.setAttribute('required', 'required');
-                    });
+                    const sectionValues = section.getAttribute('data-section').split(',');
+                    if (sectionValues.includes(selectedValue)) {
+                        section.style.display = 'block';
+                        // Restore required attributes for visible fields
+                        const wasRequiredFields = section.querySelectorAll('[data-was-required="true"]');
+                        wasRequiredFields.forEach(field => {
+                            field.setAttribute('required', 'required');
+                        });
+                    }
                 });
             }
         }
