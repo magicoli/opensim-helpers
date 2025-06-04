@@ -127,7 +127,13 @@ $main_menu_html = format_menu( ($menus['main'] ?? null ), 'main' );
 $user_menu_html = format_menu( $menus['user'] ?? null, 'user' );
 $footer_menu_html = format_menu( $menus['footer'] ?? null, 'footer' );
 
-Helpers::enqueue_script( 'template-page', 'templates/template-page.js' );
+Helpers::enqueue_style( 'bootstrap', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css', array(), '5.3.3' );
+Helpers::enqueue_style( 'bootstrap-icons', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css' );
+
+Helpers::enqueue_script( 'boostrap-bundle', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js', array(), '5.3.3', true);
+// Helpers::enqueue_script( 'bootstrap-masonry', 'https://cdn.jsdelivr.net/npm/bootstrap-masonry@1.0.0/dist/bootstrap-masonry.min.js', array( 'bootstrap' ), '1.0.0', true);
+
 Helpers::enqueue_style( 'template-page', 'templates/template-page.css' );
+Helpers::enqueue_script( 'template-page', 'templates/template-page.js' );
 
 require( 'template-page.php' );

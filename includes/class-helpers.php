@@ -129,7 +129,7 @@ class Helpers {
         }
 
         self::$version = $version;
-        self::$version_slug = self::sanitize_slug( $version );
+        self::$version_slug = sanitize_id( $version );
         if( $sanitized && self::$version_slug ) {
             return self::$version_slug;
         }
@@ -377,7 +377,7 @@ class Helpers {
                 return false;
             }
         }
-        $ver = empty( $ver ) ? self::get_version( true ) : self::sanitize_slug( $ver );
+        $ver = empty( $ver ) ? self::get_version( true ) : sanitize_id( $ver );
         $src = self::add_query_args( $src, array( 'ver' => $ver ) );
 
         $section = $in_footer ? 'footer' : 'head';
@@ -439,7 +439,7 @@ class Helpers {
         // if( strpos( $src, '://' ) === false ) {
         //     $src = OSHELPERS_URL . ltrim( $src, '/' );
         // }
-        $ver = empty( $ver ) ? self::get_version( true ) : self::sanitize_slug( $ver );
+        $ver = empty( $ver ) ? self::get_version( true ) : sanitize_id( $ver );
         $src = self::add_query_args( $src, array( 'ver' => $ver ) );
 
         self::$styles['head'][$handle] = array(
@@ -474,34 +474,6 @@ class Helpers {
             echo $html;
         }
         return $html;
-    }
-
-    public static function sanitize_id( $string ) {
-        if( empty( $string ) ) {
-            return false;
-        }
-        
-        $id = $string;
-        try {
-            $id = @transliterator_transliterate("Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC; [:Punctuation:] Remove; Lower();", $id );
-        } catch ( Error $e ) {
-            error_log( 'Warning (php-intl missing) ' . $e->getMessage() );
-            $id = $string;
-        }
-        $id = preg_replace('/[-\s]+/', '-', $id );
-            
-        return $id;
-    }
-
-    public static function sanitize_slug( $string ) {
-        return self::sanitize_id( $string );
-    }
-
-    public static function sanitize_url( $url ) {
-        $url = trim( $url );
-        $url = str_replace( ' ', '+', $url );
-        $url = filter_var( $url, FILTER_SANITIZE_URL );
-        return $url;
     }
 
     public static function validate_condition( $condition ) {

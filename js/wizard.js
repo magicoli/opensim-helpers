@@ -23,27 +23,14 @@ function selectChoice(fieldId, choiceValue) {
     
     // Update visual selection using Bootstrap classes
     document.querySelectorAll(`[onclick*="selectChoice('${fieldId}'"]`).forEach(option => {
-        const cardBody = option.querySelector('.card-body');
-        const existingDescription = cardBody.querySelector('.mt-2.text-muted');
-        
         if (option.onclick.toString().includes(`'${choiceValue}'`)) {
             // Selected card
             option.classList.remove('border-secondary');
             option.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
-            
-            // Show description if it exists but is hidden
-            if (existingDescription) {
-                existingDescription.style.display = 'block';
-            }
         } else {
             // Unselected cards
             option.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
             option.classList.add('border-secondary');
-            
-            // Hide description for unselected options
-            if (existingDescription) {
-                existingDescription.style.display = 'none';
-            }
         }
     });
     
