@@ -7,7 +7,6 @@ $content = $content ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 $sidebar_left = $sidebar_left ?? '';
 $sidebar_right = $sidebar_right ?? '';
 $version = Helpers::get_version();
-$footer = $footer ?? sprintf( _('OpenSimulator Helpers %s'), $version );
 
 // $menus['main'] = $menu ?? array(
 //     'home' => array(
@@ -119,8 +118,9 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
     return $html;
 }
 
-// $branding = '<a class="navbar-brand" href="#">' . htmlspecialchars($GLOBALS['site_title'] ?? 'OpenSimulator Helpers') . '</a>';
-$branding = $branding ?? '';
+// $branding = $branding ?? '<a class="navbar-brand" href="#">' . htmlspecialchars($GLOBALS['site_title'] ?? 'OpenSimulator Helpers') . '</a>';
+$branding = isset($branding) ? $branding : sprintf( '<a class="navbar-brand" href="%s">%s</a>', Helpers::get_home_url(), htmlspecialchars($site_title) );
+$footer = isset($footer) ? $footer : sprintf( _('OpenSimulator Helpers %s'), $version );
 
 // Generate HTML for each menu
 $main_menu_html = format_menu( ($menus['main'] ?? null ), 'main' );
