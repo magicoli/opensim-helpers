@@ -20,43 +20,45 @@ $footer = $footer ?? sprintf( _('OpenSimulator Helpers %s'), $version );
 //     ),
 // );
 
-$menus['user'] = array(
-    'userprofile' => array(
-        'url' => '/profile',
-        'label' => Helpers::display_name( _('Profile') ),
-        'icon' => [ 'OpenSim', 'user_icon' ],
-        'condition' => 'logged_in',
-        'children' => array(
-            'account' => array(
-                'url' => '/account',
-                'label' => _('Account Settings'),
-                'icon' => 'sliders'
-            ),
-            'logout' => array(
-                'url' => '?action=logout',
-                'label' => _('Logout'),
-                'icon' => 'box-arrow-right',
-            ),
-        ),
-    ),
-    'login' => array(
-        'url' => '/login',
-        'label' => 'Login',
-        'icon' => 'box-arrow-in-right',
-        'condition' => 'logged_out',
-    ),
-);
 
-$menus['footer'] = array(
-    'github' => array(
-        'url' => 'http://github.com/magicoli/opensim-helpers',
-        'label' => 'GitHub Repository',
-    ),
-    'w4os' => array(
-        'url' => 'https://w4os.org',
-        'label' => 'W4OS Project',
-    ),
-);
+// $menus['user'] = array(
+//     'userprofile' => array(
+//         'url' => '/profile',
+//         'label' => Helpers::display_name( _('Profile') ),
+//         'icon' => [ 'OpenSim', 'user_icon' ],
+//         'condition' => 'logged_in',
+//         'children' => array(
+//             'account' => array(
+//                 'url' => '/account',
+//                 'label' => _('Account Settings'),
+//                 'icon' => 'sliders'
+//             ),
+//             'logout' => array(
+//                 'url' => '?action=logout',
+//                 'label' => _('Logout'),
+//                 'icon' => 'box-arrow-right',
+//             ),
+//         ),
+//     ),
+//     'login' => array(
+//         'url' => '/login',
+//         'label' => 'Login',
+//         'icon' => 'box-arrow-in-right',
+//         'condition' => 'logged_out',
+//     ),
+// );
+
+// $menus['footer'] = array(
+//     'github' => array(
+//         'url' => 'http://github.com/magicoli/opensim-helpers',
+//         'label' => 'GitHub Repository',
+//     ),
+//     'w4os' => array(
+//         'url' => 'https://w4os.org',
+//         'label' => 'W4OS Project',
+//     ),
+// );
+$menus = $menus ?? array(); // We don't use menu everywhere, so initialize it to avoid undefined variable errors
 
 /**
  * Build HTML menu using Bootstrap styles
@@ -117,12 +119,13 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
     return $html;
 }
 
-$branding = '<a class="navbar-brand" href="#">' . htmlspecialchars($GLOBALS['site_title'] ?? 'OpenSimulator Helpers') . '</a>';
+// $branding = '<a class="navbar-brand" href="#">' . htmlspecialchars($GLOBALS['site_title'] ?? 'OpenSimulator Helpers') . '</a>';
+$branding = $branding ?? '';
 
 // Generate HTML for each menu
 $main_menu_html = format_menu( ($menus['main'] ?? null ), 'main' );
-$user_menu_html = format_menu( $menus['user'], 'user' );
-$footer_menu_html = format_menu( $menus['footer'], 'footer' );
+$user_menu_html = format_menu( $menus['user'] ?? null, 'user' );
+$footer_menu_html = format_menu( $menus['footer'] ?? null, 'footer' );
 
 Helpers::enqueue_script( 'template-page', 'templates/bootstrap.js' );
 Helpers::enqueue_style( 'template-page', 'templates/bootstrap.css' );
