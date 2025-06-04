@@ -106,16 +106,20 @@ function previousStep() {
  */
 function resetWizard() {
     if (confirm('Are you sure you want to reset the wizard? All progress will be lost.')) {
-        // Clear session data and reload page
-        fetch(window.location.href, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'reset_wizard=1'
-        }).then(() => {
-            window.location.reload();
-        });
+        // Create a form to submit reset request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.location.href;
+        
+        // Add reset parameter
+        const resetInput = document.createElement('input');
+        resetInput.type = 'hidden';
+        resetInput.name = 'reset_wizard';
+        resetInput.value = '1';
+        
+        form.appendChild(resetInput);
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 
