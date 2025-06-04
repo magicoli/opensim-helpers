@@ -110,12 +110,9 @@ $progress = $wizard->get_progress();
                             <form method="post" id="wizardForm">
                                 <?php foreach ($current_step['fields'] as $field_key => $field_config): ?>
                                     <?php 
-                                    $field_sections = array();
-                                    if (isset($field_config['section'])) {
-                                        $field_sections = is_array($field_config['section']) ? $field_config['section'] : array($field_config['section']);
-                                    }
+                                    $field_section = $field_config['section'] ?? '';
                                     ?>
-                                    <div class="field-group" <?php if (!empty($field_sections)): ?>data-section="<?php echo implode(',', $field_sections); ?>" style="display: none;"<?php endif; ?>>
+                                    <div class="field-group" <?php if (!empty($field_section)): ?>data-section="<?php echo $field_section; ?>" style="display: none;"<?php endif; ?>>
                                         <label for="<?php echo $field_key; ?>" class="form-label">
                                             <?php echo htmlspecialchars($field_config['label']); ?>
                                             <?php if (!empty($field_config['required'])): ?>
@@ -149,7 +146,7 @@ $progress = $wizard->get_progress();
                                                            value="<?php echo $option_value; ?>"
                                                            <?php echo $current_value === $option_value ? 'checked' : ''; ?>
                                                            <?php echo $required_attr; ?>
-                                                           onchange="toggleSections('<?php echo $field_key; ?>')">
+                                                           onchange="toggleSections('connection_method')">>
                                                     <label class="form-check-label" for="<?php echo $field_key . '_' . $option_value; ?>">
                                                         <?php echo htmlspecialchars($option_label); ?>
                                                     </label>
@@ -208,7 +205,7 @@ $progress = $wizard->get_progress();
             }
             
             // Initialize section visibility
-            toggleSections('install_mode');
+            toggleSections('connection_method');
         });
         
         function toggleSections(fieldName) {
@@ -228,18 +225,15 @@ $progress = $wizard->get_progress();
             const selectedRadio = document.querySelector(`input[name="${fieldName}"]:checked`);
             if (selectedRadio) {
                 const selectedValue = selectedRadio.value;
-                const sectionsToShow = document.querySelectorAll(`[data-section]`);
+                const sectionsToShow = document.querySelectorAll(`[data-section="${selectedValue}"]`);
                 
                 sectionsToShow.forEach(section => {
-                    const sectionValues = section.getAttribute('data-section').split(',');
-                    if (sectionValues.includes(selectedValue)) {
-                        section.style.display = 'block';
-                        // Restore required attributes for visible fields
-                        const wasRequiredFields = section.querySelectorAll('[data-was-required="true"]');
-                        wasRequiredFields.forEach(field => {
-                            field.setAttribute('required', 'required');
-                        });
-                    }
+                    section.style.display = 'block';
+                    // Restore required attributes for visible fields
+                    const wasRequiredFields = section.querySelectorAll('[data-was-required="true"]');
+                    wasRequiredFields.forEach(field => {
+                        field.setAttribute('required', 'required');
+                    });
                 });
             }
         }
