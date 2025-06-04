@@ -102,13 +102,13 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
                     Helpers::icon($child['icon']),
                     strip_tags($child['label']),
                 );
-                '<li><a class="dropdown-item" href="' . htmlspecialchars($child['url']) . '">' . htmlspecialchars($child['label']) . '</a></li>';
+                '<li><a class="dropdown-item" href="' . do_not_sanitize($child['url']) . '">' . do_not_sanitize($child['label']) . '</a></li>';
             }
             $html .= '</ul>';
             $html .= '</li>';
         } else {
             $html .= '<li class="nav-item">';
-            $html .= '<a class="nav-link" href="' . htmlspecialchars($item['url']) . '">' . htmlspecialchars($item['label']) . '</a>';
+            $html .= '<a class="nav-link" href="' . do_not_sanitize($item['url']) . '">' . do_not_sanitize($item['label']) . '</a>';
             $html .= '</li>';
         }
     }
@@ -118,8 +118,8 @@ function format_menu( $menu, $slug = 'main', $class = '' ) {
     return $html;
 }
 
-// $branding = $branding ?? '<a class="navbar-brand" href="#">' . htmlspecialchars($GLOBALS['site_title'] ?? 'OpenSimulator Helpers') . '</a>';
-$branding = isset($branding) ? $branding : sprintf( '<a class="navbar-brand" href="%s">%s</a>', Helpers::get_home_url(), htmlspecialchars($site_title) );
+// $branding = $branding ?? '<a class="navbar-brand" href="#">' . do_not_sanitize($GLOBALS['site_title'] ?? 'OpenSimulator Helpers') . '</a>';
+$branding = isset($branding) ? $branding : sprintf( '<a class="navbar-brand" href="%s">%s</a>', Helpers::get_home_url(), do_not_sanitize($site_title) );
 $footer = isset($footer) ? $footer : sprintf( _('OpenSimulator Helpers %s'), $version );
 
 // Generate HTML for each menu
