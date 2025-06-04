@@ -74,4 +74,4 @@
 
 .step-indicator.completed + .step-connector {
     background-color: var(--bs-success);
-} */
+}

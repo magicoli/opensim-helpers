@@ -34,7 +34,7 @@
             // $sidebar_left = '<div class="card">Card<div>';
             // $sidebar_right = '<div class="card">Card<div>';
             ?>
-            <main id="main" class="col-lg-auto">
+            <main id="main" class="col-auto col-lg-8 col-xl-6 main-content">
                 <h1 class="page-title"><?php echo $page_title; ?></h1>
                 <div class="content text-start">
                     <?php echo $content; ?>

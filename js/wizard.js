@@ -23,14 +23,27 @@ function selectChoice(fieldId, choiceValue) {
     
     // Update visual selection using Bootstrap classes
     document.querySelectorAll(`[onclick*="selectChoice('${fieldId}'"]`).forEach(option => {
+        const cardBody = option.querySelector('.card-body');
+        const existingDescription = cardBody.querySelector('.mt-2.text-muted');
+        
         if (option.onclick.toString().includes(`'${choiceValue}'`)) {
             // Selected card
             option.classList.remove('border-secondary');
             option.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+            
+            // Show description if it exists but is hidden
+            if (existingDescription) {
+                existingDescription.style.display = 'block';
+            }
         } else {
             // Unselected cards
             option.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
             option.classList.add('border-secondary');
+            
+            // Hide description for unselected options
+            if (existingDescription) {
+                existingDescription.style.display = 'none';
+            }
         }
     });
     
@@ -42,20 +55,6 @@ function selectChoice(fieldId, choiceValue) {
             subFields.classList.add('d-none');
         }
     });
-    
-    // Show/hide connection method based on config method
-    if (fieldId === 'config_method') {
-        const connectionMethodContainer = document.querySelector('[data-field="connection_method"]');
-        if (connectionMethodContainer) {
-            if (choiceValue === 'use_existing' || choiceValue === 'start_fresh') {
-                connectionMethodContainer.classList.remove('d-none');
-                connectionMethodContainer.style.display = 'block';
-            } else {
-                connectionMethodContainer.classList.add('d-none');
-                connectionMethodContainer.style.display = 'none';
-            }
-        }
-    }
 }
 
 /**
