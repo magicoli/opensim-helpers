@@ -11,8 +11,8 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Include required files
-require_once dirname(__FILE__) . '/../engine/class-installation-wizard.php';
-require_once dirname(__FILE__) . '/../engine/class-engine-settings.php';
+require_once OPENSIM_ENGINE_PATH . '/class-installation-wizard.php';
+require_once OPENSIM_ENGINE_PATH . '/class-engine-settings.php';
 
 // Initialize wizard
 $wizard = new Installation_Wizard();
