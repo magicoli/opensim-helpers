@@ -3,8 +3,6 @@
 **/
 
 :root {
-  --bs-primary-rgb: 0, 192, 0;
-  --bs-secondary-rgb: 63, 159, 63;
 }
 
 /* Add this to your CSS file */
@@ -70,63 +68,3 @@ a.hop-link {
     }
 }
 
-/* Dark mode class-based (for consistency with existing template-page.css) */
-.dark-mode .helpers-form,
-body.dark-mode .helpers-form {
-    background-color: #212529;
-    color: #fff;
-}
-
-.dark-mode .form-control,
-body.dark-mode .form-control {
-    background-color: #343a40;
-    border-color: #495057;
-    color: #fff;
-}
-
-.dark-mode .form-control:focus,
-body.dark-mode .form-control:focus {
-    background-color: #343a40;
-    border-color: #0d6efd;
-    color: #fff;
-}
-
-.dark-mode .method-header,
-body.dark-mode .method-header {
-    background-color: #343a40;
-    border-color: #495057;
-}
-
-.dark-mode .method-header:hover,
-body.dark-mode .method-header:hover {
-    background-color: #495057;
-}
-
-.dark-mode .method-accordion,
-body.dark-mode .method-accordion {
-    background-color: #212529;
-    border-color: #495057;
-}
-
-.dark-mode .choice-option,
-body.dark-mode .choice-option {
-    background-color: #212529 !important;
-    border-color: #495057 !important;
-    color: #fff;
-}
-
-.dark-mode .text-muted,
-body.dark-mode .text-muted {
-    color: #adb5bd !important;
-}
-
-.dark-mode .form-text,
-body.dark-mode .form-text {
-    color: #adb5bd;
-}
-
-.dark-mode .ini-files-section,
-body.dark-mode .ini-files-section {
-    background-color: #343a40;
-    border-color: #495057;
-}
