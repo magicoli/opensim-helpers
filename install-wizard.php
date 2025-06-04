@@ -107,9 +107,9 @@ $progress = $wizard->get_progress();
                             <p class="text-muted mb-0"><?php echo htmlspecialchars($current_step['description']); ?></p>
                         </div>
                         <div class="card-body">
-                            <form method="post">
+                            <form method="post" id="wizardForm">
                                 <?php foreach ($current_step['fields'] as $field_key => $field_config): ?>
-                                    <div class="field-group">
+                                    <div class="field-group" <?php if (isset($field_config['section'])): ?>data-section="<?php echo $field_config['section']; ?>" style="display: none;"<?php endif; ?>>
                                         <label for="<?php echo $field_key; ?>" class="form-label">
                                             <?php echo htmlspecialchars($field_config['label']); ?>
                                             <?php if (!empty($field_config['required'])): ?>
@@ -142,7 +142,8 @@ $progress = $wizard->get_progress();
                                                            id="<?php echo $field_key . '_' . $option_value; ?>" 
                                                            value="<?php echo $option_value; ?>"
                                                            <?php echo $current_value === $option_value ? 'checked' : ''; ?>
-                                                           <?php echo $required_attr; ?>>
+                                                           <?php echo $required_attr; ?>
+                                                           onchange="toggleSections('<?php echo $field_key; ?>')">
                                                     <label class="form-check-label" for="<?php echo $field_key . '_' . $option_value; ?>">
                                                         <?php echo htmlspecialchars($option_label); ?>
                                                     </label>
@@ -199,7 +200,40 @@ $progress = $wizard->get_progress();
                     });
                 });
             }
+            
+            // Initialize section visibility
+            toggleSections('install_mode');
         });
+        
+        function toggleSections(fieldName) {
+            // Hide all sections first
+            const allSections = document.querySelectorAll('[data-section]');
+            allSections.forEach(section => {
+                section.style.display = 'none';
+                // Remove required attributes from hidden fields
+                const requiredFields = section.querySelectorAll('[required]');
+                requiredFields.forEach(field => {
+                    field.setAttribute('data-was-required', 'true');
+                    field.removeAttribute('required');
+                });
+            });
+            
+            // Show fields for the selected radio option
+            const selectedRadio = document.querySelector(`input[name="${fieldName}"]:checked`);
+            if (selectedRadio) {
+                const selectedValue = selectedRadio.value;
+                const sectionsToShow = document.querySelectorAll(`[data-section="${selectedValue}"]`);
+                
+                sectionsToShow.forEach(section => {
+                    section.style.display = 'block';
+                    // Restore required attributes for visible fields
+                    const wasRequiredFields = section.querySelectorAll('[data-was-required="true"]');
+                    wasRequiredFields.forEach(field => {
+                        field.setAttribute('required', 'required');
+                    });
+                });
+            }
+        }
     </script>
 </body>
 </html>
