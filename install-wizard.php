@@ -13,6 +13,7 @@ if (session_status() == PHP_SESSION_NONE) {
 // Include required files
 require_once OPENSIM_ENGINE_PATH . '/class-installation-wizard.php';
 require_once OPENSIM_ENGINE_PATH . '/class-engine-settings.php';
+require_once OPENSIM_ENGINE_PATH . '/class-form.php';
 
 // Initialize wizard
 $wizard = new Installation_Wizard();
@@ -65,7 +66,7 @@ $progress = $wizard->get_progress();
     <title>OpenSimulator Helpers Setup Wizard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .wizard-container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+        .wizard-container { margin: 2rem auto; padding: 0 1rem; }
         .step-indicator { margin-bottom: 2rem; text-align: center; }
         .step-indicator .step { 
             display: inline-block; width: 40px; height: 40px; border-radius: 50%; 
@@ -161,169 +162,11 @@ $progress = $wizard->get_progress();
                         </div>
                         <div class="card-body">
                             <form method="post" id="wizardForm">
-                                
-                                <!-- Configuration Choice Section -->
-                                <?php if (isset($current_step['fields']['config_choice'])): ?>
-                                    <div class="config-choice">
-                                        <h5 class="mb-3"><?php echo $current_step['fields']['config_choice']['label']; ?></h5>
-                                        <?php foreach ($current_step['fields']['config_choice']['options'] as $value => $label): ?>
-                                            <div class="choice-option" onclick="selectChoice('config_choice', '<?php echo $value; ?>')">
-                                                <input type="radio" 
-                                                       name="config_choice" 
-                                                       id="config_choice_<?php echo $value; ?>" 
-                                                       value="<?php echo $value; ?>"
-                                                       <?php echo ($wizard->get_wizard_data()['config_choice'] ?? $current_step['fields']['config_choice']['default']) === $value ? 'checked' : ''; ?>
-                                                       required>
-                                                <label for="config_choice_<?php echo $value; ?>"><?php echo htmlspecialchars($label); ?></label>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
-                                
-                                <!-- Connection Method Section -->
-                                <?php if (isset($current_step['fields']['connection_method'])): ?>
-                                    <div class="connection-methods">
-                                        <h5 class="mb-3"><?php echo $current_step['fields']['connection_method']['label']; ?></h5>
-                                        
-                                        <?php 
-                                        $connection_methods = $current_step['fields']['connection_method']['options'];
-                                        $selected_method = $wizard->get_wizard_data()['connection_method'] ?? $current_step['fields']['connection_method']['default'];
-                                        ?>
-                                        
-                                        <!-- Console Method -->
-                                        <div class="method-accordion">
-                                            <div class="method-header <?php echo $selected_method === 'console' ? 'active' : ''; ?>" 
-                                                 onclick="selectMethod('console')">
-                                                <input type="radio" name="connection_method" value="console" 
-                                                       <?php echo $selected_method === 'console' ? 'checked' : ''; ?> required>
-                                                <span class="method-title"><?php echo $connection_methods['console']; ?></span>
-                                                <span class="method-icon">🖥️</span>
-                                            </div>
-                                            <div class="method-body <?php echo $selected_method === 'console' ? 'active' : ''; ?>" id="console-body">
-                                                <?php foreach ($current_step['fields'] as $field_key => $field_config): ?>
-                                                    <?php if (($field_config['section'] ?? '') === 'console'): ?>
-                                                        <div class="form-group">
-                                                            <label class="form-label" for="<?php echo $field_key; ?>">
-                                                                <?php echo htmlspecialchars($field_config['label']); ?>
-                                                                <?php if (!empty($field_config['required'])): ?>
-                                                                    <span class="text-danger">*</span>
-                                                                <?php endif; ?>
-                                                            </label>
-                                                            <input type="<?php echo $field_config['type']; ?>" 
-                                                                   class="form-control" 
-                                                                   id="<?php echo $field_key; ?>" 
-                                                                   name="<?php echo $field_key; ?>" 
-                                                                   value="<?php echo htmlspecialchars($wizard->get_wizard_data()[$field_key] ?? $field_config['default'] ?? ''); ?>"
-                                                                   placeholder="<?php echo htmlspecialchars($field_config['placeholder'] ?? ''); ?>"
-                                                                   <?php echo !empty($field_config['required']) && $selected_method === 'console' ? 'required' : ''; ?>>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                <?php endforeach; ?>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Manual Method -->
-                                        <div class="method-accordion">
-                                            <div class="method-header <?php echo $selected_method === 'manual' ? 'active' : ''; ?>" 
-                                                 onclick="selectMethod('manual')">
-                                                <input type="radio" name="connection_method" value="manual" 
-                                                       <?php echo $selected_method === 'manual' ? 'checked' : ''; ?> required>
-                                                <span class="method-title"><?php echo $connection_methods['manual']; ?></span>
-                                                <span class="method-icon">🗄️</span>
-                                            </div>
-                                            <div class="method-body <?php echo $selected_method === 'manual' ? 'active' : ''; ?>" id="manual-body">
-                                                <?php foreach ($current_step['fields'] as $field_key => $field_config): ?>
-                                                    <?php if (($field_config['section'] ?? '') === 'manual'): ?>
-                                                        <div class="form-group">
-                                                            <label class="form-label" for="<?php echo $field_key; ?>">
-                                                                <?php echo htmlspecialchars($field_config['label']); ?>
-                                                                <?php if (!empty($field_config['required'])): ?>
-                                                                    <span class="text-danger">*</span>
-                                                                <?php endif; ?>
-                                                            </label>
-                                                            <input type="<?php echo $field_config['type']; ?>" 
-                                                                   class="form-control" 
-                                                                   id="<?php echo $field_key; ?>" 
-                                                                   name="<?php echo $field_key; ?>" 
-                                                                   value="<?php echo htmlspecialchars($wizard->get_wizard_data()[$field_key] ?? $field_config['default'] ?? ''); ?>"
-                                                                   placeholder="<?php echo htmlspecialchars($field_config['placeholder'] ?? ''); ?>"
-                                                                   <?php echo !empty($field_config['required']) && $selected_method === 'manual' ? 'required' : ''; ?>>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                <?php endforeach; ?>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- INI Import Method -->
-                                        <div class="method-accordion">
-                                            <div class="method-header <?php echo $selected_method === 'ini_import' ? 'active' : ''; ?>" 
-                                                 onclick="selectMethod('ini_import')">
-                                                <input type="radio" name="connection_method" value="ini_import" 
-                                                       <?php echo $selected_method === 'ini_import' ? 'checked' : ''; ?> required>
-                                                <span class="method-title"><?php echo $connection_methods['ini_import']; ?></span>
-                                                <span class="method-icon">📁</span>
-                                            </div>
-                                            <div class="method-body <?php echo $selected_method === 'ini_import' ? 'active' : ''; ?>" id="ini_import-body">
-                                                <?php foreach ($current_step['fields'] as $field_key => $field_config): ?>
-                                                    <?php if (($field_config['section'] ?? '') === 'ini_import'): ?>
-                                                        <div class="form-group">
-                                                            <label class="form-label" for="<?php echo $field_key; ?>">
-                                                                <?php echo htmlspecialchars($field_config['label']); ?>
-                                                                <?php if (!empty($field_config['required'])): ?>
-                                                                    <span class="text-danger">*</span>
-                                                                <?php endif; ?>
-                                                            </label>
-                                                            <input type="<?php echo $field_config['type']; ?>" 
-                                                                   class="form-control" 
-                                                                   id="<?php echo $field_key; ?>" 
-                                                                   name="<?php echo $field_key; ?>" 
-                                                                   accept="<?php echo htmlspecialchars($field_config['accept'] ?? ''); ?>"
-                                                                   <?php echo !empty($field_config['required']) && $selected_method === 'ini_import' ? 'required' : ''; ?>>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                <?php endforeach; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                                
-                                <!-- Other Fields -->
-                                <?php foreach ($current_step['fields'] as $field_key => $field_config): ?>
-                                    <?php if (!in_array($field_key, ['config_choice', 'connection_method']) && empty($field_config['section'])): ?>
-                                        <div class="form-group">
-                                            <label class="form-label" for="<?php echo $field_key; ?>">
-                                                <?php echo htmlspecialchars($field_config['label']); ?>
-                                                <?php if (!empty($field_config['required'])): ?>
-                                                    <span class="text-danger">*</span>
-                                                <?php endif; ?>
-                                            </label>
-                                            
-                                            <?php
-                                            $current_value = $wizard->get_wizard_data()[$field_key] ?? $field_config['default'] ?? '';
-                                            $required_attr = !empty($field_config['required']) ? 'required' : '';
-                                            
-                                            switch ($field_config['type']):
-                                                case 'text':
-                                                case 'password':
-                                                case 'number':
-                                            ?>
-                                                <input type="<?php echo $field_config['type']; ?>" 
-                                                       class="form-control" 
-                                                       id="<?php echo $field_key; ?>" 
-                                                       name="<?php echo $field_key; ?>" 
-                                                       value="<?php echo htmlspecialchars($current_value); ?>"
-                                                       placeholder="<?php echo htmlspecialchars($field_config['placeholder'] ?? ''); ?>"
-                                                       <?php echo $required_attr; ?>>
-                                            <?php break; case 'file': ?>
-                                                <input type="file" 
-                                                       class="form-control" 
-                                                       id="<?php echo $field_key; ?>" 
-                                                       name="<?php echo $field_key; ?>"
-                                                       accept="<?php echo htmlspecialchars($field_config['accept'] ?? ''); ?>">
-                                            <?php break; endswitch; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
+                                <?php
+                                // Use Form class to render fields
+                                $form = new Form($current_step['fields'], $wizard->get_wizard_data(), 'wizardForm');
+                                echo $form->render();
+                                ?>
                                 
                                 <div class="btn-group">
                                     <div>
