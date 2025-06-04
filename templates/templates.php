@@ -127,7 +127,7 @@ $main_menu_html = format_menu( ($menus['main'] ?? null ), 'main' );
 $user_menu_html = format_menu( $menus['user'] ?? null, 'user' );
 $footer_menu_html = format_menu( $menus['footer'] ?? null, 'footer' );
 
-Helpers::enqueue_script( 'template-page', 'templates/bootstrap.js' );
-Helpers::enqueue_style( 'template-page', 'templates/bootstrap.css' );
+Helpers::enqueue_script( 'template-page', 'templates/template-page.js' );
+Helpers::enqueue_style( 'template-page', 'templates/template-page.css' );
 
 require( 'template-page.php' );
