@@ -65,7 +65,7 @@ $progress = $wizard->get_progress();
     <title>OpenSimulator Helpers Setup Wizard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .wizard-container { max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        .wizard-container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
         .step-indicator { margin-bottom: 2rem; text-align: center; }
         .step-indicator .step { 
             display: inline-block; width: 40px; height: 40px; border-radius: 50%; 
@@ -109,11 +109,20 @@ $progress = $wizard->get_progress();
         .form-control:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25); }
         .btn-group { display: flex; justify-content: space-between; margin-top: 2rem; flex-wrap: wrap; gap: 0.5rem; }
         
-        @media (max-width: 576px) {
-            .wizard-container { margin: 1rem auto; }
+        /* Form layout improvements for labels */
+        .form-row { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .form-col { flex: 1; min-width: 200px; }
+        .form-inline { display: flex; align-items: center; gap: 0.75rem; }
+        .form-inline .form-label { margin-bottom: 0; min-width: 120px; }
+        .form-inline .form-control { flex: 1; }
+        
+        @media (max-width: 768px) {
+            .wizard-container { max-width: 100%; margin: 1rem auto; }
             .step-indicator .step { width: 35px; height: 35px; line-height: 35px; font-size: 12px; }
             .choice-option, .method-header, .method-body { padding: 0.75rem; }
             .btn-group { flex-direction: column; }
+            .form-inline { flex-direction: column; align-items: stretch; }
+            .form-inline .form-label { min-width: auto; }
         }
     </style>
 </head>
