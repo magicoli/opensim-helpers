@@ -93,6 +93,24 @@ function toggleDbCredentials(fieldId) {
 }
 
 /**
+ * Toggle mutual exclusion for fields in the same fieldset or array
+ * When one field has value, disable others in the same group
+ */
+function toggleMutualExclusive(field) {
+    const fieldset = field.closest('fieldset');
+    if (!fieldset) return;
+    
+    const allFields = fieldset.querySelectorAll('input');
+    const hasValue = field.type === 'file' ? field.files.length > 0 : field.value.trim() !== '';
+    
+    allFields.forEach(otherField => {
+        if (otherField !== field) {
+            otherField.disabled = hasValue;
+        }
+    });
+}
+
+/**
  * Go to previous step
  */
 function previousStep() {
