@@ -216,7 +216,7 @@ class Helpers {
             $message = $error;
         } else {
             $message = _('Unknown error, see log for details');
-            error_log( $prefix . 'Unidentified error type: ' . gettype( $error ) . ' ' . print_r( $error, true ) );
+            error_log('[ERROR] Unidentified error type: ' . gettype( $error ) . ' ' . print_r( $error, true ) . ' in ' . __FILE__ . ':' . __LINE__ );
         }
         if( ! empty( $message ) ) {
             self::notify( $message, $type );
