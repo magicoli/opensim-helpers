@@ -3,3 +3,63 @@ input::placeholder {
     display: none;
     opacity: 0.5;
 }
+/**
+ * Avoid as much as possible using css to style the pages.
+ * Use bootstrap classes instead.
+ * This file is only used to cover what is not possible with bootstrap classes.
+**/
+
+.step-indicator { margin-bottom: 2rem; text-align: center; }
+.step-indicator .step { 
+    display: inline-block; width: 40px; height: 40px; border-radius: 50%; 
+    /* No hardcoded color, use either boostrap variables, either classes added in html */
+    /* background: #e9ecef; color: #6c757d; text-align: center; line-height: 40px;  */
+    margin: 0 5px; font-weight: bold; font-size: 14px;
+}
+/* .step-indicator .step.active { background: #0d6efd; color: white; }
+/* .step-indicator .step.completed { background: #198754; color: white; } */
+
+@media (max-width: 768px) {
+    .step-indicator .step { width: 35px; height: 35px; line-height: 35px; font-size: 12px; }
+}
+
+.step-indicators {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.step-title {
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 80px;
+}
+
+
+.step-connector {
+    flex: 1;
+}
