@@ -111,6 +111,18 @@ function toggleMutualExclusive(field) {
 }
 
 /**
+ * Clear input field and trigger change event
+ */
+function clearInputField(fieldId) {
+    const fieldInput = document.getElementById(fieldId);
+    if (fieldInput) {
+        fieldInput.value = '';
+        // Trigger change event to activate any onchange listeners
+        fieldInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+
+/**
  * Go to previous step
  */
 function previousStep() {
