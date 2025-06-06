@@ -38,8 +38,16 @@ function selectChoice(fieldId, choiceValue) {
     document.querySelectorAll(`[id^="${fieldId}_"][id$="_fields"]`).forEach(subFields => {
         if (subFields.id === `${fieldId}_${choiceValue}_fields`) {
             subFields.classList.remove('d-none');
+            // Enable all input fields in the selected choice
+            subFields.querySelectorAll('input').forEach(input => {
+                input.disabled = false;
+            });
         } else {
             subFields.classList.add('d-none');
+            // Disable all input fields in unselected choices to prevent validation issues
+            subFields.querySelectorAll('input').forEach(input => {
+                input.disabled = true;
+            });
         }
     });
 }
