@@ -23,8 +23,6 @@ if (! defined('OPENSIM_ENGINE_PATH')) {
         dirname(OPENSIM_HELPERS_PATH) . '/engine',
     );
     
-    error_log('[DEBUG] Looking for engine in: ' . implode(', ', $lookup_path));
-    
     foreach ($lookup_path as $path) {
         error_log('[DEBUG] Checking: ' . $path . '/bootstrap.php - exists: ' . (file_exists($path . '/bootstrap.php') ? 'YES' : 'NO'));
         if (file_exists($path . '/bootstrap.php')) {
