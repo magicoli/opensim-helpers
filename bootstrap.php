@@ -41,7 +41,7 @@ if( file_exists( OPENSIM_HELPERS_PATH . '/includes/config.php' ) ) {
         require_once OPENSIM_HELPERS_PATH . '/includes/config.php';
     } catch (Throwable $e) {
         // Handle error if config file fails to load
-        error_log( __METHOD__ . '() [ERROR] ' . $e->getMessage() );
+        error_log( '[ERROR] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
         // exit( 'Configuration file could not be loaded.' );
     }
 }

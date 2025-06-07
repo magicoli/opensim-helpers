@@ -10,6 +10,11 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
+// error_log('[DEBUG] ' . __FILE__ . ':' . __LINE__);
+// Load the engine
+require_once __DIR__ . '/bootstrap.php';
+// error_log('[DEBUG] ' . __FILE__ . ':' . __LINE__);
+
 // Include required files
 require_once OPENSIM_ENGINE_PATH . '/class-installation-wizard.php';
 require_once OPENSIM_ENGINE_PATH . '/class-engine-settings.php';
