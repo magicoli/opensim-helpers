@@ -10,10 +10,20 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
+## Workaround in standalone mode to avoid crashes when reading wp plugin custom config.php
+if(!function_exists('get_option')) {
+    define('W4OS_PLUGIN', 'installation-wizard');
+    function get_option($option_name, $default = false) {
+        return $default;
+    }
+}
+
+require_once dirname(__FILE__) . '/bootstrap.php';
+
 // Include required files
 require_once OPENSIM_ENGINE_PATH . '/class-installation-wizard.php';
-require_once OPENSIM_ENGINE_PATH . '/class-engine-settings.php';
-require_once OPENSIM_ENGINE_PATH . '/class-form.php';
+// require_once OPENSIM_ENGINE_PATH . '/class-engine-settings.php';
+// require_once OPENSIM_ENGINE_PATH . '/class-form.php';
 
 // Initialize wizard
 $wizard = new Installation_Wizard();

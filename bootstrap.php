@@ -7,7 +7,7 @@
  */
 
 // Define helper mode
-define('W4OS_ENGINE', true);
+define('OPENSIM_ENGINE', true);
 
 if(!defined('OPENSIM_HELPERS_PATH')) {
     // Define the path to helpers directory
