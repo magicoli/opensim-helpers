@@ -10,12 +10,10 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// error_log('[DEBUG] ' . __FILE__ . ':' . __LINE__);
-// Load the engine
+// Bootstrap the helpers system (this defines OPENSIM_ENGINE_PATH)
 require_once __DIR__ . '/bootstrap.php';
-// error_log('[DEBUG] ' . __FILE__ . ':' . __LINE__);
 
-// Include required files
+// Include required files (now OPENSIM_ENGINE_PATH is defined)
 require_once OPENSIM_ENGINE_PATH . '/class-installation-wizard.php';
 require_once OPENSIM_ENGINE_PATH . '/class-engine-settings.php';
 require_once OPENSIM_ENGINE_PATH . '/class-form.php';
