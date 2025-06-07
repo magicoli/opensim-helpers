@@ -1,13 +1,34 @@
 <?php
 /**
- * Standalone Setup Wizard
- * 
- * Direct access wizard for helpers installation
+ * Standalone Setup $return_url = $return_url ?? null;
+// Check if external data passed via session
+$external_data = $_SESSION['wizard_data'] ?? null;
+
+if ($external_data) {
+    // Validate the session data is recent (within 1 hour)
+    if (time() - $external_data['timestamp'] > 3600) {
+        unset($_SESSION['wizard_data']);
+        $external_data = null;
+    } else {
+        $return_url = $external_data['return_url'] ?? $return_url;
+        
+        // Pass imported options to Engine_Settings for this session
+        if (!empty($external_data['data'])) {
+            Engine_Settings::set_imported_options($external_data['data']);
+        }
+    }
+}ct access wizard for helpers installation
  */
 
 // Start session for wizard state
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
+}
+
+// Handle session cleanup
+if (isset($_POST['action']) && $_POST['action'] === 'clean_wizard_session') {
+    unset($_SESSION['wizard_data']);
+    exit; // Just clean up and exit, no response needed
 }
 
 ## Standalone mode workaround
@@ -18,7 +39,7 @@ if (session_status() == PHP_SESSION_NONE) {
 if(!function_exists('get_option')) {
     define('W4OS_PLUGIN', 'installation-wizard');
     function get_option($option_name, $default = false) {
-        error_log('[WARNING] get_option() called in standalone mode. Returning default value.');
+        error_log('[NOTICE] get_option(' . $option_name . ') called in standalone mode. Returning default value.');
         return $default;
     }
 }
@@ -30,19 +51,19 @@ require_once __DIR__ . '/bootstrap.php';
 
 $return_url = $return_url ?? null;
 // Check if external data passed via session
-$external_data = $_SESSION['w4os_wizard_data'] ?? null;
+$external_data = $_SESSION['wizard_data'] ?? null;
 
-if ($external_data) {
+if ($external_data && !empty($external_data['data'])) {
     // Validate the session data is recent (within 1 hour)
     if (time() - $external_data['timestamp'] > 3600) {
-        unset($_SESSION['w4os_wizard_data']);
+        unset($_SESSION['wizard_data']);
         $external_data = null;
     } else {
         $return_url = $external_data['return_url'] ?? $return_url;
         
         // Pass imported options to Engine_Settings for this session
-        if (!empty($external_data['data']['values'])) {
-            Engine_Settings::set_imported_options($external_data['data']['values']);
+        if (!empty($external_data['data'])) {
+            Engine_Settings::set_imported_options($external_data['data']);
         }
     }
 }

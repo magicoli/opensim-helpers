@@ -114,19 +114,19 @@ class Helpers {
         } else {
             $version = '0.0.0';
         }
-        if( file_exists( '.git/HEAD' ) ) {
-            $hash = trim( file_get_contents( '.git/HEAD' ) );
-            $hash = trim( preg_replace( '+.*[:/]+', '', $hash ) );
-            if( !empty( $hash ) && file_exists( '.git/refs/heads/' . $hash ) ) {
-                $hash = substr( file_get_contents( '.git/refs/heads/' . $hash ), 0, 7 ) . " ($hash)";
-            } else {
-                $hash = substr( $hash, 0, 7 );
-                $hash .= ' (detached)';
-            }
+        // if( file_exists( '.git/HEAD' ) ) {
+        //     $hash = trim( file_get_contents( '.git/HEAD' ) );
+        //     $hash = trim( preg_replace( '+.*[:/]+', '', $hash ) );
+        //     if( !empty( $hash ) && file_exists( '.git/refs/heads/' . $hash ) ) {
+        //         $hash = substr( file_get_contents( '.git/refs/heads/' . $hash ), 0, 7 ) . " ($hash)";
+        //     } else {
+        //         $hash = substr( $hash, 0, 7 );
+        //         $hash .= ' (detached)';
+        //     }
 
-            $version .= empty( $hash ) ? ' git ' : ' git ' . $hash;
-            self::$is_dev = ( empty( $hash ) ) ? self::$is_dev : true;
-        }
+        //     $version .= empty( $hash ) ? ' git ' : ' git ' . $hash;
+        //     self::$is_dev = ( empty( $hash ) ) ? self::$is_dev : true;
+        // }
 
         self::$version = $version;
         self::$version_slug = sanitize_id( $version );
