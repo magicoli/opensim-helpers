@@ -50,6 +50,8 @@ require_once dirname(__FILE__) . '/bootstrap.php';
 require_once __DIR__ . '/bootstrap.php';
 
 $return_url = $return_url ?? null;
+$return_pagename = $return_pagename ?? null;
+
 // Check if external data passed via session
 $external_data = $_SESSION['wizard_data'] ?? null;
 
@@ -60,6 +62,7 @@ if ($external_data && !empty($external_data['data'])) {
         $external_data = null;
     } else {
         $return_url = $external_data['return_url'] ?? $return_url;
+        $return_pagename = $external_data['return_pagename'] ?? $return_pagename;
         
         // Pass imported options to Engine_Settings for this session
         if (!empty($external_data['data'])) {
@@ -75,11 +78,6 @@ require_once OPENSIM_ENGINE_PATH . '/class-installation-wizard.php';
 
 // Initialize wizard
 $wizard = new Installation_Wizard();
-
-// Add return URL to wizard if available
-if ($return_url) {
-    $wizard->set_return_url($return_url);
-}
 
 // Handle form submission
 $message = '';
