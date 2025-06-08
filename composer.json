@@ -9,8 +9,16 @@
             "email": "gudule@speculoos.world"
         }
     ],
+    "require": {
+        "php": ">=7.4"
+    },
     "require-dev": {
         "magicoli/php-bump-library": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "OpenSim\\Helpers\\": "src/"
+        }
     },
     "scripts": {
       "bump-version": "vendor/magicoli/php-bump-library/vendor/bin/robo --load-from=vendor/magicoli/php-bump-library/RoboFile.php bump:version"
