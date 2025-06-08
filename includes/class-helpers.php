@@ -129,7 +129,7 @@ class Helpers {
         // }
 
         self::$version = $version;
-        self::$version_slug = sanitize_id( $version );
+        self::$version_slug = sanitize_version( $version );
         if( $sanitized && self::$version_slug ) {
             return self::$version_slug;
         }
@@ -377,7 +377,7 @@ class Helpers {
                 return false;
             }
         }
-        $ver = empty( $ver ) ? self::get_version( true ) : sanitize_id( $ver );
+        $ver = empty( $ver ) ? self::get_version( true ) : sanitize_version( $ver );
         $src = self::add_query_args( $src, array( 'ver' => $ver ) );
 
         $section = $in_footer ? 'footer' : 'head';
@@ -439,7 +439,7 @@ class Helpers {
         // if( strpos( $src, '://' ) === false ) {
         //     $src = OSHELPERS_URL . ltrim( $src, '/' );
         // }
-        $ver = empty( $ver ) ? self::get_version( true ) : sanitize_id( $ver );
+        $ver = empty( $ver ) ? self::get_version( true ) : sanitize_version( $ver );
         $src = self::add_query_args( $src, array( 'ver' => $ver ) );
 
         self::$styles['head'][$handle] = array(

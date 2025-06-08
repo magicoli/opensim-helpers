@@ -1,23 +1,6 @@
 <?php
 /**
- * Standalone Setup $return_url = $return_url ?? null;
-// Check if external data passed via session
-$external_data = $_SESSION['wizard_data'] ?? null;
-
-if ($external_data) {
-    // Validate the session data is recent (within 1 hour)
-    if (time() - $external_data['timestamp'] > 3600) {
-        unset($_SESSION['wizard_data']);
-        $external_data = null;
-    } else {
-        $return_url = $external_data['return_url'] ?? $return_url;
-        
-        // Pass imported options to Engine_Settings for this session
-        if (!empty($external_data['data'])) {
-            Engine_Settings::set_imported_options($external_data['data']);
-        }
-    }
-}ct access wizard for helpers installation
+ * Standalone Setup wizard for helpers installation.
  */
 
 // Start session for wizard state
