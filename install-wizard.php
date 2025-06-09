@@ -27,9 +27,9 @@ if(!function_exists('get_option')) {
     }
 }
 
+// Bootstrap the helpers system (this defines OPENSIM_ENGINE_PATH)
 require_once dirname(__FILE__) . '/bootstrap.php';
 
-// Bootstrap the helpers system (this defines OPENSIM_ENGINE_PATH)
 require_once __DIR__ . '/bootstrap.php';
 
 $return_url = $return_url ?? null;
