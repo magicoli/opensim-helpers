@@ -785,9 +785,9 @@ class OpenSim_Field {
             }
             
             $html .= '</div>';
-            $html .= '</div>';
         }
         
+        $html .= '</div>';
         $html .= '</div>';
         
         return $html;
