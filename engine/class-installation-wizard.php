@@ -130,9 +130,70 @@ class Installation_Wizard {
                             ),
                         ),
                     ),
+                    'grid_connection' => array(
+                        'title' => _('Grid Connection'),
+                        'description' => _('Select the method for helpers to exchange data with your OpenSimulator grid.'),
+                        'callback' => 'process_grid_connection',
+                        'fields' => array(
+                            'connection_method' => array(
+                                'type' => 'select-nested',
+                                'label' => _('Connection method'),
+                                'required' => true,
+                                'mutual-exclusive' => true,
+                                'options' => array(
+                                    'use_console' => array(
+                                        'label' => _('Console connection (recommended)'),
+                                        'description' => _('Using console is necessary to get all helpers features.'),
+                                        'icon' => '🖥️',
+                                        'fields' => array(
+                                            'robust.Network.Console' => array(
+                                                'type' => 'console_credentials',
+                                                'label' => _('Console credentials'),
+                                                'description' => _('Must be set in Robust(.HG).ini file > [Network] > Console(User|Pass|Port)'),
+                                                'troubleshooting' => '<ul><li>' . join('</li><li>', array(
+                                                    _('Make sure ConsoleUser, ConsolePass and ConsolePort are set in Robust(.HG).ini'),
+                                                    _('Make sure ConsolePort is not used by another service.'),
+                                                    _('Make sure your grid is up and running (restart the grid after any config change.')
+                                                ) ) . '</li></ul>',
+                                                'default' => $robust_console,
+                                            ),
+                                        ),
+                                    ),
+                                    'use_db' => array(
+                                        'label' => _('Database connection'),
+                                        'description' => _('Connect to the grid using database credentials. This allows main features, but some may be limited.'),
+                                        'icon' => '🗄️',
+                                        'fields' => array(
+                                            'robust.DatabaseService.ConnectionString' => array(
+                                                'type' => 'db_credentials',
+                                                'label' => _('Main database credentials'),
+                                                'default' => $robust_db,
+                                            ),
+                                            'robust.AssetService.ConnectionString' => array(
+                                                'type' => 'db_credentials',
+                                                'label' => _('Asset database credentials'),
+                                                'description' => _('Optional, most likely not necessary, leave empty to get a simpler life.'),
+                                                'default' => $asset_db,
+                                                'use_default' => empty($asset_db),
+                                            ),
+                                            'robust.UserProfilesService.ConnectionString' => array(
+                                                'type' => 'db_credentials',
+                                                'label' => _('Profiles database credentials'),
+                                                'description' => _('Optional, most likely not necessary, leave empty to get a simpler life.'),
+                                                'default' => $profiles_db,
+                                                'use_default' => empty($profiles_db),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                                'default' => empty($robust_console) && !empty($robust_db) ? 'use_db' : 'use_console',
+                                'required' => true
+                            ),
+                        )
+                    ),
                     'fields_tests' => array(
                         'title' => _('Field type tests'),
-                        'description' => _('Various field types, for testing purposes only, this form has no effect.'),
+                        'description' => _('Various field types,<ul><li> for testing purposes only,</li><li> this form has no effect.</li></ul>'),
                         'fields' => array(
                             // 'dummy_group' => array(
                             //     'label' => _('Field group'),
@@ -183,7 +244,7 @@ class Installation_Wizard {
                             'dummy_text' => array(
                                 'label' => _('Dummy text field'),
                                 'type' => 'string',
-                                'description' => _('For testing purposes only, this field has no effect.'),
+                                'description' => _('Various <strong>field types</strong>,<ul><li> for testing purposes only,</li><li> this form has no effect.</li></ul>'),
                                 'multiple' => true,
                             ),
                             'dummy_textarea' => array(
@@ -412,67 +473,6 @@ class Installation_Wizard {
                                 'description' => _('Regular Expression pattern, test with [A-Za-z]+'),
                                 'pattern' => '[A-Za-z]+',
                                 'placeholder' => 'OnlyLetters',
-                            ),
-                        )
-                    ),
-                    'grid_connection' => array(
-                        'title' => _('Grid Connection'),
-                        'description' => _('Select the method for helpers to exchange data with your OpenSimulator grid.'),
-                        'callback' => 'process_grid_connection',
-                        'fields' => array(
-                            'connection_method' => array(
-                                'type' => 'select-nested',
-                                'label' => _('Connection method'),
-                                'required' => true,
-                                'mutual-exclusive' => true,
-                                'options' => array(
-                                    'use_console' => array(
-                                        'label' => _('Console connection (recommended)'),
-                                        'description' => _('Using console is necessary to get all helpers features.'),
-                                        'icon' => '🖥️',
-                                        'fields' => array(
-                                            'robust.Network.Console' => array(
-                                                'type' => 'console_credentials',
-                                                'label' => _('Console credentials'),
-                                                'description' => _('Must be set in Robust(.HG).ini file > [Network] > Console(User|Pass|Port)'),
-                                                'troubleshooting' => '<ul><li>' . join('</li><li>', array(
-                                                    _('Make sure ConsoleUser, ConsolePass and ConsolePort are set in Robust(.HG).ini'),
-                                                    _('Make sure ConsolePort is not used by another service.'),
-                                                    _('Make sure your grid is up and running (restart the grid after any config change.')
-                                                ) ) . '</li></ul>',
-                                                'default' => $robust_console,
-                                            ),
-                                        ),
-                                    ),
-                                    'use_db' => array(
-                                        'label' => _('Database connection'),
-                                        'description' => _('Connect to the grid using database credentials. This allows main features, but some may be limited.'),
-                                        'icon' => '🗄️',
-                                        'fields' => array(
-                                            'robust.DatabaseService.ConnectionString' => array(
-                                                'type' => 'db_credentials',
-                                                'label' => _('Main database credentials'),
-                                                'default' => $robust_db,
-                                            ),
-                                            'robust.AssetService.ConnectionString' => array(
-                                                'type' => 'db_credentials',
-                                                'label' => _('Asset database credentials'),
-                                                'description' => _('Optional, most likely not necessary, leave empty to get a simpler life.'),
-                                                'default' => $asset_db,
-                                                'use_default' => empty($asset_db),
-                                            ),
-                                            'robust.UserProfilesService.ConnectionString' => array(
-                                                'type' => 'db_credentials',
-                                                'label' => _('Profiles database credentials'),
-                                                'description' => _('Optional, most likely not necessary, leave empty to get a simpler life.'),
-                                                'default' => $profiles_db,
-                                                'use_default' => empty($profiles_db),
-                                            ),
-                                        ),
-                                    ),
-                                ),
-                                'default' => empty($robust_console) && !empty($robust_db) ? 'use_db' : 'use_console',
-                                'required' => true
                             ),
                         )
                     ),

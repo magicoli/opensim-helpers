@@ -118,6 +118,9 @@ class OpenSim_Field {
             case 'select-accordion':
                 return $this->render_select_accordion();
                 
+            case 'console_credentials':
+                return $this->render_console_credentials();
+                
             case 'db_credentials':
                 return $this->render_db_credentials();
                 
@@ -195,7 +198,7 @@ class OpenSim_Field {
             $html .= sprintf(
                 '<label class="form-label" for="%s">%s%s</label>',
                 $this->field_id,
-                $this->label,
+                opensim_sanitize_basic_html($label),
                 $this->required_mark,
             );
         }
@@ -242,7 +245,7 @@ class OpenSim_Field {
                 return $this->render_hidden();
                 
             case 'color':
-                $html .= $this->render_color($input_classes, $value, $placeholder, $required);
+                $html .= $this->render_color();
                 break;
                 
             default:
@@ -253,7 +256,7 @@ class OpenSim_Field {
         
         // Add description
         if (!empty($description)) {
-            $html .= '<div class="form-text">' . opensim_esc_html($description) . '</div>';
+            $html .= '<div class="form-text">' . opensim_sanitize_html($description) . '</div>';
         }
         
         $html .= '</div>'; // End form-group
@@ -300,9 +303,9 @@ class OpenSim_Field {
             $this->field_id,
             implode(' ', $input_classes),
             $rows,
-            do_not_sanitize($placeholder),
+            opensim_esc_attr($placeholder),
             implode(' ', $attributes),
-            do_not_sanitize($value)
+            opensim_esc_html($value)
         );
         return $html;
     }
@@ -340,7 +343,7 @@ class OpenSim_Field {
         
         foreach ($options as $option_value => $option_label) {
             $selected = in_array($option_value, $selected_values) ? ' selected' : '';
-            $html .= '<option value="' . do_not_sanitize($option_value) . '"' . $selected . '>' . do_not_sanitize($option_label) . '</option>';
+            $html .= '<option value="' . opensim_esc_attr($option_value) . '"' . $selected . '>' . opensim_esc_html($option_label) . '</option>';
         }
         
         $html .= '</select>';
@@ -386,7 +389,7 @@ class OpenSim_Field {
         
         foreach ($options as $option_value => $option_label) {
             $selected = in_array($option_value, $selected_values) ? ' selected' : '';
-            $html .= '<option value="' . do_not_sanitize($option_value) . '"' . $selected . '>' . do_not_sanitize($option_label) . '</option>';
+            $html .= '<option value="' . opensim_esc_attr($option_value) . '"' . $selected . '>' . opensim_esc_html($option_label) . '</option>';
         }
         
         $html .= '</select>';
@@ -428,10 +431,10 @@ class OpenSim_Field {
                 $this->field_id,
                 $option_value,
                 implode(' ', $input_classes),
-                do_not_sanitize($option_value),
+                opensim_esc_attr($option_value),
                 ($value === $option_value) ? ' checked' : '',
                 implode(' ', $attributes),
-                do_not_sanitize($option_label)
+                opensim_sanitize_basic_html($option_label)
             );
         }
         return $html;
@@ -455,11 +458,11 @@ class OpenSim_Field {
                 <label class="form-check-label" for="%1$s_%2$s">%6$s</label>
             </div>',
             $this->field_id,
-            $option_value,
-            do_not_sanitize($option_value),
+            opensim_esc_attr($option_value),
+            opensim_esc_attr($option_value),
             in_array($option_value, $values) ? ' checked' : '',
             implode(' ', $attributes),
-            do_not_sanitize($option_label)
+            opensim_sanitize_basic_html($option_label)
             );
         }
         return $html;
@@ -495,23 +498,24 @@ class OpenSim_Field {
 
         $accept = $this->field_config['accept'] ?? '';
         if ($accept) {
-            $attributes[] = 'accept="' . do_not_sanitize($accept) . '"';
+            $attributes[] = 'accept="' . opensim_esc_attr($accept) . '"';
         }
         
         $html = sprintf(
-            '<div class="input-group"><input type="file" class="%s" id="%s" name="%s" %s %s>',
+            '<div class="input-group">
+                <input type="file" class="%s" id="%s" name="%s" %s %s>
+                <button type="button" class="btn btn-outline-secondary" onclick="clearFileInput(\'%s\')" title="%s">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>',
             implode(' ', $input_classes),
             $this->field_id,
             $this->field_id . ($multiple ? '[]' : ''),
             $required ? 'required' : '',
-            implode(' ', $attributes)
+            implode(' ', $attributes),
+            $this->field_id,
+            _('Clear file selection')
         );
-        
-        // Add clear button
-        $html .= '<button type="button" class="btn btn-outline-secondary" onclick="clearFileInput(\'' . $this->field_id . '\')" title="' . _('Clear file selection') . '">';
-        $html .= '<i class="bi bi-x"></i>';
-        $html .= '</button>';
-        $html .= '</div>';
         
         return $html;
     }
@@ -519,27 +523,28 @@ class OpenSim_Field {
     /**
      * Render color input with enhanced display
      */
-    private function render_color($input_classes, $value, $placeholder, $required) {
+    private function render_color() {
+        $input_classes = $input_classes ?? array();
+        $value = $value ?? null;
+        $placeholder = $placeholder ?? '#000000'; // Default placeholder
+        $required = $required ?? false;
+        $attributes = $this->input_attributes ?? array();
         $attributes = $this->get_input_attributes();
         $color_value = $value ?: '#000000';
         
         $html = '<div class="input-group">';
-        $html .= '<input type="color" class="form-control form-control-color" id="' . $this->field_id . '" name="' . $this->field_id . '" ';
-        $html .= 'value="' . do_not_sanitize($color_value) . '"';
-        if ($required) {
-            $html .= ' required';
-        }
-        if ($attributes) {
-            $html .= ' ' . $attributes;
-        }
-        $html .= ' onchange="updateColorValue(\'' . $this->field_id . '\')">';
-        
-        // Text input showing the hex value
-        $html .= '<input type="text" class="form-control" id="' . $this->field_id . '_text" ';
-        $html .= 'value="' . do_not_sanitize($color_value) . '" ';
-        $html .= 'pattern="^#[0-9A-Fa-f]{6}$" ';
-        $html .= 'placeholder="#000000" ';
-        $html .= 'onchange="updateColorPicker(\'' . $this->field_id . '\')">';
+        $html .= sprintf(
+            '<input type="color" class="form-control form-control-color" id="%1$s" name="%1$s" value="%2$s" %3$s %4$s onchange="updateColorValue(\'%1$s\')">',
+            $this->field_id,
+            opensim_esc_attr($color_value),
+            $required ? 'required' : '',
+            implode(' ', $attributes)
+        );
+        $html .= sprintf(
+            '<input type="text" class="form-control" id="%1$s_text" value="%2$s" pattern="^#[0-9A-Fa-f]{6}$" placeholder="#000000" onchange="updateColorPicker(\'%1$s\')">',
+            $this->field_id,
+            opensim_esc_attr($color_value)
+        );
         $html .= '</div>';
         
         return $html;
@@ -551,7 +556,7 @@ class OpenSim_Field {
     private function render_input() {
         
         if ($this->placeholder) {
-            $this->input_attributes[] = 'placeholder="' . do_not_sanitize($this->placeholder) . '"';
+            $this->input_attributes[] = 'placeholder="' . opensim_esc_attr($this->placeholder) . '"';
         }
         
         $html = sprintf(
@@ -574,7 +579,7 @@ class OpenSim_Field {
             '<input type="hidden" id="%s" name="%s" value="%s">',
             $this->field_id,
             $this->field_id,
-            do_not_sanitize($value)
+            opensim_esc_attr($this->value)
         );
         return $html;
     }
@@ -636,7 +641,7 @@ class OpenSim_Field {
                     $attributes['minlength'] = 'minlength="' . $minlength . '"';
                 }
                 if ($pattern) {
-                    $attributes['pattern'] = 'pattern="' . do_not_sanitize($pattern) . '"';
+                    $attributes['pattern'] = 'pattern="' . opensim_esc_attr($pattern) . '"';
                 }
                 break;
         }
@@ -663,10 +668,16 @@ class OpenSim_Field {
         
         $html = '<fieldset class="field-group mb-4 card px-4 py-2">';
         if ($label) {
-            $html .= '<legend class="field-group-legend h5 ps-2 mb-0">' . do_not_sanitize($label) . '</legend>';
+            $html .= sprintf(
+                '<legend class="field-group-legend h5 ps-2 mb-0">%s</legend>',
+                opensim_sanitize_basic_html($label)
+            );
         }
         if ($description) {
-            $html .= '<div class="field-group-description text-muted mb-3">' . do_not_sanitize($description) . '</div>';
+            $html .= sprintf(
+                '<div class="field-group-description text-muted mb-3">%s</div>',
+                opensim_sanitize_html($description)
+            );
         }
         
         $html .= '<div class="row">';
@@ -690,13 +701,23 @@ class OpenSim_Field {
         $value = $this->get_field_value();
         
         $required_mark = $this->required_mark;
+
         $html = '<div class="config-choice mb-4">';
         if ($label) {
-            $html .= '<h5 class="mb-3">' . do_not_sanitize($label) . $required_mark . '</h5>';
+            $html .= sprintf(
+            '<h5 class="mb-3">%s%s</h5>',
+            'offf ' . opensim_sanitize_basic_html($label),
+            $required_mark
+            );
         }
-        
+
         // Hidden input to store the selected value
-        $html .= '<input type="hidden" name="' . $this->field_id . '" id="' . $this->field_id . '" value="' . do_not_sanitize($value) . '"' . ($required ? ' required' : '') . '>';
+        $html .= sprintf(
+            '<input type="hidden" name="%1$s" id="%1$s" value="%2$s"%3$s>',
+            $this->field_id,
+            opensim_esc_attr($value),
+            $required ? ' required' : ''
+        );
         
         foreach ($options as $option_value => $option_config) {
             if(isset($option_config['enable']) && $option_config['enable'] === false) {
@@ -723,27 +744,37 @@ class OpenSim_Field {
                 $card_classes .= ' border-secondary';
             }
             
-            $html .= '<div class="' . $card_classes . '" onclick="selectChoice(\'' . $this->field_id . '\', \'' . $option_value . '\')" style="cursor: pointer;">';
-            $html .= '<div class="card-body">';
-            $html .= '<div class="d-flex align-items-center justify-content-between">';
-            $html .= '<div class="d-flex align-items-center">';
-            $html .= self::render_icon($icon);
-            $html .= '<span class="fw-semibold">' . do_not_sanitize($option_label) . '</span>';
-            $html .= '</div>';
-            $html .= '</div>';
-            
-            
-            $html .= '</div>';
+            $html .= sprintf(
+                '<div class="%s" onclick="selectChoice(\'%s\', \'%s\')" style="cursor: pointer;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                %s
+                                <span class="fw-semibold">%s</span>
+                            </div>
+                        </div>
+                    </div>',
+                $card_classes,
+                $this->field_id,
+                $option_value,
+                self::render_icon($icon),
+                opensim_sanitize_basic_html($option_label)
+            );
             
             // Render sub-fields if they exist
             if (!empty($sub_fields || ! empty( $option_description))) {
                 $display_class = $is_selected ? '' : 'd-none';
-                $html .= '<div class="choice-sub-fields border-top border-primary bg-light p-3 ' . $display_class . '" id="' . $this->field_id . '_' . $option_value . '_fields">';
+                $html .= sprintf(
+                    '<div class="choice-sub-fields border-top border-primary bg-light px-4 p-4  %s" id="%s_%s_fields">',
+                    $display_class,
+                    $this->field_id,
+                    $option_value
+                );
 
                 // Show option description
                 if ($option_description) {
-                    $desc_margin= empty($sub_fields) ? 'mb-O' : 'mb-3';
-                    $html .= '<div class="' . $desc_margin . ' text-muted">' . $option_description . '</div>';
+                    // $desc_margin= empty($sub_fields) ? 'mb-O' : 'mb-3';
+                    $html .= '<div class="' . $desc_margin . ' text-muted">' . opensim_sanitize_basic_html($option_description) . '</div>';
                 }
 
                 foreach ($sub_fields as $sub_field_id => $sub_field_config) {
@@ -753,6 +784,7 @@ class OpenSim_Field {
                 $html .= '</div>';
             }
             
+            $html .= '</div>';
             $html .= '</div>';
         }
         
@@ -766,7 +798,7 @@ class OpenSim_Field {
             return '';
         }
         if( strpos($icon, 'bi-') === 0) {
-            $icon = '<i class="' . sanitize_id($icon) . '"></i>'; 
+            $icon = '<i class="' . opensim_filter_key($icon) . '"></i>'; 
         }
         $icon_html = ' <span class="method-icon fs-4 p-1"> ' . $icon . '</span> ';
         return $icon_html;
@@ -785,7 +817,11 @@ class OpenSim_Field {
         
         $html = '<div class="connection-methods mb-4">';
         if ($label) {
-            $html .= '<h5 class="mb-3">' . do_not_sanitize($label) . $required_mark . '</h5>';
+            $html .= sprintf(
+                '<h5 class="mb-3">%s%s</h5>',
+                opensim_sanitize_basic_html($label),
+                $required_mark
+            );
         }
         
         foreach ($options as $option_value => $option_config) {
@@ -809,28 +845,42 @@ class OpenSim_Field {
                 $body_classes .= ' border-secondary d-none';
             }
             
-            $html .= '<div class="method-accordion mb-3">';
-            $html .= '<div class="' . $header_classes . '" onclick="selectMethod(\'' . $option_value . '\')" style="cursor: pointer;">';
-            $html .= '<div class="d-flex align-items-center">';
-            $html .= '<input type="radio" name="' . $this->field_id . '" value="' . $option_value . '" ' . $checked . ($required ? ' required' : '') . ' class="me-3">';
-            $html .= '<span class="method-title fw-semibold">' . do_not_sanitize($option_label) . '</span>';
-            $html .= '</div>';
-            $html .= self::render_icon($option_icon ?? '');
-            $html .= '</div>';
+            $html .= sprintf(
+                '<div class="method-accordion mb-3">
+                    <div class="%s" onclick="selectMethod(\'%s\')" style="cursor: pointer;">
+                        <div class="d-flex align-items-center">
+                            <input type="radio" name="%s" value="%s" %s%s class="me-3">
+                            <span class="method-title fw-semibold">%s</span>
+                        </div>
+                        %s
+                    </div>',
+                $header_classes,
+                $option_value,
+                $this->field_id,
+                opensim_esc_attr($option_value),
+                $checked,
+                ($required ? ' required' : ''),
+                opensim_sanitize_basic_html($option_label),
+                self::render_icon($option_icon ?? '')
+            );
             
-            $html .= '<div class="' . $body_classes . '" id="' . $option_value . '-body">';
+            $html .= sprintf(
+                '<div class="%s" id="%s-body">',
+                $body_classes,
+                $option_value
+            );
             if ($option_description) {
-                $html .= '<p class="text-muted mb-3">' . do_not_sanitize($option_description) . '</p>';
+                $html .= sprintf(
+                    '<p class="text-muted mb-3">%s</p>',
+                    opensim_sanitize_basic_html($option_description)
+                );
             }
             
-            // Render option fields
-            if (!empty($option_fields)) {
-                foreach ($option_fields as $option_field_id => $option_field_config) {
-                    $field = new OpenSim_Field($option_field_id, $option_field_config);
-                    $html .= $field->render();
-                }
+            // Render sub-fields for this accordion item
+            foreach ($option_fields as $sub_field_id => $sub_field_config) {
+                $sub_field = new OpenSim_Field($sub_field_id, $sub_field_config);
+                $html .= $sub_field->render();
             }
-            
             $html .= '</div>';
             $html .= '</div>';
         }
@@ -849,36 +899,30 @@ class OpenSim_Field {
         $description = $this->field_config['description'] ?? '';
         
         $html = '<div class="credentials-section my-4">';
-        $html .= '<h6>' . do_not_sanitize($label) . '</h6>';
+        $html .= '<h6>' . opensim_sanitize_basic_html($label) . '</h6>';
         
         if ($description) {
-            $html .= '<p class="text-muted small">' . $description . '</p>';
+            $html .= '<p class="text-muted small">' . opensim_sanitize_html($description) . '</p>';
         }
         
         // Console fields in rows
-        $html .= '<div class="row">';
-        $html .= '<div class="col-md-6">';
-        $html .= $this->render_inline_field('console_host', _('Host'), 'text', $defaults['host'] ?? 'localhost', true);
-        $html .= '</div>';
-        $html .= '<div class="col-md-2">';
-        $html .= $this->render_inline_field('console_port', _('Port'), 'number', $defaults['port'] ?? '8404', true);
-        $html .= '</div>';
-        $html .= '</div>';
-        
-        $html .= '<div class="row">';
-        $html .= '<div class="col-md-6">';
-        $html .= $this->render_inline_field('console_user', _('Username'), 'text', $defaults['user'] ?? 'admin', true);
-        $html .= '</div>';
-        $html .= '<div class="col-md-6">';
-        $html .= $this->render_inline_field('console_pass', _('Password'), 'password', $defaults['pass'] ?? '', true);
-        $html .= '</div>';
-        $html .= '</div>';
-        
-        $html .= '</div>';
+        $html .= sprintf(
+            '<div class="row">
+            <div class="col-md-6">%s</div>
+            <div class="col-md-2">%s</div>
+            <div class="col-md-6">%s</div>
+            <div class="col-md-6">%s</div>
+            </div>
+            </div>',
+            $this->render_inline_field('console_host', _('Host'), 'text', $defaults['host'] ?? 'localhost', true),
+            $this->render_inline_field('console_port', _('Port'), 'number', $defaults['port'] ?? '8404', true),
+            $this->render_inline_field('console_user', _('Username'), 'text', $defaults['user'] ?? 'admin', true),
+            $this->render_inline_field('console_pass', _('Password'), 'password', $defaults['pass'] ?? '', true)
+        );
         
         return $html;
     }
-    
+
     /**
      * Render database credentials fields
      */
@@ -890,10 +934,10 @@ class OpenSim_Field {
         $is_main_db = strpos($this->field_id, 'robust.DatabaseService') !== false;
         
         $html = '<div class="credentials-section my-4">';
-        $html .= '<h6>' . do_not_sanitize($label) . '</h6>';
+        $html .= '<h6>' . opensim_sanitize_basic_html($label) . '</h6>';
         
         if ($description) {
-            $html .= '<p class="text-muted small">' . $description . '</p>';
+            $html .= '<p class="text-muted small">' . opensim_sanitize_html($description) . '</p>';
         }
         
         // Add "Use default" checkbox for non-main databases
@@ -901,42 +945,34 @@ class OpenSim_Field {
             $use_default_checked = $use_default ? 'checked' : '';
             $fields_style = $use_default ? 'style="display: none;"' : '';
             
-            $html .= '<div class="form-check mb-3">';
-            $html .= '<input class="form-check-input" type="checkbox" id="' . $this->field_id . '_use_default" ';
-            $html .= 'name="' . $this->field_id . '_use_default" value="1" ' . $use_default_checked . ' ';
-            $html .= 'onchange="toggleDbCredentials(\'' . $this->field_id . '\')">';
-            $html .= '<label class="form-check-label" for="' . $this->field_id . '_use_default">';
-            $html .= _('Use default (same as main database)');
-            $html .= '</label>';
-            $html .= '</div>';
-            
-            $html .= '<div class="db-credentials-fields" id="' . $this->field_id . '_fields" ' . $fields_style . '>';
+            $html .= sprintf(
+                '<div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="%1$s_use_default" name="%1$s_use_default" value="1" %2$s onchange="toggleDbCredentials(\'%1$s\')">
+                    <label class="form-check-label" for="%1$s_use_default">%3$s</label>
+                </div>
+                <div class="db-credentials-fields" id="%1$s_fields" %4$s>',
+                $this->field_id,
+                $use_default_checked,
+                _('Use default (same as main database)'),
+                $fields_style
+            );
         }
         
         // Database fields in rows
-        $html .= '<div class="row">';
-        $html .= '<div class="col-md-4">';
-        $html .= $this->render_inline_field('db_host', _('Host name'), 'text', $defaults['host'] ?? '', true);
-        $html .= '</div>';
-        $html .= '<div class="col-md-2">';
-        $html .= $this->render_inline_field('db_port', _('Port'), 'number', $defaults['port'] ?? '3306', true);
-        $html .= '</div>';
-        $html .= '<div class="col-md-6">';
-        $html .= $this->render_inline_field('db_name', _('Database name'), 'text', $defaults['name'] ?? '', true);
-        $html .= '</div>';
-        // $html .= '</div>';
-        
-        // $html .= '<div class="row">';
-        $html .= '<div class="col-md-6">';
-        $html .= $this->render_inline_field('db_user', _('Username'), 'text', $defaults['user'] ?? '', true);
-        $html .= '</div>';
-        // $html .= '</div>';
-        
-        // $html .= '<div class="row">';
-        $html .= '<div class="col-md-6">';
-        $html .= $this->render_inline_field('db_pass', _('Password'), 'password', $defaults['pass'] ?? '', true);
-        $html .= '</div>';
-        $html .= '</div>';
+        $html .= sprintf(
+            '<div class="row">
+                <div class="col-md-4">%s</div>
+                <div class="col-md-2">%s</div>
+                <div class="col-md-6">%s</div>
+                <div class="col-md-6">%s</div>
+                <div class="col-md-6">%s</div>
+            </div>',
+            $this->render_inline_field('db_host', _('Host name'), 'text', $defaults['host'] ?? '', true),
+            $this->render_inline_field('db_port', _('Port'), 'number', $defaults['port'] ?? '3306', true),
+            $this->render_inline_field('db_name', _('Database name'), 'text', $defaults['name'] ?? '', true),
+            $this->render_inline_field('db_user', _('Username'), 'text', $defaults['user'] ?? '', true),
+            $this->render_inline_field('db_pass', _('Password'), 'password', $defaults['pass'] ?? '', true)
+        );
         
         if (!$is_main_db) {
             $html .= '</div>'; // Close db-credentials-fields
@@ -957,10 +993,10 @@ class OpenSim_Field {
         $required = $this->field_config['required'] ?? false ? 'required' : '';
         
         $html = '<div class="ini-files-section">';
-        $html .= '<h6>' . do_not_sanitize($label) . '</h6>';
+        $html .= '<h6>' . opensim_sanitize_basic_html($label) . '</h6>';
         
         if ($description) {
-            $html .= '<p class="text-muted small">' . $description . '</p>';
+            $html .= '<p class="text-muted small">' . opensim_sanitize_html($description) . '</p>';
         }
         
         // Only Robust.HG.ini for grid configuration, OpenSim.ini comes later for regions
@@ -994,37 +1030,47 @@ class OpenSim_Field {
     private function render_inline_field($name, $label, $type, $value = '', $required = false, $readonly = false, $accept = '') {
         $required_attr = $required ? 'required' : '';
         $readonly_attr = $readonly ? 'readonly' : '';
-        $accept_attr = $accept ? 'accept="' . do_not_sanitize($accept) . '"' : '';
+        $accept_attr = $accept ? 'accept="' . opensim_esc_attr($accept) . '"' : '';
         $required_mark = $this->required_mark;
         
-        $html = '<div class="form-group mb-2">';
-        $html .= '<label class="form-label" for="' . $name . '">' . do_not_sanitize($label) . $required_mark . '</label>';
-        $html .= '<input type="' . $type . '" class="form-control" id="' . $name . '" name="' . $name . '" ';
-        $html .= 'value="' . do_not_sanitize($value) . '" ' . $required_attr . ' ' . $readonly_attr . ' ' . $accept_attr . '>';
-        $html .= '</div>';
+        $html = sprintf(
+            '<div class="form-group mb-2">
+            <label class="form-label" for="%1$s">%2$s%3$s</label>
+            <input type="%4$s" class="form-control" id="%1$s" name="%1$s" value="%5$s" %6$s %7$s %8$s>
+            </div>',
+            $name,
+            opensim_sanitize_basic_html($label),
+            $required_mark,
+            $type,
+            opensim_esc_attr($value),
+            $required_attr,
+            $readonly_attr,
+            $accept_attr
+        );
         
         return $html;
     }
     
     /**
-     * Get field value with proper fallback
+     * Get field value with proper fallbacks
      */
     private function get_field_value() {
-        return $_POST[$this->field_id] ?? $this->field_config['default'] ?? '';
-    }
-    
-    /**
-     * Check if a method should be active based on available credentials
-     */
-    private function is_method_active($method_key, $method_fields) {
-        // Check against default value and current value
-        $current_value = $this->get_field_value();
-        if ($current_value === $method_key) {
-            return true;
+        // Check if value is explicitly set in config
+        if (isset($this->field_config['value'])) {
+            return $this->field_config['value'];
         }
         
-        // Check if this is the default value
-        $default_value = $this->field_config['default'] ?? '';
-        return ($default_value === $method_key);
+        // Check POST data
+        if (isset($_POST[$this->field_id])) {
+            return $_POST[$this->field_id];
+        }
+        
+        // Check session data
+        if (isset($_SESSION['opensim_install_wizard'][$this->field_id])) {
+            return $_SESSION['opensim_install_wizard'][$this->field_id];
+        }
+        
+        // Use default value
+        return $this->field_config['default'] ?? null;
     }
 }

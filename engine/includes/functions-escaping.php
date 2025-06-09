@@ -20,7 +20,9 @@ function opensim_get_escaper() {
 
 // OUTPUT ESCAPING FUNCTIONS (opensim_esc_* series)
 function opensim_esc_html($text) {
-    return opensim_get_escaper()->escapeHtml($text);
+    if(is_string($text)) {
+        return opensim_get_escaper()->escapeHtml($text);
+    }
 }
 
 function opensim_esc_attr($text) {
@@ -70,4 +72,32 @@ function opensim_filter_int($value) {
 
 function opensim_filter_float($value) {
     return filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+}
+
+// HTML SANITIZATION FUNCTIONS (opensim_sanitize_* series)
+function opensim_sanitize_html($html, $allowed_tags = null) {
+    if ($allowed_tags === null) {
+        // Default allowed tags for descriptions: basic formatting only
+        $allowed_tags = '<p><br><strong><b><em><i><u><code><pre><a><span><div><ul><ol><li><blockquote>';
+    }
+    
+    // Strip dangerous tags but keep allowed formatting
+    $clean_html = strip_tags($html, $allowed_tags);
+
+    // Remove dangerous attributes from allowed tags
+    $clean_html = preg_replace('/(<[^>]*)\s(on\w+|style|class)\s*=\s*["\'][^"\']*["\']([^>]*>)/i', '$1$3', $clean_html);
+    
+    return trim($clean_html);
+}
+
+function opensim_sanitize_rich_text($html) {
+    // For rich content areas - more permissive
+    $allowed_tags = '<p><br><strong><b><em><i><u><code><pre><a><span><div><h1><h2><h3><h4><h5><h6><ul><ol><li><blockquote>';
+    return opensim_sanitize_html($html, $allowed_tags);
+}
+
+function opensim_sanitize_basic_html($html) {
+    // For basic formatting only
+    $allowed_tags = '<strong><b><em><i><u><code><a>';
+    return opensim_sanitize_html($html, $allowed_tags);
 }
