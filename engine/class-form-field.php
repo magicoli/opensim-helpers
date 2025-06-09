@@ -706,7 +706,7 @@ class OpenSim_Field {
         if ($label) {
             $html .= sprintf(
             '<h5 class="mb-3">%s%s</h5>',
-            'offf ' . opensim_sanitize_basic_html($label),
+            opensim_sanitize_basic_html($label),
             $required_mark
             );
         }

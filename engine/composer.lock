@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "074bd3f0858773e24fb884cb798e3445",
+    "content-hash": "d8705b41850b13ba75014ff6f966fa2b",
     "packages": [
         {
             "name": "laminas/laminas-escaper",
@@ -344,7 +344,44 @@
             "time": "2021-11-05T16:50:12+00:00"
         }
     ],
-    "packages-dev": [],
+    "packages-dev": [
+        {
+            "name": "magicoli/opensim-rest-php",
+            "version": "v1.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/magicoli/opensim-rest-php.git",
+                "reference": "3b421170322f8a8b59248ac0d32ded9afc96cb3d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/magicoli/opensim-rest-php/zipball/3b421170322f8a8b59248ac0d32ded9afc96cb3d",
+                "reference": "3b421170322f8a8b59248ac0d32ded9afc96cb3d",
+                "shasum": ""
+            },
+            "require-dev": {
+                "clue/phar-composer": "^1.4",
+                "magicoli/php-bump-library": "^1.0"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "AGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Olivier van Helden",
+                    "email": "olivier@van-helden.net"
+                }
+            ],
+            "description": "OpenSimulator REST PHP library and command-line client",
+            "support": {
+                "issues": "https://github.com/magicoli/opensim-rest-php/issues",
+                "source": "https://github.com/magicoli/opensim-rest-php/tree/v1.0.5"
+            },
+            "time": "2023-07-21T02:01:36+00:00"
+        }
+    ],
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": [],

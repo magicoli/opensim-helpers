@@ -14,12 +14,20 @@
         "laminas/laminas-escaper": "^2.12",
         "laminas/laminas-filter": "^2.24"
     },
+    "require-dev": {
+        "magicoli/opensim-rest-php": "^1.0"
+    },
     "autoload": {
         "psr-4": {
             "OpenSim\\Engine\\": "src/"
         },
         "files": [
             "includes/functions-escaping.php"
+        ]
+    },
+    "scripts": {
+        "post-update-cmd": [
+        "[ $COMPOSER_DEV_MODE -eq 0 ] || cp vendor/magicoli/opensim-rest-php/class-rest.php contrib/magicoli/opensim-rest-php/"
         ]
     },
     "suggest": {
