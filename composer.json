@@ -9,15 +9,13 @@
             "email": "gudule@speculoos.world"
         }
     ],
-    "require": {
-        "php": ">=7.4"
-    },
     "require-dev": {
         "magicoli/php-bump-library": "^1.0"
     },
     "autoload": {
         "psr-4": {
-            "OpenSim\\Helpers\\": "src/"
+            "OpenSim\\Helpers\\": "src/",
+            "OpenSim\\Engine\\": "engine/src/"
         }
     },
     "scripts": {

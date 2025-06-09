@@ -15,28 +15,7 @@ if(!defined('OPENSIM_HELPERS_PATH')) {
     define('OPENSIM_HELPERS_PATH', __DIR__);
 }
 
-// If OPENSIM_ENGINE_PATH is not defined, fallback to OPENSIM_HELPERS_PATH/engine
-if (! defined('OPENSIM_ENGINE_PATH')) {
-    $lookup_path = array(
-        OPENSIM_HELPERS_PATH . '/engine',
-        dirname(OPENSIM_HELPERS_PATH) . '/engine',
-    );
-    
-    foreach ($lookup_path as $path) {
-        if (file_exists($path . '/bootstrap.php')) {
-            define('OPENSIM_ENGINE_PATH', $path);
-            break;
-        }
-    }
-    
-    // If still not defined, this is a critical error
-    if (! defined('OPENSIM_ENGINE_PATH')) {
-        error_log('[CRITICAL] Could not locate engine directory. Looked in: ' . implode(', ', $lookup_path));
-        die('Critical error: Engine directory not found. Please check your installation.');
-    }
-}
-
-require_once OPENSIM_ENGINE_PATH . '/bootstrap.php';
+require_once OPENSIM_HELPERS_PATH . '/engine/bootstrap.php';
 
 // Load helper classes
 // require_once OPENSIM_HELPERS_PATH . '/includes/class-api.php';
