@@ -11,8 +11,9 @@
  * @license     AGPLv3
  */
 
-require_once 'includes/config.php';
-require_once 'includes/search.php';
+require_once __DIR__ . '/bootstrap.php';
+// require_once 'includes/config.php';
+// require_once 'includes/search.php';
 define( 'EVENTS_NULL_KEY', '00000000-0000-0000-0000-000000000001' );
 
 dontWait();
