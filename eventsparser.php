@@ -13,7 +13,13 @@
 
 require_once __DIR__ . '/bootstrap.php';
 // require_once 'includes/config.php';
-// require_once 'includes/search.php';
+require_once 'includes/search.php';
+
+if ( ! $SearchDB || ! is_object( $SearchDB ?? false ) || ! $SearchDB->connected ) {
+	// Abort
+	error_log( '[ERROR] ' . __FILE__ . ':' . __LINE__ . ' - Search database not connected.' );
+	die_knomes( 'Database not connected', 500 );
+}
 
 $hypevents_url = Engine_Settings::get( 'engine.Search.HypeventsUrl');
 if ( empty( $hypevents_url ) && defined( 'HYPEVENTS_URL' ) ) {
@@ -140,12 +146,12 @@ foreach ( $json as $json_event ) {
 	$events[] = $fields;
 }
 
-if ( is_object( $SearchDB ) && $SearchDB->connected ) {
-	$SearchDB->query( 'DELETE FROM ' . SEARCH_TABLE_EVENTS );
-	foreach ( $events as $event ) {
-		$result = $SearchDB->insert( SEARCH_TABLE_EVENTS, $event );
-		if ( ! $result ) {
-			error_log( 'error while inserting new events)' );
-		}
+$SearchDB->query( 'DELETE FROM ' . SEARCH_TABLE_EVENTS );
+// TODO: use a prepared statement to avoid SQL injection
+// TODO: use BEGIN TRANSACTION to allow rollback in case of error
+foreach ( $events as $event ) {
+	$result = $SearchDB->insert( SEARCH_TABLE_EVENTS, $event );
+	if ( ! $result ) {
+		error_log( 'error while inserting new events)' );
 	}
 }

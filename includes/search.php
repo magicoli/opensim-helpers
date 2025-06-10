@@ -16,6 +16,11 @@
  *   [OpenSimSearch](https://github.com/kcozens/OpenSimSearch)
  */
 
+require_once dirname(__DIR__) . '/bootstrap.php';
+
+$search_db = OpenSim_Search::db();
+die('DEBUG');
+
 if ( ! defined( 'SEARCH_TABLE_EVENTS' ) ) {
 	define( 'SEARCH_TABLE_EVENTS', 'events' );
 }
