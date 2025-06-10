@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         verbose="false"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="true">
+    
+    <testsuites>
+        <testsuite name="OpenSim Helpers Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    
+    <php>
+        <env name="PHPUNIT_RUNNING" value="true"/>
+    </php>
+</phpunit>

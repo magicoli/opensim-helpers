@@ -22,12 +22,15 @@ class Helpers {
     private static $scripts;
     private static $styles;
     private static $is_dev;
+    private static $host;
 
     public static $robust_db;
 
     public function __construct() {
+        self::$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
         // Check if domain name starts with "dev." or usual wp debug constants are set
-        self::$is_dev = ( strpos( $_SERVER['HTTP_HOST'], 'dev.' ) === 0 ) || ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG );
+        self::$is_dev = ( strpos( self::$host, 'dev.' ) === 0 ) || ( defined( 'OSHELPERS_DEBUG' ) && OSHELPERS_DEBUG ) || ( defined( 'OSHELPERS_DEBUG' ) && OSHELPERS_DEBUG );
     }
 
     public function init() {
@@ -96,7 +99,7 @@ class Helpers {
 
         $parsed = array(
             'scheme' => isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http',
-            'host' => $_SERVER['HTTP_HOST'],
+            'host' => self::$host,
         );
         $url = self::build_url( $parsed ) . ltrim( $url_path );
 

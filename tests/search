@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This is only a reference for the kind of tests to execute.
+# Tests have to be made with PHP unit and use the current setup, not hard-coded values like here.
+
 SearchURL="https://2do.directory/helpers/query.php"
 GatekeeperURL="http://speculoos.world:8002"
 

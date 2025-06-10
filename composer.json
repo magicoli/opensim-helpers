@@ -10,7 +10,8 @@
         }
     ],
     "require-dev": {
-        "magicoli/php-bump-library": "^1.0"
+        "magicoli/php-bump-library": "^1.0",
+        "phpunit/phpunit": "^9.5"
     },
     "autoload": {
         "psr-4": {
@@ -19,7 +20,8 @@
         }
     },
     "scripts": {
-      "bump-version": "vendor/magicoli/php-bump-library/vendor/bin/robo --load-from=vendor/magicoli/php-bump-library/RoboFile.php bump:version"
+      "bump-version": "vendor/magicoli/php-bump-library/vendor/bin/robo --load-from=vendor/magicoli/php-bump-library/RoboFile.php bump:version",
+      "test": "vendor/bin/phpunit"
     },
     "config": {
         "optimize-autoloader": true,
