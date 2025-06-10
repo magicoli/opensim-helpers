@@ -17,11 +17,27 @@ if(!defined('OPENSIM_HELPERS_PATH')) {
 
 require_once OPENSIM_HELPERS_PATH . '/engine/bootstrap.php';
 
-// Load helper classes
+// Helpers autoloader for optional classes
+spl_autoload_register(function ($class) {
+    if (strpos($class, 'OpenSim_Helpers_') === 0 || strpos($class, 'Helpers_') === 0) {
+        $class_name = str_replace('OpenSim_', '', $class);
+        $file = OPENSIM_HELPERS_PATH . '/classes/class-' . strtolower(str_replace('_', '-', $class_name)) . '.php';
+        if (file_exists($file)) {
+            require $file;
+        } else {
+            error_log('[ERROR] Helper class '. $class . ' missing, file not found: ' . $file);
+        }
+
+    }
+});
+
+// Load ONLY essential dependencies that are always needed
+// Move to autoloader (only loaded when used):
 // require_once OPENSIM_HELPERS_PATH . '/includes/class-api.php';
 // require_once OPENSIM_HELPERS_PATH . '/includes/class-search-helper.php';
 // require_once OPENSIM_HELPERS_PATH . '/includes/class-profile-helper.php';
 
+// Deprecation notice: setting will be handled by Engine_Settings in next release.
 if( file_exists( OPENSIM_HELPERS_PATH . '/includes/config.php' ) ) {
     // Load configuration if exists
     try {
@@ -32,7 +48,7 @@ if( file_exists( OPENSIM_HELPERS_PATH . '/includes/config.php' ) ) {
     }
 }
 
-require_once OPENSIM_HELPERS_PATH . '/includes/class-helpers.php';
+require_once OPENSIM_HELPERS_PATH . '/classes/class-helpers.php';
 
-// Migration from v2 to v3
-require_once OPENSIM_HELPERS_PATH . '/includes/helpers-migration-v2to3.php';
+// Move to autoloader (only loaded when used):
+// require_once OPENSIM_HELPERS_PATH . '/includes/helpers-migration-v2to3.php';

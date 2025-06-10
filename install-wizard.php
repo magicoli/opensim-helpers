@@ -56,8 +56,6 @@ if ($external_data && !empty($external_data['data'])) {
 
 // Include required files (now OPENSIM_ENGINE_PATH is defined)
 require_once OPENSIM_ENGINE_PATH . '/class-installation-wizard.php';
-// require_once OPENSIM_ENGINE_PATH . '/class-engine-settings.php';
-// require_once OPENSIM_ENGINE_PATH . '/class-form.php';
 
 // Initialize wizard
 $wizard = new Installation_Wizard();
