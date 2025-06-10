@@ -8,6 +8,11 @@
  *   [OpenSimSearch](https://github.com/kcozens/OpenSimSearch)
  * Events need to be fetched with a separate script, from an HYPEvents server
  *
+ * 
+ * TODO: use templates for HTML output, with a custom template for viewers.
+ * TODO: implement parcel image thumbnail, fallback to bigger title instead of placeholder.
+ * TODO: implement user/admin-curated destinations lists
+ * 
  * @package    magicoli/opensim-helpers
  * @subpackage    magicoli/opensim-helpers/guide
  * @author     Gudule Lapointe <gudule@speculoos.world>
@@ -23,27 +28,42 @@ class OpenSim_Helpers_Guide {
 	private $source;
 	private $locale;
 
+	private $page_title;
+	private $head_title;
+	private $disclaimer = null; // Disclaimer text, can be set to null if not needed
+
 	public function __construct( $source = null ) {
 		$this->locale = set_helpers_locale();
 
 		$this->public_url   = $this->get_public_url();
-		$this->internal_url = $this->get_child_script_url();
+		$this->page_title = '<em>' . _( 'Destinations Guide' ) . '</em>';
+		$this->head_title = fix_utf_encoding($this->page_title);
+		$this->disclaimer = _( 'This is a work in progress, please report any issues or suggestions.' );
 
+		if( empty( $this->public_url ) ) {
+			$request_uri = getenv( 'REQUEST_URI' );
+			error_log( '[WARNING] ' . $request_uri . ' called without grid configuration.' );
+			die();
+		}
+		
 		if ( ! empty( $source ) ) {
 			$this->source = $source;
-		} elseif ( defined( 'OPENSIM_GUIDE_SOURCE' ) && ! empty( OPENSIM_GUIDE_SOURCE ) ) {
-			$this->source = OPENSIM_GUIDE_SOURCE;
-		} else {
+		} else if ( ! empty( $_GET['source'] ) ) {
 			$this->source             = isset( $_GET['source'] ) ? $_GET['source'] : null;
 			$this->url_args['source'] = $this->source;
+		} else if( $source = Engine_Settings::get('engine.DestinationGuide.GuideSource') ?? false ) {
+			$this->source = $source;
+		} else if ( defined( 'OPENSIM_GUIDE_SOURCE' ) && ! empty( OPENSIM_GUIDE_SOURCE ) ) {
+			Engine_Settings::log_migration_required();
+			$this->source = OPENSIM_GUIDE_SOURCE;
 		}
 
-		// If it's the main script, output the html, otherwise let the main app
-		// decide how and when, with build_html and output_html methods
-		if ( $this->is_main_script() ) {
-			$this->fullHTML = true;
-			$this->output_html();
-		}
+		// We don't output HTML from constructor anymore, the caller decides:
+		// 		if( $guide = new OpenSim_Helpers_Guide( $this->source ) ) {
+		// 			$guide->output_page(); // Output full HTML page, including <html> tags
+		// 		    $guide->output_html(); // Output only the guide block
+		// 		    $html = $guide->build_html(); // Return guide block for further processing
+		// 		}
 	}
 
 	public function output_page() {
@@ -71,6 +91,7 @@ class OpenSim_Helpers_Guide {
 		}
 
 		if ( empty( $this->destinations ) ) {
+			die_knomes();
 			$content .= $this->no_result();
 		} elseif ( empty( $category ) ) {
 			$content .= $this->categories_list();
@@ -80,10 +101,13 @@ class OpenSim_Helpers_Guide {
 
 		$content .= $this->html_suffix();
 
-		return $content;
+		return fix_utf_encoding($content);
 	}
 
 	private function load_destinations( $source ) {
+		if(empty($source)) {
+			die_knomes( 'No source provided for destinations guide.' );
+		}
 		$fileContent = null;
 		// Check if the source is a URL or a file path
 		if ( filter_var( $source, FILTER_VALIDATE_URL ) ) {
@@ -94,7 +118,7 @@ class OpenSim_Helpers_Guide {
 
 		$lines = explode( "\n", $fileContent );
 
-		$categoryTitle = _( 'Destinations Guide' );
+		$categoryTitle = $this->page_title;
 		foreach ( $lines as $line ) {
 			// Exclude lines starting with "#" or "//" or containing no actual characters
 			if ( substr( trim( $line ), 0, 1 ) === '#' || substr( trim( $line ), 0, 2 ) === '//' || ! trim( $line ) ) {
@@ -133,11 +157,15 @@ class OpenSim_Helpers_Guide {
 	}
 
 	public function categories_list() {
-		$content = '<div class=header>'
-		. '<h1>' . _( 'Destinations Guide' ) . '</h1>'
-		. '<span class="disclaimer">' . _( 'This is a work in progress, please be indulgent.' ) . '</span>'
-		. '</div>'
-		. '<div class="list">';
+		$content = sprintf(
+			'<div class="header">
+				<h1>%s</h1>
+				%s
+			</div>
+			<div class="list">',
+			opensim_sanitize_basic_html($this->page_title),
+			$this->disclaimer ? '<span class="disclaimer">' . opensim_sanitize_basic_html($this->disclaimer) . '</span>' : ''
+		);
 		foreach ( $this->destinations as $categoryTitle => $destinations ) {
 			if ( ! empty( $destinations ) ) {
 				$content .= '<a href="' . $this->build_url( $categoryTitle ) . '">'
@@ -156,12 +184,22 @@ class OpenSim_Helpers_Guide {
 
 	public function destinations_list( $categoryTitle ) {
 		// Build header
-		$content = '<div class=header><h2>' . $categoryTitle . '</h2>';
-		if ( count( $this->destinations ) > 1 ) {
-			$content .= '<a href="' . $this->build_url() . '" class="back">' . _( 'Back to categories' ) . '</a>';
-		}
-		$content .= '<span class="disclaimer">' . _( 'This is a work in progress, please be indulgent.' ) . '</span>';
-		$content .= '</div>';
+		$back_url = (count($this->destinations) > 1) ? sprintf(
+			'<a href="%s" class="back">%s</a>',
+			$this->build_url(),
+			_( 'Back to categories' )
+		) : '';
+
+		$content = sprintf(
+			'<div class="header">
+				<h2>%s</h2>
+				%s
+				%s
+			</div>',
+			opensim_sanitize_basic_html($categoryTitle),
+			$back_url,
+			$this->disclaimer ? '<span class="disclaimer">' . opensim_sanitize_basic_html($this->disclaimer) . '</span>' : ''
+		);
 
 		// Build list
 		$content .= '<div class="list">';
@@ -186,18 +224,9 @@ class OpenSim_Helpers_Guide {
 		return $content;
 	}
 
-	private function no_result() {
-		$content = '<div class="error">'
-		. _( 'The realm of destinations you seek has eluded our grasp, spirited away by elusive knomes. Rally the grid managers, let them venture forth to curate a grand tapestry of remarkable places for your exploration!' )
-		. '</div>';
-		return $content;
-	}
-
-	// Rest of the class remains unchanged...
-
 	private function place_thumbnail() {
 		// Replace this with the actual URL for the thumbnail placeholder
-		return $this->internal_url . '/no-img.jpg';
+		return OSHELPERS_URL . '/no-img.jpg';
 	}
 
 	private function place_traffic() {
@@ -231,24 +260,41 @@ class OpenSim_Helpers_Guide {
 	private function html_prefix() {
 		$content = '';
 		if ( $this->fullHTML ) {
-			$content = '<!DOCTYPE html>'
-			. '<html lang="' . $this->locale . '">'
-			. '<head>'
-			. '<meta charset="UTF-8">'
-			. '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
-			. '<title>Destination Guide</title>'
-			. '</head>'
-			. '<body class="destination-guide">';
-		}
+			// Send headers if not yet sent
+			if ( headers_sent() ) {
+				error_log( '[WARNING] Headers already sent, cannot set HTML headers.' );
+			} else {
+				header( 'Content-Type: text/html; charset=UTF-8' );
+				header( 'Content-Language: ' . $this->locale );
 
-		$content .= '<link rel="stylesheet" type="text/css" href="' . $this->internal_url . '/css/guide.css?' . time() . '">'
+				// header( 'Cache-Control: no-cache, no-store, must-revalidate' );
+				// header( 'Pragma: no-cache' );
+				// header( 'Expires: 0' );
+				// header( 'Content-Security-Policy: default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data:; font-src \'self\';' );
+			}
+			// Output the full HTML structure
+			$content = sprintf(
+				'<!DOCTYPE html>
+				<html lang="%s">
+					<head>
+						<meta charset="UTF-8">
+						<meta name="viewport" content="width=device-width, initial-scale=1.0">
+						<title>%s</title>
+					</head>
+				<body class="os-helpers destination-guide">',
+				$this->locale,
+				strip_tags($this->head_title),
+			);
+		}
+		error_log( '[DEBUG] css url: ' . OSHELPERS_URL . '/css/guide.css?' . time() );
+		$content .= '<link rel="stylesheet" type="text/css" href="' . OSHELPERS_URL . '/css/guide.css?' . time() . '">'
 		. '<div id="guide">';
 		return $content;
 	}
 
 	private function html_suffix() {
 		$content  = '</div>';
-		$content .= '<script src="' . $this->internal_url . '/js/guide.js?' . time() . '"></script>';
+		$content .= '<script src="' . OSHELPERS_URL . '/js/guide.js?' . time() . '"></script>';
 		if ( $this->fullHTML ) {
 			$content .= '</body></html>';
 		}
@@ -280,35 +326,5 @@ class OpenSim_Helpers_Guide {
 			return $this->public_url;
 		}
 		return $this->public_url . '?' . http_build_query( $args );
-	}
-
-	// ... (other methods in the OpenSim_Helpers_Guide class)
-
-	private function get_child_script_url() {
-		// Get the full path of the current file (the helper script)
-		$helper_script_path = __FILE__;
-
-		// Get the directory path of the current file
-		$directory_path = dirname( $helper_script_path );
-
-		// Get the server's document root path
-		$document_root = $_SERVER['DOCUMENT_ROOT'];
-
-		// Convert the directory path to a URL by replacing the document root with an empty string
-		$child_script_url = str_replace( $document_root, '', $directory_path );
-
-		// Ensure the URL starts with a slash to make it an absolute URL
-		$child_script_url = '/' . ltrim( $child_script_url, '/' );
-
-		// Get the current protocol (http or https)
-		$protocol = isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-
-		// Get the host
-		$host = $_SERVER['HTTP_HOST'];
-
-		// Combine the protocol, host, and child script URL to get the full URL of the child script
-		$full_child_script_url = $protocol . $host . $child_script_url;
-
-		return $full_child_script_url;
 	}
 }

@@ -166,28 +166,6 @@ class Helpers {
         return $dir;
     }
 
-	public static function connectionstring_to_array( $connectionstring ) {
-		$parts = explode( ';', $connectionstring );
-		$creds = array();
-		foreach ( $parts as $part ) {
-			$pair              = explode( '=', $part );
-			$creds[ $pair[0] ] = $pair[1] ?? '';
-		}
-        if( preg_match( '/:[0-9]+$/', $creds['Data Source'] ) ) {
-            $host = explode( ':', $creds['Data Source'] );
-            $creds['Data Source'] = $host[0];
-            $creds['Port'] = empty( $host[1] || $host[1] == 3306 ) ? null : $creds['Port'];
-        }
-        $result = array(
-            'host' => $creds['Data Source'],
-            'port' => $creds['Port'] ?? null,
-            'name' => $creds['Database'],
-            'user' => $creds['User ID'],
-            'pass' => $creds['Password'],
-        );
-		return $result;
-	}
-
     // Clone of WP trailingslashit function
     public static function trailingslashit( $value ) {
         return self::untrailingslashit( $value ) . '/';

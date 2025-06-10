@@ -19,7 +19,8 @@
  *   [OpenSimSearch](https://github.com/kcozens/OpenSimSearch)
  */
 
-require_once 'includes/config.php';
+require_once __DIR__ . '/bootstrap.php';
+// require_once 'includes/config.php';
 require_once 'includes/search.php';
 
 $host    = $_GET['host'];

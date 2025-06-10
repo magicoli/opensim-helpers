@@ -14,15 +14,30 @@
 require_once __DIR__ . '/bootstrap.php';
 // require_once 'includes/config.php';
 // require_once 'includes/search.php';
-define( 'EVENTS_NULL_KEY', '00000000-0000-0000-0000-000000000001' );
+
+$hypevents_url = Engine_Settings::get( 'engine.Search.HypeventsUrl');
+if ( empty( $hypevents_url ) && defined( 'HYPEVENTS_URL' ) ) {
+	Engine_Settings::log_migration_required();
+	$hypevents_url = HYPEVENTS_URL;
+}
+if( empty( $hypevents_url ) ) {
+	$request_uri = getenv( 'REQUEST_URI' );
+	error_log( '[WARNING] ' . $request_uri . ' called without HYPEvents URL set in settings.' );
+	die();
+}
+
+// Define a null key for events no or unknown owner, to avoid NULL values in the database
+// and to allow easy filtering of events without owners.
+if(!defined('EVENTS_NULL_KEY')) {
+	define( 'EVENTS_NULL_KEY', '00000000-0000-0000-0000-000000000001' );
+}
 
 dontWait();
 
-$json_url = HYPEVENTS_URL . '/events.json';
+$json_url = $hypevents_url . '/events.json';
 $json     = json_decode( file_get_contents( $json_url ), true );
 if ( ! $json ) {
-	error_log( "Invalid json received from $json_url" );
-	die;
+	die_knomes('Invalid JSON received from ' . $json_url, 500 );
 }
 
 $categories = array(

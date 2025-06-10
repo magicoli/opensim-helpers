@@ -16,6 +16,7 @@ if(!defined('OPENSIM_HELPERS_PATH')) {
 }
 
 require_once OPENSIM_HELPERS_PATH . '/engine/bootstrap.php';
+set_helpers_locale();
 
 // Helpers autoloader for optional classes
 spl_autoload_register(function ($class) {
