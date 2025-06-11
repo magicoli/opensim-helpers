@@ -27,7 +27,15 @@ class Helpers {
     public static $robust_db;
 
     public function __construct() {
-        self::$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        self::$host = $_SERVER['HTTP_HOST'] ?? null;
+        // If empty, use the host part of grid login uri
+        if( empty( self::$host ) ) {
+            $login_url = OpenSim::login_uri();
+            if( ! empty( $login_url ) ) {
+                $parsed = parse_url( $login_url );
+                self::$host = $parsed['host'] ?? 'localhost';
+            }
+        }
 
         // Check if domain name starts with "dev." or usual wp debug constants are set
         self::$is_dev = ( strpos( self::$host, 'dev.' ) === 0 ) || ( defined( 'OSHELPERS_DEBUG' ) && OSHELPERS_DEBUG ) || ( defined( 'OSHELPERS_DEBUG' ) && OSHELPERS_DEBUG );
@@ -46,7 +54,7 @@ class Helpers {
         }
         define( 'OSHELPERS', true );
         define( 'OSHELPERS_DIR', self::trailingslashit( dirname( __DIR__ ) ) );
-        define( 'OSHELPERS_URL', self::get_helpers_url() );
+        define( 'OSHELPERS_URL', self::url() );
         // ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]" );
 
     }
@@ -93,9 +101,15 @@ class Helpers {
         }
     }
 
-    public function get_helpers_url() {
-        $helpers_path = dirname( __DIR__ );
-        $url_path = self::trailingslashit( str_replace( $_SERVER['DOCUMENT_ROOT'], '', $helpers_path ) );
+    public static function url( $path = null ) {
+        $url_path = Engine_Settings::get(
+            'engine.Helpers.HelpersSlug',
+        );
+        if(empty($url_path)) {
+            $helpers_dir = dirname( __DIR__ );
+            $url_path = str_replace( $_SERVER['DOCUMENT_ROOT'], '', $helpers_dir ); 
+        }
+        $url_path = '/' . ltrim( $url_path, '/' ) . '/';
 
         $parsed = array(
             'scheme' => isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http',
@@ -103,6 +117,9 @@ class Helpers {
         );
         $url = self::build_url( $parsed ) . ltrim( $url_path );
 
+        if( ! empty( $path ) ) {
+            $url .= ltrim( $path, '/' );
+        }
         return $url;
     }
 

@@ -10,14 +10,10 @@ class GuideTest extends OpenSimHelpersTestCase
     public function testGuideAccessibility()
     {
         $response = $this->sendRequest('guide.php', '', 'GET');
-        
+
         $url = $response['url'] ?? 'unknown';
         $response_line = $response['headers'][0] ?? 'No headers';
         $body_preview = substr($response['body'] ?? '', 0, 200);
-        
-        echo "\nTesting URL: $url";
-        echo "\nHTTP Response: $response_line";
-        echo "\nBody preview: " . $body_preview;
         
         // Should not return 500 error
         $this->assertStringNotContains('500', $response_line, 'Guide should not return 500 error');
@@ -26,12 +22,11 @@ class GuideTest extends OpenSimHelpersTestCase
             // Guide might be disabled - this is acceptable
             $this->assertStringContains('404', $response_line, 'Disabled guide should return 404');
             if (!empty($response['body'])) {
-                echo "\nGuide appears to be disabled (404 response)";
+                // Guide appears to be disabled (404 response)
             }
         } else {
             // Guide is enabled - should return content
             $this->assertNotEmpty($response['body'], 'Enabled guide should return content');
-            echo "\nGuide appears to be enabled";
         }
     }
     

@@ -16,10 +16,10 @@ class PrerequisitesTest extends OpenSimHelpersTestCase
             $this->fail('CRITICAL: Robust database connection string not configured');
         }
         
-        // Test database connectivity using existing engine classes
+        // Test database connectivity using OpenSim::db()
         try {
-            $db = new OpenSim_Database();
-            $connected = $db->test_connection();
+            $db = OpenSim::db();
+            $connected = $db->is_connected();
             
             if (!$connected) {
                 $this->fail('CRITICAL: Cannot connect to Robust database');
@@ -39,9 +39,16 @@ class PrerequisitesTest extends OpenSimHelpersTestCase
             $this->fail('CRITICAL: Grid login URI not configured');
         }
         
+        // Add http:// prefix if missing
+        if (!preg_match('#^https?://#', $login_uri)) {
+            $login_uri = 'http://' . $login_uri;
+        }
+        
         // Clean the URI
-        $base_uri = rtrim($login_uri, '/');
-        $grid_info_url = $base_uri . '/get_grid_info';
+        // grid login URI can only be used to directly communicate with the grid API,
+        // (which provides get_grid_info endpoint), not for user front-end pages.
+        $grid_login_uri = rtrim($login_uri, '/');
+        $grid_info_url = $grid_login_uri . '/get_grid_info';
         
         echo "\nTesting grid at: $grid_info_url";
         
@@ -52,7 +59,7 @@ class PrerequisitesTest extends OpenSimHelpersTestCase
                 'method' => 'GET'
             ]
         ]);
-        
+
         $response = @file_get_contents($grid_info_url, false, $context);
         
         if ($response === false) {
@@ -72,7 +79,6 @@ class PrerequisitesTest extends OpenSimHelpersTestCase
             $this->fail('CRITICAL: Grid response missing gridname');
         }
         
-        echo "\nGrid online: $grid_name";
         $this->assertTrue(true, 'Grid is online');
     }
 }

@@ -7,22 +7,27 @@ use PHPUnit\Framework\TestCase;
 
 abstract class OpenSimHelpersTestCase extends TestCase
 {
-    protected static $baseUrl;
+    protected static $helpersBaseUrl;
     protected static $gatekeeperUrl;
     
     public static function setUpBeforeClass(): void
     {
-        // Get base URL from settings
-        self::$baseUrl = rtrim(Engine_Settings::get('engine.General.OSHelpersDir', 'http://localhost'), '/');
-        self::$gatekeeperUrl = Engine_Settings::get('robust.GridInfoService.login', 'http://localhost:8002');
+        // Get helpers base URL using the proper method
+        self::$helpersBaseUrl = Helpers::url();
         
-        // Clean URLs
-        if (!preg_match('#^https?://#', self::$baseUrl)) {
-            self::$baseUrl = 'http://' . self::$baseUrl;
+        // Get grid login URI for grid connectivity tests
+        $login_uri = Engine_Settings::get('robust.GridInfoService.login');
+        
+        if (empty($login_uri)) {
+            throw new Exception('CRITICAL: Grid login URI not configured');
         }
-        if (!preg_match('#^https?://#', self::$gatekeeperUrl)) {
-            self::$gatekeeperUrl = 'http://' . self::$gatekeeperUrl;
+        
+        // Add http:// prefix if missing
+        if (!preg_match('#^https?://#', $login_uri)) {
+            $login_uri = 'http://' . $login_uri;
         }
+        
+        self::$gatekeeperUrl = $login_uri;
     }
     
     /**
@@ -30,7 +35,7 @@ abstract class OpenSimHelpersTestCase extends TestCase
      */
     protected function sendRequest($script, $data = '', $method = 'POST', $headers = [])
     {
-        $url = self::$baseUrl . '/' . $script;
+        $url = Helpers::url($script);
         
         $context_options = [
             'http' => [

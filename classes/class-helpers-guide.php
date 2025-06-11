@@ -286,9 +286,14 @@ class OpenSim_Helpers_Guide {
 				strip_tags($this->head_title),
 			);
 		}
-		error_log( '[DEBUG] css url: ' . OSHELPERS_URL . '/css/guide.css?' . time() );
-		$content .= '<link rel="stylesheet" type="text/css" href="' . OSHELPERS_URL . '/css/guide.css?' . time() . '">'
-		. '<div id="guide">';
+		// TODO: use enqueue_style(), but it might need the templates
+		$css_url = Helpers::url('css/guide.css');
+		error_log( '[DEBUG] css url: ' . $css_url );
+		$content .= sprintf(
+			'<link rel="stylesheet" type="text/css" href="%s">',
+			$css_url
+		);
+		$content .= '<div id="guide">';
 		return $content;
 	}
 
@@ -299,6 +304,16 @@ class OpenSim_Helpers_Guide {
 			$content .= '</body></html>';
 		}
 		return $content;
+	}
+
+	static function url() {
+		return Engine_Settings::get(
+			'robust.LoginService.DestinationGuide', 
+			Engine_Settings::get(
+				'opensim.SimulatorFeatures.DestinationGuide',
+				defined('OSHELPERS_URL') ? OSHELPERS_URL . '/' . basename( __FILE__ ) : null
+			)
+		);
 	}
 
 	private function get_public_url() {
