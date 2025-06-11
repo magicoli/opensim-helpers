@@ -16,7 +16,6 @@
  */
 
 require_once __DIR__ . '/bootstrap.php';
-// require_once __DIR__ . '/includes/config.php'; // DEBUG: disabled until we're ready with WP
 
 if($destinations_guide = new OpenSim_Helpers_Guide()) {
     // If the guide is enabled, we can proceed

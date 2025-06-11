@@ -75,7 +75,7 @@ switch ( $service ) {
 		break;
 
 	case 'offline':
-		ossearch_hostUnregister( $host, $port );
+		OpenSim_Search::unregister_host( $host, $port );
 		break;
 }
 

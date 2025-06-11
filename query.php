@@ -74,7 +74,7 @@ function dir_places_query( $method_name, $params, $app_data ) {
 	$order = ( $flags & 1024 ) ? 'dwell DESC, parcelname' : 'parcelname';
 
 	$terms[] = '(parcelname LIKE :text OR description LIKE :text)';
-	$type    = ossearch_terms_build_rating( $flags );
+	$type    = OpenSim_Search::rating_flags_to_query( $flags );
 	if ( ! empty( $type ) ) {
 		$terms[] = "$type";
 	}
@@ -148,7 +148,7 @@ function dir_popular_query( $method_name, $params, $app_data ) {
 		$terms[] = 'has_picture = 1';
 	}
 	// if ($flags & pow(2,11)) $terms[] = "pop.mature = 0";     //PgSimsOnly (1 << 11)
-	$typeCondition = ossearch_terms_build_rating( $flags, 'pop' );
+	$typeCondition = OpenSim_Search::rating_flags_to_query( $flags, 'pop' );
 	if ( ! empty( $typeCondition ) ) {
 		$terms[] = $typeCondition;
 	}
@@ -236,7 +236,7 @@ function dir_land_query( $method_name, $params, $app_data ) {
 		}
 	}
 
-	$typeCondition = ossearch_terms_build_rating( $flags );
+	$typeCondition = OpenSim_Search::rating_flags_to_query( $flags );
 	if ( ! empty( $typeCondition ) ) {
 		$terms[] = $typeCondition;
 	}
@@ -381,7 +381,7 @@ function dir_events_query( $method_name, $params, $app_data ) {
 		$type[] = 'eventflags = 2'; // IncludeAdult (1 << 26)
 	}
 	if ( count( $type ) > 0 ) {
-		$terms[] = ossearch_terms_join( ' OR ', $type );
+		$terms[] = OSPDO::join_query_conditions( $type, 'OR' );
 	}
 
 	if ( $search_text != '' ) {
@@ -468,7 +468,7 @@ function dir_classified_query( $method_name, $params, $app_data ) {
 		$f[] = 'classifiedflags & 64'; // Adult (1 << 6)
 	}
 	if ( count( $f ) > 0 ) {
-		$terms[] = ossearch_terms_join( ' OR ', $f );
+		$terms[] = OSPDO::join_query_conditions( $f, 'OR' );
 	}
 
 	// Only restrict results based on category if it is not 0 (Any Category)
