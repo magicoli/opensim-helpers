@@ -21,7 +21,8 @@
  **/
 
 require_once __DIR__ . '/bootstrap.php';
-// require_once 'includes/search.php';
+require_once 'includes/search.php';
+
 dontWait();
 
 $now = time();

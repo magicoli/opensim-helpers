@@ -18,8 +18,8 @@
  *   Fumi.Iseki for CMS/LMS '09 5/31
  */
 
-// require_once 'includes/config.php';
-require_once 'includes/economy.php';
+require_once __DIR__ . '/bootstrap.php';
+require_once OPENSIM_ENGINE_PATH . '/includes/functions-economy.php';
 
 // No user serviceable parts below #####################
 //

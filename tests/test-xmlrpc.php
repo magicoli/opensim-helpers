@@ -10,7 +10,7 @@ require_once __DIR__ . '/../bootstrap.php';
 // Test if xmlrpc functions are available
 $functions_available = function_exists('xmlrpc_encode') && 
                        function_exists('xmlrpc_decode') && 
-                       function_exists('xmlrpc_encode_request') && 
+                       php_has('xmlrpc')  && 
                        function_exists('xmlrpc_is_fault');
 
 echo "XML-RPC functions available: " . ($functions_available ? "Yes" : "No") . "\n";
