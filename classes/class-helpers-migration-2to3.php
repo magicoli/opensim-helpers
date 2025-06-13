@@ -172,6 +172,9 @@ class Helpers_Migration_2to3 {
             case 'extract_console_port':
                 return is_array($value) && isset($value['ConsolePort']) ? $value['ConsolePort'] : null;
                 
+            case 'sanitize_id':
+                return sanitize_id($value ?? '');
+                
             case 'currency_provider_to_module':
                 switch (strtolower($value ?? '')) {
                     case 'gloebit':
