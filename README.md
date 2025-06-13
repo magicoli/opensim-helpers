@@ -1,6 +1,6 @@
 # OpenSimulator Helpers
 
-![Version 2.4.0](https://badgen.net/badge/Version/2.4.0/blue)
+![Version 3.0.0-dev](https://badgen.net/badge/Version/3.0.0-dev/blue)
 ![Stable 2.4.0](https://badgen.net/badge/Stable/2.4.0/green)
 ![Requires PHP 5.7](https://badgen.net/badge/PHP/5.7/7884bf)
 ![License AGPLv3](https://badgen.net/badge/License/AGPLv3/552b55)
